@@ -1,4 +1,4 @@
-{%- macro validation_count__sample() %}
+{%- macro validation_count__sample_1() %}
 
     {% set dbt_identifier = '???' %}
 

@@ -1,4 +1,4 @@
-{%- macro validation_all_col__sample(summarize=true) -%}
+{%- macro validation_all_col__sample_1(summarize=true) -%}
 
     {% set dbt_identifier = '???' %}
 

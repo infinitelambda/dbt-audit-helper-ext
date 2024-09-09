@@ -1,4 +1,4 @@
-{%- macro validation__transaction_cont_devis(summarize=true) -%}
+{%- macro validation_full__sample_1(summarize=true) -%}
 
     {% set dbt_identifier = '???' %}
 

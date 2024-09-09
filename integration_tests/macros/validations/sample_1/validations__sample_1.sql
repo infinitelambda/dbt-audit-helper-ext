@@ -1,4 +1,4 @@
-{%- macro validations__sample(summarize=true) -%}
+{%- macro validations__sample_1(summarize=true) -%}
 
     {% set dbt_identifier = '???' %}
 
