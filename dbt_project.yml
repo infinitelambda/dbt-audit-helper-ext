@@ -1,6 +1,5 @@
 name: 'audit_helper_ext'
-config-version: 2
-require-dbt-version: [">=1.6.0", "<2.0.0"]
+require-dbt-version: [">=1.7.0", "<2.0.0"]
 
 model-paths: ["models"]
 macro-paths: ["macros"]
@@ -10,6 +9,11 @@ clean-targets:
   - "dbt_packages"
   - "logs"
 
+models:
+  audit_helper_ext:
+    +database: "{{ var('audit_helper__database', target.database) }}"
+    +schema: "{{ var('audit_helper__schema', target.schema) }}"
+
 vars:
-  # audit_helper_ext__database: audit_helper_ext
-  # audit_helper_ext__schema: validation
+  # audit_helper__database: audit_helper_ext
+  # audit_helper__schema: validation

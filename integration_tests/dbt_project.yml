@@ -10,5 +10,5 @@ clean-targets:
   - "logs"
 
 vars:
-  audit_helper_ext__database: audit_helper_ext
-  audit_helper_ext__schema: validation
+  audit_helper__database: audit_helper_ext
+  audit_helper__schema: validation
