@@ -1,0 +1,14 @@
+name: 'audit_helper_ext_test'
+version: '0.0.0'
+config-version: 2
+
+profile: 'audit_helper_ext'
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+  - "logs"
+
+vars:
+  audit_helper_ext__database: audit_helper_ext
+  audit_helper_ext__schema: validation
