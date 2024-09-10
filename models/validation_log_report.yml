@@ -1,0 +1,21 @@
+models:
+  - name: validation_log_report
+    description: Latest status of the validation result
+    columns:
+      - name: mart_table
+      - name: mart_folder
+      - name: dbt_cloud_job_url
+      - name: dbt_cloud_job_run_url
+      - name: date_of_process
+      - name: dbt_cloud_job_start_at
+      - name: old_relation
+      - name: dbt_relation
+      - name: old_relation_row_count
+      - name: dbt_relation_row_count
+      - name: is_count_match
+      - name: match_rate_percentage
+      - name: match_rate_status
+      - name: match_count
+      - name: found_only_in_old_row_count
+      - name: found_only_in_dbt_row_count
+      - name: int_models_row_count

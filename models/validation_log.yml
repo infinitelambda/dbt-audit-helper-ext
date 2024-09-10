@@ -1,0 +1,24 @@
+models:
+  - name: validation_log
+    description: Raw log data of the validations
+    columns:
+      - name: mart_table
+        description: (PK) Final table name
+      - name: dbt_cloud_job_run_url
+        description: (PK) URL to the job run e.g. https://emea.dbt.com/deploy/<account_id>/projects/<project_id>/runs/<run_id>
+      - name: date_of_process
+        description: (PK) Snapshot start date of data gets proceeded
+      - name: validation_type
+        description: (PK) Validation type
+      - name: dbt_cloud_job_url
+        description: URL to the job e.g. https://emea.dbt.com/deploy/<account_id>/projects/<project_id>/jobs/<job_id>
+      - name: dbt_cloud_job_start_at
+        description: First run started at of the validation job
+      - name: old_relation
+        description: Full qualified name of the Old table
+      - name: dbt_relation
+        description: Full qualified name of the New table which newly migrated in dbt
+      - name: mart_path
+        description: Folder path to mart model
+      - name: validation_result_json
+        description: Validation result in json format

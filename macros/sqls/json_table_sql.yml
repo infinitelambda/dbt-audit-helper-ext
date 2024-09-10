@@ -1,0 +1,3 @@
+macros:
+  - name: json_table_sql
+    description: SQL expression to flatten/unnest the json array column

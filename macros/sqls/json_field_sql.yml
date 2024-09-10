@@ -1,0 +1,3 @@
+macros:
+  - name: json_field_sql
+    description: SQL expression to access the json field, only 1 nested level support here
