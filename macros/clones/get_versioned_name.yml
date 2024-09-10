@@ -1,0 +1,6 @@
+macros:
+  - name: get_versioned_name
+    description: |
+      Constructs the versioned name = name__YYYYMMDD,
+
+      YYYYMMDD value is extracted from the Date of Process (`audit_helper__date_of_process`)

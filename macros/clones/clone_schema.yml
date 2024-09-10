@@ -1,0 +1,12 @@
+macros:
+  - name: clone_schema
+    description: |
+      Clone data of a whole schema (`SC__YYYYMMDD`) from a versioned source (`SC`).
+
+      Useful when we want to freeze the source data before running dbt.
+
+      For example: I am given a source schema `SC1`, now want to freeze its data
+      ```shell
+      ✅ dbt run-operation clone_schema --args '{source_schema: SC1}'
+      # sample cloned schema name: SC1__20240909
+      ```

@@ -1,6 +1,28 @@
 macros:
   - name: clone_relation
     description: |
-      Procedure to clone data of a dbt relation from an Identifier
+      Clone data of a dbt model (`SC.X`) from a versioned source (`SC__YYYYMMDD.X`).
 
-      It always creates the `TABLE` in Target regardless to which object type in Source
+      Useful when we want to `dbt run -s X` from its snapshot data.
+
+      This always creates the `TABLE` in the Target regardless to which object type in Source.
+
+      For example, given the `TABLE1` model:
+
+      - Source table info:
+          - Identifier = TABLE1
+          - Location = DB.SC__20240909.TABLE1
+
+      - dbt model config:
+          - Identifier = TABLE1
+          - Location = DB.SC.TABLE1
+
+      I want to clone the `TABLE1` model data from the source before running dbt:
+
+      ```shell
+      ✅ dbt run-operation clone_relation --args '{identifier: TABLE1, source_schema_versioned: true}'
+      # will work since the schemas are different in the versioned fashion
+
+      ✅ dbt run-operation clone_relation --args '{identifier: TABLE1}'
+      # will work implicitly since the source schema is versioned (source_schema_versioned=true) by default
+      ```

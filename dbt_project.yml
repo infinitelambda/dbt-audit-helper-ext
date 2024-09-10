@@ -18,4 +18,4 @@ vars:
   # audit_helper__dbt_cloud_host_url: emea.dbt.com
   # audit_helper__database: audit_helper_ext
   # audit_helper__schema: validation
-  # audit_helper__date_of_process: "'2024-09-09'"
+  # audit_helper__date_of_process: "'2024-09-09'" # default to UTC now if not specified

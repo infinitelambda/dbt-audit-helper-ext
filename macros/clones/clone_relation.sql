@@ -1,29 +1,43 @@
-{% macro clone_relation(identifier=identifier, identifier_database=none, identifier_schema=none, is_target_versioned=false) %}
+{% macro clone_relation(
+    identifier,
+    source_database=none,
+    source_database_versioned=false,
+    source_schema=none,
+    source_schema_versioned=true
+) %}
     {{ return(adapter.dispatch('clone_relation', 'audit_helper_ext')(
         identifier=identifier,
-        identifier_database=identifier_database,
-        identifier_schema=identifier_schema,
-        is_target_versioned=is_target_versioned
+        source_database=source_database,
+        source_database_versioned=source_database_versioned,
+        source_schema=source_schema,
+        source_schema_versioned=source_schema_versioned
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation(identifier, identifier_database, identifier_schema, is_target_versioned) %}
+{% macro default__clone_relation(
+    identifier,
+    source_database,
+    source_database_versioned,
+    source_schema,
+    source_schema_versioned
+) %}
 
     {% set copy_mode = 'clone' %}
-    {# clone from [id_YYYYMMDD] to [id] #}
-    {% set source_id, target_id = audit_helper_ext.get_versioned_identifier(identifier), identifier %}
-    {% if is_target_versioned %}
-        {# clone from [id] to [id_YYYYMMDD] #}
-      {% set source_id, target_id = target_id, source_id %}
+
+    {# get source location #}
+    {% if source_database_versioned %}
+        {% set source_database = audit_helper_ext.get_versioned_name(name=source_database or target.database) %}
+    {% endif %}
+    {% if source_schema_versioned %}
+        {% set source_schema = audit_helper_ext.get_versioned_name(name=source_schema or target.schema) %}
     {% endif %}
 
-    {# checking source #}
+    {# checking source table #}
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(
-        identifier=source_id,
-        identifier_database=identifier_database,
-        identifier_schema=identifier_schema,
-        node_name=identifier
+        identifier=identifier,
+        source_database=source_database,
+        source_schema=source_schema
     ) %}
     {% if source_relation_exists == false %}
         {% do exceptions.raise_compiler_error("❌ The table " ~ source_relation.identifier ~ " cannot be found at " ~  source_relation ~ "." ) %}
@@ -32,28 +46,23 @@
         {% set copy_mode = 'select' %}
     {% endif %}
 
-    {# checking target #}
-    {% set target_relation_exists, target_relation, target_config = audit_helper_ext.get_relation(
-        identifier=target_id,
-        identifier_database=identifier_database,
-        identifier_schema=identifier_schema,
-        node_name=identifier
-    ) %}
-    {% if target_relation_exists == true and target_relation.type == 'view' %}
-        {{ log("ℹ️ 🗑️  " ~ target_relation.identifier ~ " exists as a view, it needs to be dropped first.", true) }}
-        {% do audit_helper_ext.drop_object(object_name=target_relation, object_type="view") %}
-    {% elif target_relation_exists == true and target_relation.type == 'table'  %}
-        {{ log("ℹ️ ♻️  The table `" ~ target_relation.identifier ~ "` will be replaced with a fresh version, using " ~ source_relation ~ ".", true) }}
+    {# checking target table #}
+    {% set dbt_relation_exists, dbt_relation, dbt_config = audit_helper_ext.get_relation(identifier=identifier) %}
+    {% if dbt_relation_exists == true and dbt_relation.type == 'view' %}
+        {{ log("ℹ️ 🗑️  " ~ dbt_relation.identifier ~ " exists as a view, it needs to be dropped first.", true) }}
+        {% do audit_helper_ext.drop_object(object_name=dbt_relation, object_type="view") %}
+    {% elif dbt_relation_exists == true and dbt_relation.type == 'table'  %}
+        {{ log("ℹ️ ♻️  The table `" ~ dbt_relation.identifier ~ "` will be replaced with a fresh version, using " ~ source_relation ~ ".", true) }}
     {% else %}
-        {{ log("ℹ️ 🐣  The table `" ~ target_relation.identifier ~ "` will be created using " ~ source_relation ~ ".", true) }}
+        {{ log("ℹ️ 🐣  The table `" ~ dbt_relation.identifier ~ "` will be created using " ~ source_relation ~ ".", true) }}
     {% endif %}
 
-    {# perform clone #}
+    {# perform clone source to target #}
     {% if copy_mode == 'select' %}
         {% set sql = 'select * from ' ~ source_relation %}
-        {% do audit_helper_ext.create_or_replace_table_as(relation=target_relation, sql=sql, config=target_config) %}
+        {% do audit_helper_ext.create_or_replace_table_as(relation=dbt_relation, sql=sql, config=dbt_config) %}
     {% elif copy_mode == 'clone' %}
-        {% do audit_helper_ext.clone_object(object_name=target_relation, source_object_name=source_relation, replace=true) %}
+        {% do audit_helper_ext.clone_object(object_name=dbt_relation, source_object_name=source_relation, replace=true) %}
     {% endif %}
 
 {% endmacro %}

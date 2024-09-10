@@ -1,4 +1,0 @@
-macros:
-  - name: get_versioned_identifier
-    description: |
-      Constructs the versioned identifier = the identifier suffixes `__YYYYMMDD` which is extracted from the Date of Process
