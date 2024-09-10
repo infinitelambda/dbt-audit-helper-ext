@@ -7,7 +7,7 @@
 ## To validate only a model:
 ##      dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1 -r
 ## To validate only a model by type:
-##      dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1 -r -t count | full | all_col
+##      dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1 -r -t count | full | all_col | upstream_row_count
 
 set -e
 
@@ -52,6 +52,7 @@ echo "$(timestamp) 📂  Log Location should be: [ $LOG_LOCATION_PIPE ]"
 # Convert model name to lowercase
 MODEL_lower=$(echo "$MODEL" | tr '[:upper:]' '[:lower:]')
 
+macro_get_upstream_count="get_upstream_row_count"
 macro_validation="validation_full__$MODEL_lower"
 macro_validation_count="validation_count__$MODEL_lower"
 macro_validation_col="validation_all_col__$MODEL_lower"
@@ -78,6 +79,16 @@ fi
 
 
 if [[ "$SKIP_VALIDATION" != "true" ]]; then
+
+    if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "UPSTREAM_ROW_COUNT" ]]; then
+        echo "$(timestamp) "
+        echo "$(timestamp) 👀 🔢            Get upstream row counts - $MODEL                      👀"
+        echo "$(timestamp) "
+        set -x #echo on
+        dbt run-operation $macro_get_upstream_count $MODEL  && \
+        set +x #echo off
+        set +x #echo off
+    fi
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "COUNT" ]]; then
         echo "$(timestamp) "
@@ -109,7 +120,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
     fi
 
 
-    if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "ALL_COL" ]]; then
+    if [[ "$VALIDATION_TYPE_UPPER" == "ALL_COL" ]]; then # Useful for debugging purpose only
         echo "$(timestamp) "
         echo "$(timestamp) 👀  ͍            Validate column by column - $MODEL              👀"
         echo "$(timestamp) "

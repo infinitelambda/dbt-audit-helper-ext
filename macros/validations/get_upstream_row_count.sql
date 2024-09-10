@@ -25,7 +25,7 @@
       {% set audit_results = audit_helper_ext.run_audit_query(count_query) %}
 
       {{ audit_helper_ext.log_validation_result(
-          type='int_models_row_count',
+          type='upstream_row_count',
           result=audit_results,
           dbt_identifier=dbt_identifier,
           dbt_relation=ref(dbt_identifier)

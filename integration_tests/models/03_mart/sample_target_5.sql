@@ -1,6 +1,6 @@
 {{
   config(
     materialized = 'table',
-    unique_key = ['???']
+    unique_key = ['id5']
   )
 }}

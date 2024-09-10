@@ -69,7 +69,7 @@ extract_data as (
       ), 0) as found_only_in_dbt_row_count,
     string_agg(
       case
-      when validation_type = 'int_models_row_count'
+      when validation_type = 'upstream_row_count'
         then concat(
             case
               when {{ json_field_sql('result', 'count') }} <> '0' then '✅ '
