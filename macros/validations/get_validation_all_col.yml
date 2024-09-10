@@ -1,0 +1,5 @@
+macros:
+  - name: get_validation_all_col
+    description: |
+      Execute the Audit Query returned by `audit_helper.compare_all_columns`, and
+      log the result into the validation log table if `summarize=true`

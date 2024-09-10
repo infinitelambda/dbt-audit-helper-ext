@@ -11,7 +11,7 @@
 
     {% if execute %}
 
-        {{ audit_helper_ext.get_int_models_row_count(
+        {{ audit_helper_ext.get_upstream_row_count(
             dbt_identifier=dbt_identifier
         ) }}
 

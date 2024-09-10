@@ -1,0 +1,6 @@
+macros:
+  - name: get_upstream_row_count
+    description: |
+      Finds the upstream (1 level) models of a single target model,
+      queries the count, and
+      log it into the validation log table as 1 row data

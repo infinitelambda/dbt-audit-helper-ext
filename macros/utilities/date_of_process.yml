@@ -1,0 +1,10 @@
+macros:
+  - name: date_of_process
+    description: |
+      Returns the source's snapshot date(time) which is configured by `audit_helper__date_of_process` variable.
+
+      If not available, it uses the UTC now value
+    arguments:
+      - name: format
+        type: boolean
+        description: Turn it to `true` to format the date string to YYYYMMDD

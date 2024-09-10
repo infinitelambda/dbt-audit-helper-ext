@@ -1,0 +1,33 @@
+macros:
+  - name: convert_query_result_to_list
+    description: |
+      Given the `agate.Table` result returned from `run_query`, convert this result to `List[dict]`
+
+      For example:
+
+      - Result table:
+      ```
+      | in_a |  in_b |  count | percent_of_total |
+      | ---- | ----- | ------ | ---------------- |
+      | True |  True | 207398 |            99.85 |
+      | True | False |  36039 |             14.8 |
+      ```
+
+      - Converted List: ⭐
+
+      ```
+      [
+        {
+          "in_a": "True",
+          "in_b": "True",
+          "count": "207398",
+          "percent_of_total": "99.85"
+        },
+        {
+          "in_a": "True",
+          "in_b": "False",
+          "count": "36039",
+          "percent_of_total": "14.8"
+        }
+      ]
+      ```

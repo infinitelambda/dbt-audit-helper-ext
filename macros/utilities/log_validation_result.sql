@@ -19,7 +19,7 @@
   %}
 
   {% set insert_query -%}
-    insert {{ {{ ref('validation_log') }} }} (
+    insert {{ ref('validation_log') }} (
         mart_table,
         dbt_cloud_job_url,
         dbt_cloud_job_run_url,
@@ -33,15 +33,15 @@
     )
     values (
         '{{ dbt_identifier }}',
-        'https://emea.dbt.com/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/jobs/{{ env_var("DBT_CLOUD_JOB_ID", "core") }}',
-        'https://emea.dbt.com/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/runs/{{ env_var("DBT_CLOUD_RUN_ID", "core") }}',
+        'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/jobs/{{ env_var("DBT_CLOUD_JOB_ID", "core") }}',
+        'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/runs/{{ env_var("DBT_CLOUD_RUN_ID", "core") }}',
         {{ audit_helper_ext.date_of_process() }},
         '{{ run_started_at }}',
         '{{ old_relation }}',
         '{{ dbt_relation }}',
         '{{ mart_path }}',
         '{{ type }}',
-        '{{ tojson(convert_query_result_to_dict(result)) }}' TODO: dbt_utils.get_query_result_as_dict?
+        '{{ tojson(audit_helper_ext.convert_query_result_to_list(result)) }}'
     );
   {%- endset %}
 

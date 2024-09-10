@@ -1,0 +1,4 @@
+macros:
+  - name: log_validation_result
+    description: |
+      Save the Audit Helper query result into the validation log table

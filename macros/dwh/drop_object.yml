@@ -1,0 +1,4 @@
+{#
+    Drop object.
+    Can be a database, schema, table, or view, etc...
+#}

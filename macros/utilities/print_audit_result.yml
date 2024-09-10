@@ -1,0 +1,4 @@
+macros:
+  - name: print_audit_result
+    description: |
+      Print the Audit Query result to the console in format of TABLE, or CSV

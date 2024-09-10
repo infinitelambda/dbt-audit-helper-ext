@@ -1,0 +1,6 @@
+macros:
+  - name: clone_relation
+    description: |
+      Procedure to clone data of a dbt relation from an Identifier
+
+      It always creates the `TABLE` in Target regardless to which object type in Source

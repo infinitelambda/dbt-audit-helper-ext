@@ -1,0 +1,4 @@
+{#
+    Clone object.
+    Object can be a DATABASE or SCHEMA or TABLE
+#}

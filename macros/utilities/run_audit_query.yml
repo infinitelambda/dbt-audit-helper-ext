@@ -1,0 +1,4 @@
+macros:
+  - name: run_audit_query
+    description: |
+      Execute the Audit Query, and print the result to the console

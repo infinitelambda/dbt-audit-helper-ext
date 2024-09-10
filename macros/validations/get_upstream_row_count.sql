@@ -1,27 +1,24 @@
-{% macro get_int_models_row_count(dbt_identifier) %}
-  {{ return(adapter.dispatch('get_int_models_row_count', 'audit_helper_ext')(dbt_identifier=dbt_identifier)) }}
+{% macro get_upstream_row_count(dbt_identifier) %}
+  {{ return(adapter.dispatch('get_upstream_row_count', 'audit_helper_ext')(dbt_identifier=dbt_identifier)) }}
 {% endmacro %}
 
-{% macro default__get_int_models_row_count(dbt_identifier) %}
+{% macro default__get_upstream_row_count(dbt_identifier) %}
 
   {% if execute %}
       {% set dbt_node = graph.nodes.values() | selectattr("name", "equalto", dbt_identifier) | first %}
-      {% set dbt_depends_on_nodes = dbt_node.get('depends_on').get('nodes') %}
-
-      {% set row_count_results = [] %}
+      {% set dbt_depends_on_nodes = dbt_node.get('depends_on', {}).get('nodes', []) %}
 
       {% set count_query %}
         {% for depends_on_node in dbt_depends_on_nodes %}
           {% set name = (
               graph.nodes.values()
               | selectattr("unique_id", "equalto", depends_on_node)
-              | first)
-              ["name"]
+              | first) ["name"]
           %}
-          select '{{name}}' as model_name, count(*) as row_count
+          select '{{ name }}' as model_name, count(*) as row_count
           from {{ ref(name) }}
 
-          {% if not loop.last %} union all {% endif %}
+          {% if not loop.last -%} union all {% endif %}
         {% endfor %}
       {% endset %}
 
