@@ -3,6 +3,7 @@
 ##      export SOURCE_DATABASE=?
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart sample_target_1
+import operator
 import os
 import re
 import sys
@@ -13,7 +14,7 @@ def get_models(directory: str = "models/03_mart", name=None) -> dict:
     Collect list of models (dict[model_name, model_dir]) in the mart folder
     """
     models = []
-    for dirpath, dirnames, filenames in os.walk(directory):
+    for dirpath, _, filenames in os.walk(directory):
         for file in filenames:
             if file.endswith(".sql"):
                 filename = os.path.splitext(file)[0]
@@ -22,10 +23,10 @@ def get_models(directory: str = "models/03_mart", name=None) -> dict:
                 models.append(
                     dict(
                         model_name=filename,
-                        model_dir=f"{dirpath}" + "/".join(dirnames),
+                        model_dir=dirpath,
                     )
                 )
-    return models
+    return sorted(models, key=operator.itemgetter("model_name"))
 
 
 def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):

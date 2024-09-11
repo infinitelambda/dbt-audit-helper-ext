@@ -53,11 +53,11 @@ TODO
 
 👉 See [CONTRIBUTING guideline](./CONTRIBUTING.md)
 
-🌟 And then, kudos to **our beloved Contributors**:
+<!-- 🌟 And then, kudos to **our beloved Contributors**:
 
 <a href="https://github.com/infinitelambda/dbt-audit-helper-ext/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=infinitelambda/dbt-audit-helper-ext" alt="Contributors" />
-</a>
+</a> -->
 
 ## About Infinite Lambda
 
