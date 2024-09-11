@@ -2,3 +2,10 @@ macros:
   - name: clone_object
     description: |
       Clone object. Object can be a DATABASE or SCHEMA or TABLE
+
+      Usage:
+
+      ```
+      dbt run-operation clone_object --args '{object_name: sc__20240909, source_object_name: sc, object_type: schema, replace: true, dry_run: true}'
+      dbt run-operation clone_object --args '{object_name: sc__20240909, source_object_name: sc, object_type: schema, replace: true, dry_run: false}'
+      ```

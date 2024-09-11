@@ -5,15 +5,17 @@
 
 {% macro default__date_of_process(format) %}
 
-  {% set date_str = var('audit_helper__date_of_process', '') %}
+  {% set dt = modules.datetime.datetime %}
+
+  {% set date_str = var('audit_helper__date_of_process', '') | string %}
   {% if not date_str %}
-    {% set date_str = modules.datetime.datetime.utcnow().strftime('%Y-%m-%d') %}
+    {% set date_str = dt.utcnow().strftime('%Y-%m-%d') %}
   {% endif %}
 
   {% if not format %}
     {{ return(date_str) }}
   {% endif %}
 
-  {{ return(modules.datetime.datetime.strptime(date_str).strftime('%Y%m%d')) }}
+  {{ return(dt.strptime(date_str, "%Y-%m-%d").strftime('%Y%m%d')) }}
 
 {% endmacro %}

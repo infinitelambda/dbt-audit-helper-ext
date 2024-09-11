@@ -35,7 +35,7 @@
         '{{ dbt_identifier }}',
         'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/jobs/{{ env_var("DBT_CLOUD_JOB_ID", "core") }}',
         'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/runs/{{ env_var("DBT_CLOUD_RUN_ID", "core") }}',
-        {{ audit_helper_ext.date_of_process() }},
+        '{{ audit_helper_ext.date_of_process() }}',
         '{{ run_started_at }}',
         '{{ old_relation }}',
         '{{ dbt_relation }}',

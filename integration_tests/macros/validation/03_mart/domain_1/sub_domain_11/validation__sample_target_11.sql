@@ -51,7 +51,7 @@
 
 
 {# Full validation #}
-{%- macro validation__sample_target_11(summarize=true) -%}
+{%- macro validation_full__sample_target_11(summarize=true) -%}
 
     {% set dbt_identifier = 'sample_target_11' %}
 
@@ -79,7 +79,7 @@
 {% endmacro %}
 
 
-{# Validations for cloud #}
+{# Validations for All #}
 {%- macro validations__sample_target_11(summarize=true) -%}
 
     {% set dbt_identifier = 'sample_target_11' %}

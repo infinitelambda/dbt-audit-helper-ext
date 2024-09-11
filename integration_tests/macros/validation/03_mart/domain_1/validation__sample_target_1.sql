@@ -3,8 +3,8 @@
 
     {% set dbt_identifier = 'sample_target_1' %}
 
-    {% set old_database = 'DB' %}
-    {% set old_schema = 'SC' %}
+    {% set old_database = target.database %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_1' %}
 
     {% if execute %}
@@ -26,11 +26,11 @@
 
     {% set dbt_identifier = 'sample_target_1' %}
 
-    {% set old_database = 'DB' %}
-    {% set old_schema = 'SC' %}
+    {% set old_database = target.database %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_1' %}
 
-    {%- set primary_keys = ['id1'] -%}
+    {%- set primary_keys = ['name'] -%}
     {%- set exclude_columns = [] -%}
 
     {% if execute %}
@@ -51,15 +51,15 @@
 
 
 {# Full validation #}
-{%- macro validation__sample_target_1(summarize=true) -%}
+{%- macro validation_full__sample_target_1(summarize=true) -%}
 
     {% set dbt_identifier = 'sample_target_1' %}
 
-    {% set old_database = 'DB' %}
-    {% set old_schema = 'SC' %}
+    {% set old_database = target.database %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_1' %}
 
-    {%- set primary_keys = ['id1'] -%}
+    {%- set primary_keys = ['name'] -%}
     {%- set exclude_columns = [] -%}
 
     {% if execute %}
@@ -79,16 +79,16 @@
 {% endmacro %}
 
 
-{# Validations for cloud #}
+{# Validations for All #}
 {%- macro validations__sample_target_1(summarize=true) -%}
 
     {% set dbt_identifier = 'sample_target_1' %}
 
-    {% set old_database = 'DB' %}
-    {% set old_schema = 'SC' %}
+    {% set old_database = target.database %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_1' %}
 
-    {%- set primary_keys = ['id1'] -%}
+    {%- set primary_keys = ['name'] -%}
     {%- set exclude_columns = [] -%}
 
     {% if execute %}

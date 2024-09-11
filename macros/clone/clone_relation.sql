@@ -36,8 +36,8 @@
     {# checking source table #}
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(
         identifier=identifier,
-        source_database=source_database,
-        source_schema=source_schema
+        identifier_database=source_database,
+        identifier_schema=source_schema
     ) %}
     {% if source_relation_exists == false %}
         {% do exceptions.raise_compiler_error("❌ The table " ~ source_relation.identifier ~ " cannot be found at " ~  source_relation ~ "." ) %}

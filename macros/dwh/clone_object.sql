@@ -1,4 +1,4 @@
-{% macro clone_object(object_name, source_object_name, object_type, replace=true, dry_run=false) %}
+{% macro clone_object(object_name, source_object_name, object_type="table", replace=true, dry_run=false) %}
   {{ return(adapter.dispatch('clone_object', 'audit_helper_ext')(
     object_name=object_name,
     source_object_name=source_object_name,
@@ -20,6 +20,8 @@
 
     {% if dry_run == false %}
       {% do run_query(clone_statement) %}
+    {% else %}
+      {{ log("sql: \n" ~ clone_statement, info=True) }}
     {% endif %}
 
     {{ return(clone_statement) }}

@@ -19,42 +19,6 @@ import re
 import sys
 
 
-def get_models(directory: str = "models/03_mart", name=None) -> dict:
-    """
-    Collect list of models (dict[model_name, model_dir]) in the mart folder
-    """
-    models = []
-    for dirpath, _, filenames in os.walk(directory):
-        for file in filenames:
-            if file.endswith(".sql"):
-                filename = os.path.splitext(file)[0]
-                if name is not None and filename != name:
-                    continue
-                models.append(
-                    dict(
-                        model_name=filename,
-                        model_dir=dirpath,
-                    )
-                )
-    return sorted(models, key=operator.itemgetter("model_name"))
-
-
-def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):
-    """Extract model config if exists"""
-    with open(f"{model_path}.sql", "r") as f:
-        content = f.read()
-
-    pattern = f"\\b{config_attr}\\s*=\\s*\\[(.*?)\\]"
-    if config_attr_type != "list":
-        pattern = f"\\b{config_attr}\\s*=\\s*'(.*?)'"
-    match = re.search(pattern, content)
-    result = ""
-    if match:
-        result = match.group(1)
-
-    return result
-
-
 def create_validation_count(model_name, schema_name, database_name):
     """Template of `validation_count__model` macro"""
     output_str = f"""
@@ -63,8 +27,8 @@ def create_validation_count(model_name, schema_name, database_name):
 
     {{% set dbt_identifier = '{model_name}' %}}
 
-    {{% set old_database = '{database_name}' %}}
-    {{% set old_schema = '{schema_name}' %}}
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = '{model_name}' %}}
 
     {{% if execute %}}
@@ -83,16 +47,16 @@ def create_validation_count(model_name, schema_name, database_name):
     return output_str
 
 
-def create_validation(model_name, model_dir, schema_name, database_name):
+def create_validation_full(model_name, model_dir, schema_name, database_name):
     """Template of `validation__model` macro"""
     output_str = f"""
 {{# Full validation #}}
-{{%- macro validation__{model_name.lower()}(summarize=true) -%}}
+{{%- macro validation_full__{model_name.lower()}(summarize=true) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
-    {{% set old_database = '{database_name}' %}}
-    {{% set old_schema = '{schema_name}' %}}
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = '{model_name}' %}}
 
     {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
@@ -125,8 +89,8 @@ def create_validation_all_col(model_name, model_dir, schema_name, database_name)
 
     {{% set dbt_identifier = '{model_name}' %}}
 
-    {{% set old_database = '{database_name}' %}}
-    {{% set old_schema = '{schema_name}' %}}
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = '{model_name}' %}}
 
     {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
@@ -157,13 +121,13 @@ def create_validations(model_name, model_dir, schema_name, database_name):
     Useful to shorten the dbt cloud job steps
     """
     output_str = f"""
-{{# Validations for cloud #}}
+{{# Validations for All #}}
 {{%- macro validations__{model_name}(summarize=true) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
-    {{% set old_database = '{database_name}' %}}
-    {{% set old_schema = '{schema_name}' %}}
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = '{model_name}' %}}
 
     {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
@@ -199,25 +163,66 @@ def create_validations(model_name, model_dir, schema_name, database_name):
     return output_str
 
 
+def get_models(directory: str = "models/03_mart", name=None) -> dict:
+    """
+    Collect list of models (dict[model_name, model_dir]) in the mart folder
+    """
+    models = []
+    for dirpath, _, filenames in os.walk(directory):
+        for file in filenames:
+            if file.endswith(".sql"):
+                filename = os.path.splitext(file)[0]
+                if name is not None and filename != name:
+                    continue
+                models.append(
+                    dict(
+                        model_name=filename,
+                        model_dir=dirpath,
+                    )
+                )
+    return sorted(models, key=operator.itemgetter("model_name"))
+
+
+def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):
+    """Extract model config if exists"""
+    with open(f"{model_path}.sql", "r") as f:
+        content = f.read()
+
+    result = ""
+    pattern = f"\\b{config_attr}\\s*=\\s*\\[(.*?)\\]"
+    if config_attr_type != "list":
+        pattern = f"\\b{config_attr}\\s*=\\s*'(.*?)'"
+    match = re.search(pattern, content)
+    if match:
+        result = match.group(1)
+
+    return result
+
+
 def create_validation_file(model: dict):
     """Create the model's validation file contains all macos"""
     model_name, model_dir = model.get("model_name"), model.get("model_dir")
-    schema_name = get_model_config(
-        f"{model_dir}/{model_name}",
+    model_path = f"{model_dir}/{model_name}"
+    schema_name = f"""'{get_model_config(
+        model_path,
         config_attr="audit_helper__source_schema",
         config_attr_type="string",
-    ) or os.environ.get("SOURCE_SCHEMA")
-    database_name = get_model_config(
-        f"{model_dir}/{model_name}",
+    )}'"""
+    if schema_name == "''":
+        schema_name = os.environ.get("SOURCE_SCHEMA", "target.schema")
+    database_name = f"""'{get_model_config(
+        model_path,
         config_attr="audit_helper__source_database",
         config_attr_type="string",
-    ) or os.environ.get("SOURCE_DATABASE")
+    )}'"""
+    if database_name == "''":
+        database_name = os.environ.get("SOURCE_DATABASE", "target.database")
 
     macro_count = create_validation_count(model_name, schema_name, database_name)
     macro_all_col = create_validation_all_col(
         model_name, model_dir, schema_name, database_name
     )
-    macro_full = create_validation(model_name, model_dir, schema_name, database_name)
+    macro_full = create_validation_full(model_name, model_dir, schema_name, database_name)
     macro_all = create_validations(model_name, model_dir, schema_name, database_name)
 
     output_str = (
@@ -253,5 +258,7 @@ if __name__ == "__main__":
 
     models = get_models(directory=mart_dir, name=model_name)
     for m in models:
-        print(f"ℹ️  Working on the model: {m.get('model_name').upper()}")
+        print(f"🏃 Working on the model: {m.get('model_name').upper()} ...")
         create_validation_file(model=m)
+        print(f"◾◾◾")
+    print(f"🚏🚏🚏")
