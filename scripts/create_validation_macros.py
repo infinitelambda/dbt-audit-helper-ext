@@ -1,6 +1,16 @@
 ## Usage:
+##  If all source tables are in the same location:
 ##      export SOURCE_SCHEMA=?
 ##      export SOURCE_DATABASE=?
+##  If any specific, go to that model config and add:
+##      {{
+##        config(
+##          ...
+##          audit_helper__source_database = 'DB',
+##          audit_helper__source_schema = 'SC'
+##        )
+##      }}
+##  Run:
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart sample_target_1
 import operator

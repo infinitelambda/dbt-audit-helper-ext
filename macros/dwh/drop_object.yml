@@ -1,4 +1,4 @@
-{#
-    Drop object.
-    Can be a database, schema, table, or view, etc...
-#}
+macros:
+  - name: drop_object
+    description: |
+      Drop object. Can be a database, schema, table, or view, etc

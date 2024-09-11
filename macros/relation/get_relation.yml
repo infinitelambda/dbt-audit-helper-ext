@@ -1,0 +1,7 @@
+macros:
+  - name: get_relation
+    description: |
+      Finds the relation node and returns a tuple of 3 info:
+      - relation exists: True if exists, False otherwise
+      - relation: Relation object if exists, create a cached Relation object otherwise
+      - node config: Graph node config if exists

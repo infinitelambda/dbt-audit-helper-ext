@@ -1,4 +1,4 @@
-{#
-    Clone object.
-    Object can be a DATABASE or SCHEMA or TABLE
-#}
+macros:
+  - name: clone_object
+    description: |
+      Clone object. Object can be a DATABASE or SCHEMA or TABLE

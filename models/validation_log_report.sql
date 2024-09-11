@@ -53,17 +53,17 @@ extract_data as (
       max(
         case
           when validation_type = 'full'
-            and {{ json_field_sql('result', 'in_a') }}
-            and {{ json_field_sql('result', 'in_b') }}
-            then {{ json_field_sql('result', 'count') }} as integer)
+            and {{ json_field_sql('result', 'in_a') }} = 'true'
+            and {{ json_field_sql('result', 'in_b') }} = 'false'
+            then safe_cast({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_old_row_count,
     coalesce(
       max(
         case
           when validation_type = 'full'
-            and {{ json_field_sql('result', 'in_a') }}
-            and {{ json_field_sql('result', 'in_b') }}
+            and {{ json_field_sql('result', 'in_a') }} = 'false'
+            and {{ json_field_sql('result', 'in_b') }} = 'true'
             then safe_cast({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_dbt_row_count,
@@ -92,11 +92,14 @@ calculate_exp as (
 
   select
     *,
-    cast(match_count as numeric) / (match_count + found_only_in_old_row_count + found_only_in_dbt_row_count) * 100 as match_rate_percentage,
+    {% set match_rate_percentage -%}
+      cast(match_count as numeric) / (match_count + found_only_in_old_row_count + found_only_in_dbt_row_count) * 100
+    {%- endset %}
+    {{ match_rate_percentage }} as match_rate_percentage,
     case when old_relation_row_count = dbt_relation_row_count then 'Yes ✅' else 'No 🟡' end as is_count_match,
     case
-      when match_rate_percentage = 100 then '✅'
-      when match_rate_percentage >= 99 and match_rate_percentage < 100 then '🟡'
+      when {{ match_rate_percentage }} = 100 then '✅'
+      when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then '🟡'
       else '❌'
     end as match_rate_status,
 

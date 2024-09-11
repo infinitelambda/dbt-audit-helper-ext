@@ -1,4 +1,6 @@
-{#
-    Get the full node for a model name in the aeis_data_dbt project (our dbt project).
-    Useful to get the config for a model.
-#}
+macros:
+  - name: get_model_node
+    description: |
+        Get the full node for a model name in the dbt project.
+
+        Useful to get the config for a model.

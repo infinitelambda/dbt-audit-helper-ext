@@ -7,7 +7,7 @@
       'date_of_process',
       'validation_type'
     ],
-    on_schema_change = "append_new_columns"
+    on_schema_change = "append_new_columns",
     full_refresh = false,
   )
 }}

@@ -1,0 +1,4 @@
+macros:
+  - name: create_or_replace_table_as
+    description: |
+      Build CTAS statement and execute it
