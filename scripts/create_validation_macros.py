@@ -207,16 +207,16 @@ def create_validation_file(model: dict):
         model_path,
         config_attr="audit_helper__source_schema",
         config_attr_type="string",
-    )}'"""
+    ) or os.environ.get("SOURCE_SCHEMA", "") }'"""
     if schema_name == "''":
-        schema_name = os.environ.get("SOURCE_SCHEMA", "target.schema")
+        schema_name = "target.schema"
     database_name = f"""'{get_model_config(
         model_path,
         config_attr="audit_helper__source_database",
         config_attr_type="string",
-    )}'"""
+    ) or os.environ.get("SOURCE_DATABASE", "")}'"""
     if database_name == "''":
-        database_name = os.environ.get("SOURCE_DATABASE", "target.database")
+        database_name =  "target.database"
 
     macro_count = create_validation_count(model_name, schema_name, database_name)
     macro_all_col = create_validation_all_col(

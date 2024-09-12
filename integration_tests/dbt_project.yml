@@ -11,7 +11,7 @@ clean-targets:
 
 seeds:
   audit_helper_ext_test:
-    +schema: _20240909 # physical name: audit_helper_ext__20240909
+    +schema: audit_helper_ext__20240909
     sample_source_1:
       +alias: sample_target_1
     sample_source_11:

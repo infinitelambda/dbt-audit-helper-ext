@@ -1,13 +1,12 @@
 {{
   config(
     materialized = 'table',
-    unique_key = ['name'],
-    audit_helper__source_schema = 'audit_helper_ext__20240909'
+    unique_key = ['name']
   )
 }}
 
 --to compare vs {{ ref("sample_source_1") }}
-select 'Alice' AS Name, 29 AS Age, 'New York' AS City
+select 'Alice' AS name, 29 AS age, 'New York' AS city
 union all
 select 'Bob', 35, 'San Francisco'
 union all

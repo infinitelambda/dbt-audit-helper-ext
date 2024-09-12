@@ -4,7 +4,7 @@
     {% set dbt_identifier = 'sample_target_2' %}
 
     {% set old_database = target.database %}
-    {% set old_schema = audit_helper_ext__20240909 %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_2' %}
 
     {% if execute %}
@@ -27,7 +27,7 @@
     {% set dbt_identifier = 'sample_target_2' %}
 
     {% set old_database = target.database %}
-    {% set old_schema = audit_helper_ext__20240909 %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_2' %}
 
     {%- set primary_keys = ['id2'] -%}
@@ -56,7 +56,7 @@
     {% set dbt_identifier = 'sample_target_2' %}
 
     {% set old_database = target.database %}
-    {% set old_schema = audit_helper_ext__20240909 %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_2' %}
 
     {%- set primary_keys = ['id2'] -%}
@@ -85,7 +85,7 @@
     {% set dbt_identifier = 'sample_target_2' %}
 
     {% set old_database = target.database %}
-    {% set old_schema = audit_helper_ext__20240909 %}
+    {% set old_schema = 'audit_helper_ext__20240909' %}
     {% set old_identifier = 'sample_target_2' %}
 
     {%- set primary_keys = ['id2'] -%}
