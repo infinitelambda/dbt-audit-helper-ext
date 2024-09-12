@@ -209,7 +209,7 @@ def create_validation_file(model: dict):
         config_attr_type="string",
     ) or os.environ.get("SOURCE_SCHEMA", "") }'"""
     if schema_name == "''":
-        schema_name = "target.schema"
+        schema_name = "target.schema ~ '__' ~ audit_helper_ext.date_of_process(true)"
     database_name = f"""'{get_model_config(
         model_path,
         config_attr="audit_helper__source_database",

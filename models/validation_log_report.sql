@@ -25,7 +25,7 @@ extract_data as (
     {% set mart_paths -%}
       split(mart_path, '/')
     {%- endset %}
-    {{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as mart_folder,
+    cast({{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as {{ dbt.type_string() }}) as mart_folder,
     dbt_cloud_job_url,
     dbt_cloud_job_run_url,
     date_of_process,
