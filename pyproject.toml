@@ -83,6 +83,7 @@ verify = [
 init = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt run -s audit_helper_ext --project-dir integration_tests"},
+  {cmd = "dbt seed --project-dir integration_tests"},
 ]
 build = [
   {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
@@ -127,6 +128,5 @@ validate = [
 ]
 all = [
   {cmd = "poe init"},
-  {cmd = "poe build"},
   {cmd = "poe validate"},
 ]
