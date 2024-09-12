@@ -31,22 +31,21 @@
     summarize=true
 ) %}
 
-    {%- set dbt_relation = ref(dbt_identifier) -%}
-
-    {%- set old_relation = adapter.get_relation(
+    {% set old_relation = adapter.get_relation(
         database = old_database,
         schema = old_schema,
         identifier = old_identifier
-    ) -%}
+    ) %}
+    {% set dbt_relation = ref(dbt_identifier) %}
 
-    {%- set audit_query = audit_helper.compare_relations(
+    {% set audit_query = audit_helper.compare_relations(
         a_relation = old_relation,
         b_relation = dbt_relation,
         exclude_columns = exclude_columns,
         primary_key = dbt_utils.generate_surrogate_key(primary_keys),
         summarize = summarize,
         limit = 100
-    ) -%}
+    ) %}
 
     {% if execute %}
       {{ log('ℹ️  Those columns are excluded from the comparison: ' ~ exclude_columns, true) }}

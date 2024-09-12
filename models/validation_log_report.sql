@@ -22,7 +22,10 @@ extract_data as (
 
   select
     mart_table,
-    array_reverse(split(mart_path, '/'))[1] as mart_folder,
+    {% set mart_paths -%}
+      split(mart_path, '/')
+    {%- endset %}
+    {{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as mart_folder,
     dbt_cloud_job_url,
     dbt_cloud_job_run_url,
     date_of_process,
@@ -33,56 +36,63 @@ extract_data as (
       case
         when validation_type = 'count'
           and {{ json_field_sql('result', 'relation_name') }} = old_relation
-          then safe_cast({{ json_field_sql('result', 'total_records') }} as integer)
+          then {{ safe_cast_sql() }}({{ json_field_sql('result', 'total_records') }} as integer)
       end
     ) as old_relation_row_count,
     max(
       case
         when validation_type = 'count'
           and {{ json_field_sql('result', 'relation_name') }} = dbt_relation
-          then safe_cast({{ json_field_sql('result', 'total_records') }} as integer)
+          then {{ safe_cast_sql() }}({{ json_field_sql('result', 'total_records') }} as integer)
       end
     ) as dbt_relation_row_count,
     max(
       case
         when validation_type = 'full'
-          and {{ json_field_sql('result', 'in_a') }} = 'true'
-          and {{ json_field_sql('result', 'in_b') }} = 'true'
-          then safe_cast({{ json_field_sql('result', 'count') }} as integer)
+          and lower({{ json_field_sql('result', 'in_a') }}) = 'true'
+          and lower({{ json_field_sql('result', 'in_b') }}) = 'true'
+          then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
       end
     ) as match_count,
     coalesce(
       max(
         case
           when validation_type = 'full'
-            and {{ json_field_sql('result', 'in_a') }} = 'true'
-            and {{ json_field_sql('result', 'in_b') }} = 'false'
-            then safe_cast({{ json_field_sql('result', 'count') }} as integer)
+            and lower({{ json_field_sql('result', 'in_a') }}) = 'true'
+            and lower({{ json_field_sql('result', 'in_b') }}) = 'false'
+            then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_old_row_count,
     coalesce(
       max(
         case
           when validation_type = 'full'
-            and {{ json_field_sql('result', 'in_a') }} = 'false'
-            and {{ json_field_sql('result', 'in_b') }} = 'true'
-            then safe_cast({{ json_field_sql('result', 'count') }} as integer)
+            and lower({{ json_field_sql('result', 'in_a') }}) = 'false'
+            and lower({{ json_field_sql('result', 'in_b') }}) = 'true'
+            then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_dbt_row_count,
-    string_agg(
+    {{ string_agg_sql() }}(
       case
-      when validation_type = 'upstream_row_count'
-        then concat(
-            case
-              when {{ json_field_sql('result', 'count') }} <> '0' then '✅ '
-              when {{ json_field_sql('result', 'count') }} = '0' then '🟡 '
-            end,
-            {{ json_field_sql('result', 'model_name') }}, ': ',
-            {{ json_field_sql('result', 'row_count') }}, ' row(s)'
-          )
-      end, '\n'
-      order by safe_cast({{ json_field_sql('result', 'row_count') }} as integer)
-    ) as int_models_row_count,
+        when validation_type = 'upstream_row_count'
+          then concat(
+              case
+                when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
+                when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
+              end,
+              {{ json_field_sql('result', 'model_name') }}, ': ',
+              {{ json_field_sql('result', 'row_count') }}, ' row(s)',
+              '\n'
+            )
+        end
+      {% if target.type == "bigquery" -%}
+        order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer)
+      {%- endif %}
+    )
+    {% if target.type == "snowflake" -%}
+      within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
+    {%- endif %} as upstream_row_count,
+
   from
     latest_log,
     {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
@@ -126,6 +136,6 @@ select
   match_count,
   found_only_in_old_row_count,
   found_only_in_dbt_row_count,
-  int_models_row_count,
+  upstream_row_count,
 
 from calculate_exp

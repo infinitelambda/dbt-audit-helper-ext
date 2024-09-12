@@ -1,13 +1,13 @@
 [tool.poetry]
 name = "dbt-audit-helper-ext"
 version = "0.0.0"
-description = "Extended audit helper"
+description = "Extended audit helper 💪"
 authors = ["Infinite Lambda <contact@infinitelambda.com>"]
 readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/infinitelambda/dbt-audit-helper-ext"
 homepage = "https://infinitelambda.com"
-keywords = ["packaging", "dbt", "data-quality", "audit-helper", "markdown", "lint"]
+keywords = ["packaging", "dbt", "data-quality", "audit-helper", "markdown", "lint", "migration", "data-diff"]
 classifiers = [
   "Topic :: dbt Package Development :: Documentation",
   "Topic :: dbt Package Development :: Testing",
@@ -85,7 +85,10 @@ init = [
   {cmd = "dbt run -s audit_helper_ext --project-dir integration_tests"},
 ]
 build = [
-  {cmd = "dbt run --exclude audit_helper_ext --project-dir integration_tests"},
+  {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
+]
+gen = [
+  {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart"}
 ]
 git-push-github = [
   {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
@@ -113,7 +116,7 @@ validate-stores = [
 validate-supplies = [
   {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m supplies"}
 ]
-validate-all = [
+validate = [
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-customers"},
   {cmd = "poe validate-items"},
@@ -122,8 +125,8 @@ validate-all = [
   {cmd = "poe validate-stores"},
   {cmd = "poe validate-supplies"},
 ]
-build-n-validate-all = [
+all = [
   {cmd = "poe init"},
   {cmd = "poe build"},
-  {cmd = "poe validate-all"},
+  {cmd = "poe validate"},
 ]

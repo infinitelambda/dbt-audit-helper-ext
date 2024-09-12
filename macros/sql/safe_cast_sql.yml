@@ -1,0 +1,3 @@
+macros:
+  - name: safe_cast_sql
+    description: SQL function name of the TRY_CAST(snowflake) or SAFE_CAST(bigquery)

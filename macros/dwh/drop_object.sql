@@ -10,14 +10,15 @@
 
 {% macro default__drop_object(object_name, object_type, cascade, dry_run) %}
 
-    {% set drop_statement %}
-      drop {{ object_type }} if exists {{ object_name }} {% if cascade %} cascade {% endif %};
-    {% endset %}
+  {% set drop_statement %}
+    drop {{ object_type }} if exists {{ object_name }} {% if cascade %} cascade {% endif %};
+  {% endset %}
 
-    {% if dry_run == false %}
-      {% do run_query(drop_statement) %}
-    {% endif %}
+  {{ log_debug("\n" ~ drop_statement, info=True) if dry_run }}
+  {% if dry_run == false %}
+    {% do run_query(drop_statement) %}
+  {% endif %}
 
-    {{ return(drop_statement) }}
+  {{ return(drop_statement) }}
 
 {% endmacro %}

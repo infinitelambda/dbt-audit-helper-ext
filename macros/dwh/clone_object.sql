@@ -18,10 +18,10 @@
 
     {%- endset %}
 
+    {{ log("ℹ️ 🐣  The " ~ object_type ~ " `" ~ object_name ~ "` will be created using " ~ source_object_name ~ ".", true) }}
+    {{ log_debug("\n" ~ clone_statement, info=True) if dry_run }}
     {% if dry_run == false %}
       {% do run_query(clone_statement) %}
-    {% else %}
-      {{ log("sql: \n" ~ clone_statement, info=True) }}
     {% endif %}
 
     {{ return(clone_statement) }}

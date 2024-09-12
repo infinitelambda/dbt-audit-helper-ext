@@ -11,7 +11,7 @@ clean-targets:
 
 seeds:
   audit_helper_ext_test:
-    +schema: audit_helper_ext__20240909
+    +schema: "{{ target.schema ~ '__20240909' }}"
     sample:
       sample_source_1:
         +alias: sample_1

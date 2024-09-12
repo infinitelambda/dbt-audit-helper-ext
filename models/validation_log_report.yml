@@ -18,4 +18,4 @@ models:
       - name: match_count
       - name: found_only_in_old_row_count
       - name: found_only_in_dbt_row_count
-      - name: int_models_row_count
+      - name: upstream_row_count

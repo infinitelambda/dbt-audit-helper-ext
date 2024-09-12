@@ -3,6 +3,8 @@ macros:
     description: |
       Given the `agate.Table` result returned from `run_query`, convert this result to `List[dict]`
 
+      Note: All the dict's attribute names will be lowercase
+
       For example:
 
       - Result table:

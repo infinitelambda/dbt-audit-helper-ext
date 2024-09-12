@@ -17,10 +17,10 @@
 {% endmacro %}
 
 
-{% macro snowflake__json_field_sql(json_column) %}
+{% macro snowflake__json_field_sql(json_table_alias, json_field) %}
 
   {% set sql -%}
-    json_extract_path_text({{ json_table_alias }}, '{{ json_field }}'),
+    json_extract_path_text({{ json_table_alias }}.value, '{{ json_field }}')
   {%- endset %}
 
   {{ return(sql) }}

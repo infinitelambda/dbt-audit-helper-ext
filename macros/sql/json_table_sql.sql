@@ -17,7 +17,7 @@
 {% macro snowflake__json_table_sql(json_column) %}
 
   {% set sql -%}
-    lateral flatten(input => {{ json_column }})
+    lateral flatten(input => parse_json({{ json_column }}))
   {%- endset %}
 
   {{ return(sql) }}

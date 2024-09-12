@@ -1,0 +1,3 @@
+macros:
+  - name: string_agg_sql
+    description: SQL function name of the LISTAGG(snowflake) or STRING_AGG(bigquery)

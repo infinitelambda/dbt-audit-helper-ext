@@ -6,15 +6,15 @@ audit_helper_ext:
       account: infinitelambda.eu-west-1
       warehouse: wh_audit_helper_ext
       database: audit_helper_ext
-      role: rolea_audit_helper_ext
-      schema: dbt_dat # YOUR_VALUE
+      role: role_audit_helper_ext
+      schema: audit_helper_ext # YOUR_VALUE
       user: dat@infinitelambda.com # YOUR_VALUE
       authenticator: externalbrowser
       threads: 10
     bq:
       type: bigquery
       project: bichapter
-      dataset: audit_helper_ext_dat # YOUR_VALUE
+      dataset: audit_helper_ext # YOUR_VALUE
       location: EU
       method: oauth
       priority: interactive

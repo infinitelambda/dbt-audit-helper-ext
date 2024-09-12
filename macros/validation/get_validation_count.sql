@@ -25,7 +25,7 @@
         database = old_database,
         schema = old_schema,
         identifier = old_identifier
-    ) -%}
+    ) %}
     {% set dbt_relation = ref(dbt_identifier) %}
 
     {% set audit_query = audit_helper.compare_row_counts(

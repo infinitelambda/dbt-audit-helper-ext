@@ -8,6 +8,7 @@
   {% set results = [] %}
 
   {% for column_name, column in result.columns.items() %}
+    {% set column_name = column_name | lower %}
     {% if results == [] %}
       {% for column_value in column.values() %}
         {% do results.append({column_name: column_value~''}) %}

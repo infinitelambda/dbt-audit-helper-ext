@@ -19,7 +19,7 @@
   %}
 
   {% set insert_query -%}
-    insert {{ ref('validation_log') }} (
+    insert into {{ ref('validation_log') }} (
         mart_table,
         dbt_cloud_job_url,
         dbt_cloud_job_run_url,
@@ -31,7 +31,7 @@
         validation_type,
         validation_result_json
     )
-    values (
+    select
         '{{ dbt_identifier }}',
         'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/jobs/{{ env_var("DBT_CLOUD_JOB_ID", "core") }}',
         'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/runs/{{ env_var("DBT_CLOUD_RUN_ID", "core") }}',
@@ -41,8 +41,9 @@
         '{{ dbt_relation }}',
         '{{ mart_path }}',
         '{{ type }}',
-        '{{ tojson(audit_helper_ext.convert_query_result_to_list(result)) }}'
-    );
+        --escape double-quote in old_relation so that json is parsable
+        replace('{{ tojson(audit_helper_ext.convert_query_result_to_list(result)) }}', '{{ old_relation }}', replace('{{ old_relation }}', '"', '\\"'))
+    ;
   {%- endset %}
 
   {% if execute %}

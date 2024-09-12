@@ -25,6 +25,7 @@
 
   {%- endset %}
 
+  {{ log_debug("\n" ~ create_statement, info=True) if dry_run }}
   {% if dry_run == false %}
     {% do run_query(create_statement) %}
   {% endif %}
