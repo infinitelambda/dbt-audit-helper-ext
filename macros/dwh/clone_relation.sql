@@ -12,7 +12,7 @@
 
     {# get source location #}
     {% set source_database = source_database or target.database %}
-    {% set source_schema = source_schema or audit_helper_ext.get_versioned_name(name=var('audit_helper__schema_schema', target.schema)) %}
+    {% set source_schema = source_schema or audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
 
     {# checking source table #}
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(

@@ -4,7 +4,7 @@
     {% set dbt_identifier = 'sample_1' %}
 
     {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = var('audit_helper__source_schema', target.schema) %}
+    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'sample_1' %}
 
     {% if execute %}
@@ -27,7 +27,7 @@
     {% set dbt_identifier = 'sample_1' %}
 
     {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = var('audit_helper__source_schema', target.schema) %}
+    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'sample_1' %}
 
     {%- set primary_keys = ['name'] -%}
@@ -56,7 +56,7 @@
     {% set dbt_identifier = 'sample_1' %}
 
     {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = var('audit_helper__source_schema', target.schema) %}
+    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'sample_1' %}
 
     {%- set primary_keys = ['name'] -%}
@@ -85,7 +85,7 @@
     {% set dbt_identifier = 'sample_1' %}
 
     {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = var('audit_helper__source_schema', target.schema) %}
+    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'sample_1' %}
 
     {%- set primary_keys = ['name'] -%}

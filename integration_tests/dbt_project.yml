@@ -36,6 +36,6 @@ seeds:
         +alias: supplies
 
 vars:
-  audit_helper__date_of_process: 2024-09-09
   audit_helper__schema: log
-  audit_helper__schema_schema: audit_helper_ext_seed
+  audit_helper__date_of_process: 2024-09-09
+  audit_helper__source_schema: audit_helper_ext_seed
