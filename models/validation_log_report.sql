@@ -1,6 +1,8 @@
 {{
   config(
     materialized = 'view',
+    database = var('audit_helper__database', target.database),
+    schema = var('audit_helper__schema', target.schema)
   )
 }}
 

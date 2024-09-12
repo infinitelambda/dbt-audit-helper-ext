@@ -76,21 +76,54 @@ lint = [
   {cmd = "dbt deps"},
   {cmd = "sqlfluff lint . --dialect snowflake"},
 ]
-audit-helper-verify = [
+verify = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt debug --project-dir integration_tests"},
 ]
-build-doc = [
+init = [
   {cmd = "dbt deps --project-dir integration_tests"},
-  {cmd = "dbt docs generate --select package:audit_helper_ext --project-dir integration_tests"},
-  {cmd = "mkdocs build"}
+  {cmd = "dbt run -s audit_helper_ext --project-dir integration_tests"},
 ]
-build-doc-and-serve = [
-  {cmd = "poe build-doc"},
-  {cmd = "mkdocs serve"}
+build = [
+  {cmd = "dbt run --exclude audit_helper_ext --project-dir integration_tests"},
 ]
 git-push-github = [
   {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
   {cmd = "git push"},
   {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"}
+]
+validate-sample-1 = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1"}
+]
+validate-customers = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m customers"}
+]
+validate-items = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m items"}
+]
+validate-orders = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m orders"}
+]
+validate-products = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m products"}
+]
+validate-stores = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m stores"}
+]
+validate-supplies = [
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m supplies"}
+]
+validate-all = [
+  {cmd = "poe validate-sample-1"},
+  {cmd = "poe validate-customers"},
+  {cmd = "poe validate-items"},
+  {cmd = "poe validate-orders"},
+  {cmd = "poe validate-products"},
+  {cmd = "poe validate-stores"},
+  {cmd = "poe validate-supplies"},
+]
+build-n-validate-all = [
+  {cmd = "poe init"},
+  {cmd = "poe build"},
+  {cmd = "poe validate-all"},
 ]

@@ -9,6 +9,8 @@
     ],
     on_schema_change = "append_new_columns",
     full_refresh = false,
+    database = var('audit_helper__database', target.database),
+    schema = var('audit_helper__schema', target.schema)
   )
 }}
 

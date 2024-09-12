@@ -12,20 +12,23 @@ clean-targets:
 seeds:
   audit_helper_ext_test:
     +schema: audit_helper_ext__20240909
-    sample_source_1:
-      +alias: sample_target_1
-    sample_source_11:
-      +alias: sample_target_11
-    sample_source_2:
-      +alias: sample_target_2
-    sample_source_3:
-      +alias: sample_target_3
-    sample_source_4:
-      +alias: sample_target_4
-    sample_source_5:
-      +alias: sample_target_5
+    sample:
+      sample_source_1:
+        +alias: sample_1
+    jaffle_shop:
+      raw_customers:
+        +alias: customers
+      raw_items:
+        +alias: items
+      raw_orders:
+        +alias: orders
+      raw_products:
+        +alias: products
+      raw_stores:
+        +alias: stores
+      raw_supplies:
+        +alias: supplies
 
 vars:
-  audit_helper__database: audit_helper_ext
-  audit_helper__schema: validation
   audit_helper__date_of_process: 2024-09-09
+  audit_helper__schema: log

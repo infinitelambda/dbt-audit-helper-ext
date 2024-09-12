@@ -6,7 +6,7 @@ audit_helper_ext:
       account: infinitelambda.eu-west-1
       warehouse: wh_audit_helper_ext
       database: audit_helper_ext
-      role: rolea_udit_helper_ext
+      role: rolea_audit_helper_ext
       schema: dbt_dat # YOUR_VALUE
       user: dat@infinitelambda.com # YOUR_VALUE
       authenticator: externalbrowser

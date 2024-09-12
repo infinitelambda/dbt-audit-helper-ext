@@ -51,6 +51,7 @@ echo "$(timestamp)  📂  Log Location should be: [ $LOG_LOCATION_PIPE ]"
 
 # Convert model name to lowercase
 MODEL_lower=$(echo "$MODEL" | tr '[:upper:]' '[:lower:]')
+MODEL_UPPER=$(echo "$MODEL" | tr '[:lower:]' '[:upper:]')
 
 macro_get_upstream_count="get_upstream_row_count"
 macro_validation="validation_full__$MODEL_lower"
@@ -58,17 +59,17 @@ macro_validation_count="validation_count__$MODEL_lower"
 macro_validation_all_col="validation_all_col__$MODEL_lower"
 
 
-echo "$(timestamp)  🛫  Starting the [ $VALIDATION_TYPE_UPPER ] validation(s) against [ $MODEL ] ..."
+echo "$(timestamp)  🛫  Starting the [ $VALIDATION_TYPE_UPPER ] validation(s) against [ $MODEL_UPPER ] ..."
 if [[ "$SKIP_RUN" != "true" ]]; then
     echo "$(timestamp)  "
-    echo "$(timestamp)  🐑  Clone - $MODEL assuming that the source (schema___<YYYYMMDD>.$MODEL) exists"
+    echo "$(timestamp)  🐑  Clone - $MODEL_UPPER assuming that the source (schema___<YYYYMMDD>.$MODEL_UPPER) exists"
     set -x #echo on
     dbt run-operation clone_relation --args {'identifier: '$MODEL'}' && \
     set +x #echo off`
     set +x #echo off`
 
     echo "$(timestamp)  "
-    echo "$(timestamp)  ▶️  Run  - $MODEL"
+    echo "$(timestamp)  ▶️  Run  - $MODEL_UPPER"
     echo "$(timestamp)  "
     set -x #echo on
     dbt run -s +$MODEL --full-refresh --exclude $MODEL && \
@@ -82,7 +83,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "UPSTREAM_ROW_COUNT" ]]; then
         echo "$(timestamp)  "
-        echo "$(timestamp)  👀 🔢            Get upstream row counts - $MODEL                      👀"
+        echo "$(timestamp)  👀 🔢            Get upstream row counts - $MODEL_UPPER                      👀"
         echo "$(timestamp)  "
         set -x #echo on
         dbt run-operation $macro_get_upstream_count --args {'dbt_identifier: '$MODEL'}'  && \
@@ -92,7 +93,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "COUNT" ]]; then
         echo "$(timestamp)  "
-        echo "$(timestamp)  👀 🔢            Validate count - $MODEL                        👀"
+        echo "$(timestamp)  👀 🔢            Validate count - $MODEL_UPPER                        👀"
         echo "$(timestamp)  "
         set -x #echo on
         dbt run-operation $macro_validation_count && \
@@ -103,7 +104,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "FULL" ]]; then
         echo "$(timestamp)  "
-        echo "$(timestamp)  👀  ͍            Validate Row by row - Summarize True - $MODEL   👀"
+        echo "$(timestamp)  👀  ͍            Validate Row by row - Summarize True - $MODEL_UPPER   👀"
         echo "$(timestamp)  "
         set -x #echo on
         dbt run-operation $macro_validation && \
@@ -111,7 +112,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
         set +x #echo off
 
         echo "$(timestamp)  "
-        echo "$(timestamp)  👀  ͍            Validate Row by row - Summarize False - $MODEL  👀"
+        echo "$(timestamp)  👀  ͍            Validate Row by row - Summarize False - $MODEL_UPPER  👀"
         echo "$(timestamp)  "
         set -x #echo on
         dbt run-operation $macro_validation --args {'summarize: false'} && \
@@ -122,7 +123,7 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL_COL" ]]; then # Useful for debugging purpose only
         echo "$(timestamp)  "
-        echo "$(timestamp)  👀  ͍            Validate column by column - $MODEL              👀"
+        echo "$(timestamp)  👀  ͍            Validate column by column - $MODEL_UPPER              👀"
         echo "$(timestamp)  "
         set -x #echo on
         dbt run-operation $macro_validation_all_col && \
