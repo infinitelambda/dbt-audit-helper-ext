@@ -9,9 +9,15 @@ clean-targets:
   - "dbt_packages"
   - "logs"
 
+on-run-end:
+  - > # freeze the source with __YYYYMMDD version
+    {% if flags.WHICH in ["seed", "build"] %}
+      {{ audit_helper_ext.clone_schema(source_schema=target.schema ~ '__seed') }}
+    {% endif %}
+
 seeds:
   audit_helper_ext_test:
-    +schema: "{{ target.schema ~ '__20240909' }}"
+    +schema: "{{ target.schema ~ '__seed' }}"
     sample:
       sample_source_1:
         +alias: sample_1
@@ -32,3 +38,4 @@ seeds:
 vars:
   audit_helper__date_of_process: 2024-09-09
   audit_helper__schema: log
+  audit_helper__schema_schema: "{{ target.schema ~ '__seed' }}"

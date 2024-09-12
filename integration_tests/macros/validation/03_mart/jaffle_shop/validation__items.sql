@@ -3,8 +3,8 @@
 
     {% set dbt_identifier = 'items' %}
 
-    {% set old_database = target.database %}
-    {% set old_schema = target.schema ~ '__' ~ audit_helper_ext.date_of_process(true) %}
+    {% set old_database = var('audit_helper__source_database') %}
+    {% set old_schema = var('audit_helper__source_schema') %}
     {% set old_identifier = 'items' %}
 
     {% if execute %}
@@ -26,8 +26,8 @@
 
     {% set dbt_identifier = 'items' %}
 
-    {% set old_database = target.database %}
-    {% set old_schema = target.schema ~ '__' ~ audit_helper_ext.date_of_process(true) %}
+    {% set old_database = var('audit_helper__source_database') %}
+    {% set old_schema = var('audit_helper__source_schema') %}
     {% set old_identifier = 'items' %}
 
     {%- set primary_keys = ['id'] -%}
@@ -55,8 +55,8 @@
 
     {% set dbt_identifier = 'items' %}
 
-    {% set old_database = target.database %}
-    {% set old_schema = target.schema ~ '__' ~ audit_helper_ext.date_of_process(true) %}
+    {% set old_database = var('audit_helper__source_database') %}
+    {% set old_schema = var('audit_helper__source_schema') %}
     {% set old_identifier = 'items' %}
 
     {%- set primary_keys = ['id'] -%}
@@ -84,8 +84,8 @@
 
     {% set dbt_identifier = 'items' %}
 
-    {% set old_database = target.database %}
-    {% set old_schema = target.schema ~ '__' ~ audit_helper_ext.date_of_process(true) %}
+    {% set old_database = var('audit_helper__source_database') %}
+    {% set old_schema = var('audit_helper__source_schema') %}
     {% set old_identifier = 'items' %}
 
     {%- set primary_keys = ['id'] -%}

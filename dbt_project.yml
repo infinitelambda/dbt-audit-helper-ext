@@ -14,3 +14,5 @@ vars:
   # audit_helper__database: audit_helper
   # audit_helper__schema: log
   # audit_helper__date_of_process: 2024-09-09 # default to UTC now if not specified
+  # audit_helper__source_database: ???
+  # audit_helper__schema_schema: ???

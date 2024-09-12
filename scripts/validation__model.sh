@@ -62,7 +62,7 @@ macro_validation_all_col="validation_all_col__$MODEL_lower"
 echo "$(timestamp)  🛫  Starting the [ $VALIDATION_TYPE_UPPER ] validation(s) against [ $MODEL_UPPER ] ..."
 if [[ "$SKIP_RUN" != "true" ]]; then
     echo "$(timestamp)  "
-    echo "$(timestamp)  🐑  Clone - $MODEL_UPPER assuming that the source (schema___<YYYYMMDD>.$MODEL_UPPER) exists"
+    echo "$(timestamp)  🐑  Clone - $MODEL_UPPER"
     set -x #echo on
     dbt run-operation clone_relation --args {'identifier: '$MODEL'}' && \
     set +x #echo off`

@@ -27,10 +27,10 @@
 
     {# get source location #}
     {% if source_database_versioned %}
-        {% set source_database = audit_helper_ext.get_versioned_name(name=source_database or target.database) %}
+        {% set source_database = audit_helper_ext.get_versioned_name(name=source_database or var('audit_helper__source_database', target.database)) %}
     {% endif %}
     {% if source_schema_versioned %}
-        {% set source_schema = audit_helper_ext.get_versioned_name(name=source_schema or target.schema) %}
+        {% set source_schema = audit_helper_ext.get_versioned_name(name=source_schema or var('audit_helper__schema_schema', target.schema)) %}
     {% endif %}
 
     {# checking source table #}
