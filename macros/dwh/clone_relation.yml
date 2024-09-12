@@ -20,9 +20,5 @@ macros:
       I want to clone the `TABLE1` model data from the source before running dbt:
 
       ```shell
-      ✅ dbt run-operation clone_relation --args '{identifier: TABLE1, source_schema_versioned: true}'
-      # will work since the schemas are different in the versioned fashion
-
       ✅ dbt run-operation clone_relation --args '{identifier: TABLE1}'
-      # will work implicitly since the source schema is versioned (source_schema_versioned=true) by default
       ```

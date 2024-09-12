@@ -1,37 +1,18 @@
-{% macro clone_relation(
-    identifier,
-    source_database=none,
-    source_database_versioned=false,
-    source_schema=none,
-    source_schema_versioned=true
-) %}
+{% macro clone_relation(identifier, source_database=none, source_schema=none) %}
     {{ return(adapter.dispatch('clone_relation', 'audit_helper_ext')(
         identifier=identifier,
         source_database=source_database,
-        source_database_versioned=source_database_versioned,
-        source_schema=source_schema,
-        source_schema_versioned=source_schema_versioned
+        source_schema=source_schema
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation(
-    identifier,
-    source_database,
-    source_database_versioned,
-    source_schema,
-    source_schema_versioned
-) %}
-
+{% macro default__clone_relation(identifier, source_database, source_schema) %}
     {% set copy_mode = 'clone' %}
 
     {# get source location #}
-    {% if source_database_versioned %}
-        {% set source_database = audit_helper_ext.get_versioned_name(name=source_database or var('audit_helper__source_database', target.database)) %}
-    {% endif %}
-    {% if source_schema_versioned %}
-        {% set source_schema = audit_helper_ext.get_versioned_name(name=source_schema or var('audit_helper__schema_schema', target.schema)) %}
-    {% endif %}
+    {% set source_database = source_database or target.database %}
+    {% set source_schema = source_schema or audit_helper_ext.get_versioned_name(name=var('audit_helper__schema_schema', target.schema)) %}
 
     {# checking source table #}
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(
