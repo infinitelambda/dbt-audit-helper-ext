@@ -1,10 +1,13 @@
 # Usage:
-# - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml -p PROJECT_ID -e ENVIRONMENT_ID
-# - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml -p PROJECT_ID -e ENVIRONMENT_ID
+# - Set token: export DBT_API_KEY=dbtc???
+# - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml
+# - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml
 jobs:
   compile: &val_job # Using this as the job template
-    name: "👀 Compile 📍 "
-    account_id: 0 # ❗ Mandatory
+    name: "Compile"
+    account_id: 11553 # ❗ Mandatory
+    project_id: 380261 # ❗ Mandatory
+    environment_id: 328988 # ❗ Mandatory
     execute_steps:
       - "dbt compile"
     execution:
@@ -26,10 +29,10 @@ jobs:
 
   validation_00000: # customers
     <<: *val_job
-    name: "👀 customers 📍 "
+    name: "customers"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: customers"
+      - "dbt run-operation clone_relation --args 'identifier: customers'"
       - "dbt build -s +customers --exclude customers --full-refresh"
       - "dbt build -s customers"
       - "dbt run-operation validations__customers"
@@ -41,10 +44,10 @@ jobs:
 
   validation_00001: # items
     <<: *val_job
-    name: "👀 items 📍 "
+    name: "items"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: items"
+      - "dbt run-operation clone_relation --args 'identifier: items'"
       - "dbt build -s +items --exclude items --full-refresh"
       - "dbt build -s items"
       - "dbt run-operation validations__items"
@@ -56,10 +59,10 @@ jobs:
 
   validation_00002: # orders
     <<: *val_job
-    name: "👀 orders 📍 "
+    name: "orders"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: orders"
+      - "dbt run-operation clone_relation --args 'identifier: orders'"
       - "dbt build -s +orders --exclude orders --full-refresh"
       - "dbt build -s orders"
       - "dbt run-operation validations__orders"
@@ -71,10 +74,10 @@ jobs:
 
   validation_00003: # products
     <<: *val_job
-    name: "👀 products 📍 "
+    name: "products"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: products"
+      - "dbt run-operation clone_relation --args 'identifier: products'"
       - "dbt build -s +products --exclude products --full-refresh"
       - "dbt build -s products"
       - "dbt run-operation validations__products"
@@ -86,10 +89,10 @@ jobs:
 
   validation_00004: # sample_1
     <<: *val_job
-    name: "👀 sample_1 📍 "
+    name: "sample_1"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: sample_1"
+      - "dbt run-operation clone_relation --args 'identifier: sample_1'"
       - "dbt build -s +sample_1 --exclude sample_1 --full-refresh"
       - "dbt build -s sample_1"
       - "dbt run-operation validations__sample_1"
@@ -101,10 +104,10 @@ jobs:
 
   validation_00005: # stores
     <<: *val_job
-    name: "👀 stores 📍 "
+    name: "stores"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: stores"
+      - "dbt run-operation clone_relation --args 'identifier: stores'"
       - "dbt build -s +stores --exclude stores --full-refresh"
       - "dbt build -s stores"
       - "dbt run-operation validations__stores"
@@ -116,10 +119,10 @@ jobs:
 
   validation_00006: # supplies
     <<: *val_job
-    name: "👀 supplies 📍 "
+    name: "supplies"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: supplies"
+      - "dbt run-operation clone_relation --args 'identifier: supplies'"
       - "dbt build -s +supplies --exclude supplies --full-refresh"
       - "dbt build -s supplies"
       - "dbt run-operation validations__supplies"

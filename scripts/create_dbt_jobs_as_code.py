@@ -1,8 +1,8 @@
 ## Usage:
 ##  Run:
-##      export DBT_CLOUD_ACCOUNT_ID=?
-##      export DBT_CLOUD_PROJECT_ID=?
-##      export DBT_CLOUD_ENVIRONMENT_ID=?
+##      export DBT_CLOUD_ACCOUNT_ID=11553 # replace with YOURS
+##      export DBT_CLOUD_PROJECT_ID=380261 # replace with YOURS
+##      export DBT_CLOUD_ENVIRONMENT_ID=328988 # replace with YOURS
 ##      python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart
 ##      python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart sample_target_1
 import os
@@ -20,8 +20,10 @@ CRON_BASE = "0 17 * * 1-5"  # At 17:00 on every day-of-week from Monday through 
 MINUTES_BETWEEN_RUNS = 15   # We don't run all jobs at once to avoid OOM issue
 BASE_JOB_CONFIG = f"""\
   compile: &val_job # Using this as the job template
-    name: "👀 Compile 📍 "
+    name: "Compile"
     account_id: {os.environ.get("DBT_CLOUD_ACCOUNT_ID", 0)} # ❗ Mandatory
+    project_id: {os.environ.get("DBT_CLOUD_PROJECT_ID", 0)} # ❗ Mandatory
+    environment_id: {os.environ.get("DBT_CLOUD_ENVIRONMENT_ID", 0)} # ❗ Mandatory
     execute_steps:
       - "dbt compile"
     execution:
@@ -54,8 +56,9 @@ def generate_yaml_string(models) -> str:
 
     yaml_string = f"""\
 # Usage:
-# - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml -p {os.environ.get("DBT_CLOUD_PROJECT_ID", "PROJECT_ID")} -e {os.environ.get("DBT_CLOUD_ENVIRONMENT_ID", "ENVIRONMENT_ID")}
-# - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml -p {os.environ.get("DBT_CLOUD_PROJECT_ID", "PROJECT_ID")} -e {os.environ.get("DBT_CLOUD_ENVIRONMENT_ID", "ENVIRONMENT_ID")}
+# - Set token: export DBT_API_KEY=dbtc???
+# - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml
+# - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml
 jobs:
 {BASE_JOB_CONFIG}
 """
@@ -85,10 +88,10 @@ jobs:
 
   {job_id}: # { model }
     <<: *val_job
-    name: "👀 {model} 📍 "
+    name: "{model}"
     execute_steps:
       - "dbt run -s validation_log"
-      - "dbt run-operation clone_relation --args 'identifier: {model}"
+      - "dbt run-operation clone_relation --args 'identifier: {model}'"
       - "dbt build -s +{model} --exclude {model} --full-refresh"
       - "dbt build -s {model}"
       - "dbt run-operation validations__{model.lower()}"
@@ -115,6 +118,6 @@ if __name__ == "__main__":
     dbt_cloud_jobs_file_path = f"{dataops_dir}/dbt_cloud_jobs.yml"
     if not os.path.isdir(dataops_dir):
         os.makedirs(dataops_dir)
-    with open(dbt_cloud_jobs_file_path, "w") as f:
+    with open(dbt_cloud_jobs_file_path, mode="w", encoding="utf-8") as f:
         f.write(yaml_string)
     print(f"✅ File: {dbt_cloud_jobs_file_path} created or updated!")
