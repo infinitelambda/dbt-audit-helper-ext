@@ -56,7 +56,7 @@ def generate_yaml_string(models) -> str:
 
     yaml_string = f"""\
 # Usage:
-# - Set token: export DBT_API_KEY=dbtc???
+# - Set token: export DBT_API_KEY=dbtc??? # Job Admin permission at least
 # - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml
 # - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml
 jobs:
