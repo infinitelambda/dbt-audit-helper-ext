@@ -3,47 +3,33 @@
 
 <img align="right" width="150" height="150" src="./docs/assets/img/il-logo.png">
 
-[![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
-[![support-dbt](https://img.shields.io/badge/support-dbt%20v1.6+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
+<!-- [![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
+[![support-dbt](https://img.shields.io/badge/support-dbt%20v1.6+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda) -->
 
 Extended Audit Helper solution 💪
 
 ## Installation
 
-- Add to `packages.yml` file:
+- Copy this repo to your dbt project. We will treat it as the local package until it's published
+- Add to `packages.yml` or `dependencies.yml` file:
 
 ```yml
 packages:
-  - package: infinitelambda/audit_helper_ext
-    version: [">=1.0.0", "<1.1.0"]
+  - local: dbt-audit-helper-ext
 ```
 
-Or use the latest version from git:
-
-```yml
-packages:
-  - git: "https://github.com/infinitelambda/dbt-audit-helper-ext.git"
-    revision: 1.0.0 # 1.0.0b1
-```
-
-- (Optional) Configure database & schema in `dbt_project.yml` file:
-
-```yml
-vars:
-  # (optional) default to `target.database` if not specified
-  audit_helper_ext__database: COMMON
-  # (optional) default to `target.schema` if not specified
-  audit_helper_ext__schema: VALIDATION
-```
-
-- Create/Migrate the `audit-helper`'s DDL resources
+- Deploy the resources:
 
 ```bash
 dbt deps
 dbt run -s audit_helper_ext
 ```
 
-## Quick Demo
+## Validation Strategy
+
+TODO
+
+## Demo
 
 TODO
 
