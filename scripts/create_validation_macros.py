@@ -13,10 +13,14 @@
 ##  Run:
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 ##      python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart sample_target_1
-import operator
 import os
 import re
 import sys
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+
+from scripts.common import get_args, get_models
 
 
 def create_validation_count(model_name, schema_name, database_name):
@@ -163,26 +167,6 @@ def create_validations(model_name, model_dir, schema_name, database_name):
     return output_str
 
 
-def get_models(directory: str = "models/03_mart", name=None) -> dict:
-    """
-    Collect list of models (dict[model_name, model_dir]) in the mart folder
-    """
-    models = []
-    for dirpath, _, filenames in os.walk(directory):
-        for file in filenames:
-            if file.endswith(".sql"):
-                filename = os.path.splitext(file)[0]
-                if name is not None and filename != name:
-                    continue
-                models.append(
-                    dict(
-                        model_name=filename,
-                        model_dir=dirpath,
-                    )
-                )
-    return sorted(models, key=operator.itemgetter("model_name"))
-
-
 def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):
     """Extract model config if exists"""
     with open(f"{model_path}.sql", "r") as f:
@@ -247,14 +231,7 @@ def create_validation_file(model: dict):
 
 
 if __name__ == "__main__":
-    mart_dir = "models/03_mart"
-    model_name = None
-    if len(sys.argv) < 2:
-        print(f"💁 Assumming the mart directory is [{mart_dir}]")
-    else:
-        mart_dir = sys.argv[1]
-        if len(sys.argv) > 2:
-            model_name = sys.argv[2]
+    mart_dir, model_name = get_args()
 
     models = get_models(directory=mart_dir, name=model_name)
     for m in models:

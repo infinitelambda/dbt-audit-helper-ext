@@ -1,0 +1,130 @@
+# Usage:
+# - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml -p PROJECT_ID -e ENVIRONMENT_ID
+# - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml -p PROJECT_ID -e ENVIRONMENT_ID
+jobs:
+  compile: &val_job # Using this as the job template
+    name: "👀 Compile 📍 "
+    account_id: 0 # ❗ Mandatory
+    execute_steps:
+      - "dbt compile"
+    execution:
+      timeout_seconds: 0
+    generate_docs: false
+    run_generate_sources: false
+    schedule:
+      cron: "0 4 * * 1-5" # At 04:00 on every day-of-week from Monday through Friday.
+    settings:
+      target_name: default
+      threads: 6
+    triggers:
+      custom_branch_only: false
+      git_provider_webhook: false
+      github_webhook: false
+      schedule: false
+    job_type: other
+
+
+  validation_00000: # customers
+    <<: *val_job
+    name: "👀 customers 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: customers"
+      - "dbt build -s +customers --exclude customers --full-refresh"
+      - "dbt build -s customers"
+      - "dbt run-operation validations__customers"
+    schedule:
+      cron: "15 17 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00001: # items
+    <<: *val_job
+    name: "👀 items 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: items"
+      - "dbt build -s +items --exclude items --full-refresh"
+      - "dbt build -s items"
+      - "dbt run-operation validations__items"
+    schedule:
+      cron: "15 17 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00002: # orders
+    <<: *val_job
+    name: "👀 orders 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: orders"
+      - "dbt build -s +orders --exclude orders --full-refresh"
+      - "dbt build -s orders"
+      - "dbt run-operation validations__orders"
+    schedule:
+      cron: "30 17 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00003: # products
+    <<: *val_job
+    name: "👀 products 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: products"
+      - "dbt build -s +products --exclude products --full-refresh"
+      - "dbt build -s products"
+      - "dbt run-operation validations__products"
+    schedule:
+      cron: "45 17 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00004: # sample_1
+    <<: *val_job
+    name: "👀 sample_1 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: sample_1"
+      - "dbt build -s +sample_1 --exclude sample_1 --full-refresh"
+      - "dbt build -s sample_1"
+      - "dbt run-operation validations__sample_1"
+    schedule:
+      cron: "0 18 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00005: # stores
+    <<: *val_job
+    name: "👀 stores 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: stores"
+      - "dbt build -s +stores --exclude stores --full-refresh"
+      - "dbt build -s stores"
+      - "dbt run-operation validations__stores"
+    schedule:
+      cron: "15 18 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00006: # supplies
+    <<: *val_job
+    name: "👀 supplies 📍 "
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: supplies"
+      - "dbt build -s +supplies --exclude supplies --full-refresh"
+      - "dbt build -s supplies"
+      - "dbt run-operation validations__supplies"
+    schedule:
+      cron: "30 18 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled

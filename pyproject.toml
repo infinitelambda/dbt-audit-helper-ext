@@ -89,7 +89,8 @@ build = [
   {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
 ]
 gen = [
-  {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart"}
+  {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart"},
+  {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart"}
 ]
 git-push-github = [
   {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
