@@ -1,5 +1,7 @@
 # Usage:
-# - Set token: export DBT_API_KEY=dbtc??? # Job Admin permission at least
+# - Set env vars:
+#     export DBT_CLOUD_ACCOUNT_ID=11553
+#     export DBT_API_KEY=dbtc??? # Job Admin permission at least
 # - Plan: dbt-jobs-as-code plan dataops/dbt_cloud_jobs.yml
 # - Sync: dbt-jobs-as-code sync dataops/dbt_cloud_jobs.yml
 jobs:

@@ -13,6 +13,10 @@ dbt-cloud: # for dbt Cloud CLI
   project-id: 380261
   account-host: cloud.getdbt.com
 
+on-run-start:
+  - > # create target.schema if not exists
+    create schema if not exists {{ target.schema }}
+
 on-run-end:
   - > # freeze the source with __YYYYMMDD version = audit_helper_ext_seed__YYYYMMDD
     {% if flags.WHICH in ["seed", "build"] %}
