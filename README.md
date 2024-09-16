@@ -32,7 +32,7 @@ dbt run -s audit_helper_ext
 
 This repo contains the **useful macros** to support for saving the historical validation results into the DWH table ([`validation_log`](./models/validation_log.sql)), together with the latest summary table ([`validation_log_report`](./models/validation_log_report.sql)).
 
-There are 3 main types of valition:
+There are 3 main types of validation:
 
 - Count (`count`, [source](./macros/validation/get_validation_count.sql))
 - Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
