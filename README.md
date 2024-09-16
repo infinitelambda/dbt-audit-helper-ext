@@ -67,7 +67,7 @@ Finnally, check the validation log report, and decide what to do next steps:
 
 ![alt text](./docs/assets/img/snowflake-report-table.png)
 
-💡 Optionally, let's build the Sheet to communicate the outcome with clent, here is the BigQuery+GGSheet sample:
+💡 Optionally, let's build the [Sheet](https://docs.google.com/spreadsheets/d/1473_-s3R9D1Sx117fzqhY8SqjnqtfDmni6qKw_9tLXE/edit?usp=sharing) to communicate the outcome with clent, here is the BigQuery+GGSheet sample:
 
 ![alt text](./docs/assets/img/google-sheet-validation_resul.png)
 
