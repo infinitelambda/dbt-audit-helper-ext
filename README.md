@@ -73,7 +73,14 @@ Finnally, check the validation log report, and decide what to do next steps:
 
 ## Demo
 
-TODO
+<div>
+  <a href="https://www.loom.com/share/bb20f033d92544bab2009984d661176a">
+    <p>dbt-audit-helper Extension - First Version</p>
+  </a>
+  <a href="https://www.loom.com/share/bb20f033d92544bab2009984d661176a">
+    <img style="max-width:300px;" src="https://cdn.loom.com/sessions/thumbnails/bb20f033d92544bab2009984d661176a-3c75e1c6e700670e-full-play.gif">
+  </a>
+</div>
 
 ## How to Contribute
 
