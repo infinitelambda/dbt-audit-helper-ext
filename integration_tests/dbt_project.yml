@@ -17,7 +17,7 @@ on-run-end:
 
 seeds:
   audit_helper_ext_test:
-    +schema: audit_helper_ext_seed
+    +schema: audit_helper_ext_seed # try to mimic the source (legacy data)
     sample:
       sample_source_1:
         +alias: sample_1
@@ -36,6 +36,5 @@ seeds:
         +alias: supplies
 
 vars:
-  audit_helper__schema: log
   audit_helper__date_of_process: "2024-09-12"
   audit_helper__source_schema: audit_helper_ext_seed
