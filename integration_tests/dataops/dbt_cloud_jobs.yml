@@ -5,9 +5,9 @@
 jobs:
   compile: &val_job # Using this as the job template
     name: "Compile"
-    account_id: 11553 # ❗ Mandatory
-    project_id: 380261 # ❗ Mandatory
-    environment_id: 328988 # ❗ Mandatory
+    account_id: 0 # ❗ Mandatory, use your value
+    project_id: 0 # ❗ Mandatory, use your value
+    environment_id: 0 # ❗ Mandatory, use your value
     execute_steps:
       - "dbt compile"
     execution:

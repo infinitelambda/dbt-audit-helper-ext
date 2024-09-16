@@ -1,8 +1,8 @@
 ## Usage:
 ##  Run:
-##      export DBT_CLOUD_ACCOUNT_ID=11553 # replace with YOURS
-##      export DBT_CLOUD_PROJECT_ID=380261 # replace with YOURS
-##      export DBT_CLOUD_ENVIRONMENT_ID=328988 # replace with YOURS
+##      export DBT_CLOUD_ACCOUNT_ID=11553 # ❗ Mandatory, use your value
+##      export DBT_CLOUD_PROJECT_ID=380261 # ❗ Mandatory, use your value
+##      export DBT_CLOUD_ENVIRONMENT_ID=328988 # ❗ Mandatory, use your value
 ##      python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart
 ##      python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart sample_target_1
 import os
@@ -15,15 +15,14 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from scripts.common import get_args, get_models
 
 
-deactivate_models = []
 CRON_BASE = "0 17 * * 1-5"  # At 17:00 on every day-of-week from Monday through Friday.
 MINUTES_BETWEEN_RUNS = 15   # We don't run all jobs at once to avoid OOM issue
 BASE_JOB_CONFIG = f"""\
   compile: &val_job # Using this as the job template
     name: "Compile"
-    account_id: {os.environ.get("DBT_CLOUD_ACCOUNT_ID", 0)} # ❗ Mandatory
-    project_id: {os.environ.get("DBT_CLOUD_PROJECT_ID", 0)} # ❗ Mandatory
-    environment_id: {os.environ.get("DBT_CLOUD_ENVIRONMENT_ID", 0)} # ❗ Mandatory
+    account_id: {os.environ.get("DBT_CLOUD_ACCOUNT_ID", 0)} # ❗ Mandatory, use your value
+    project_id: {os.environ.get("DBT_CLOUD_PROJECT_ID", 0)} # ❗ Mandatory, use your value
+    environment_id: {os.environ.get("DBT_CLOUD_ENVIRONMENT_ID", 0)} # ❗ Mandatory, use your value
     execute_steps:
       - "dbt compile"
     execution:
@@ -75,14 +74,8 @@ jobs:
             if minutes == 0:
                 hours = (hours + 1) % 24
         cron_expression = f"{minutes} {hours} * * 1-5"
-
-        # Don't schedule the jobs of the deactivated models
-        if model in deactivate_models:
-            scheduled = False
-            job_type = 'other'
-        else:
-            scheduled = True
-            job_type = 'scheduled'
+        scheduled = True
+        job_type = 'scheduled'
 
         job_config = f"""\
 
