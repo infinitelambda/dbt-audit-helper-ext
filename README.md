@@ -38,7 +38,7 @@ There are 3 main types of valition:
 - Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
 - Row by Row (`full`, [source](./macros/validation/get_validation_full.sql))
 
-Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_
+Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_.
 
 Depending on projects, it might be vary in the strategy of validation. Therefore, in this package, we're suggesting 1 approach that we've used successfully in the real-life migration project (Informatica to dbt).
 
@@ -57,13 +57,14 @@ Depending on projects, it might be vary in the strategy of validation. Therefore
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD1` 👍
 - _Scenario 2: Validate the incremental run against D2 based on D1_
   - Configure source yml to use `source__YYYYMMD2`
-  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already
+  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already (e.g. [clone_relation](./macros/dwh/clone_relation.sql))
   - Run incrementally dbt to build mart tables
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD2` 👍👍
 
 Finnally, check the validation log report, and decide what to do next steps:
 
 🛩️ Sample report table on Snowflake:
+
 ![alt text](./docs/assets/img/snowflake-report-table.png)
 
 💡 Optionally, let's build the Sheet to communicate the outcome with clent, here is the BigQuery+GGSheet sample:
