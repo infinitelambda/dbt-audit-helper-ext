@@ -30,7 +30,7 @@ dbt run -s audit_helper_ext
 
 ## Validation Strategy
 
-This repo contains the **useful macros** to support for saving the historical validation results into the DWH table (named [`validation_log`](./models/validation_log.sql)), together with the latest summary table (named named [`validation_log_report`](./models/validation_log_report.sql)).
+This repo contains the **useful macros** to support for saving the historical validation results into the DWH table ([`validation_log`](./models/validation_log.sql)), together with the latest summary table ([`validation_log_report`](./models/validation_log_report.sql)).
 
 There are 3 main types of valition:
 
@@ -68,7 +68,7 @@ Finnally, check the validation log report, and decide what to do next steps:
 
 💡 Optionally, let's build the Sheet to communicate the outcome with clent, here is the BigQuery+GGSheet sample:
 
-![alt text](./docs/assets/img/google-sheet-validation_result.png)
+![alt text](./docs/assets/img/google-sheet-validation_resul.png)
 
 ## Demo
 
