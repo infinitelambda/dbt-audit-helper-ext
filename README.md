@@ -7,7 +7,7 @@ Extended Audit Helper solution 💪
 
 Supporting:
 
-- Snowflake
+- Snowflake (default)
 - BigQuery
 
 ## Installation
