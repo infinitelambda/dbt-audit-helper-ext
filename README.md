@@ -88,11 +88,7 @@ Finnally, check the validation log report, and decide what to do next steps:
 
 👉 See [CONTRIBUTING guideline](./CONTRIBUTING.md)
 
-<!-- 🌟 And then, kudos to **our beloved Contributors**:
-
-<a href="https://github.com/infinitelambda/dbt-audit-helper-ext/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=infinitelambda/dbt-audit-helper-ext" alt="Contributors" />
-</a> -->
+🌟 And finally, kudos to **our beloved OG Contributors** who orginally developed the macros and scripts in this package: [@william](https://gitlab.infinitelambda.com/william), [@duc](https://gitlab.infinitelambda.com/duc), [@csaba.elekes](https://gitlab.infinitelambda.com/csaba.elekes), [@adrien.boutreau](https://gitlab.infinitelambda.com/adrien.boutreau) & [@dat](https://gitlab.infinitelambda.com/dat)
 
 ## About Infinite Lambda
 
