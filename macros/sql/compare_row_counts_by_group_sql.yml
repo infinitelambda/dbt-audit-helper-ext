@@ -1,0 +1,42 @@
+macros:
+  - name: compare_row_counts_by_group_sql
+    description: |
+      This macro does a comparison of the row counts in two relations with a group by. This allows more detailed when comparing row counts.
+
+      ## Output
+
+      Calling this macro on two different relations will return a table comparing the row counts of each group-by.
+
+      | group_by_column  | count_a | count_b | diff | diff_status |
+      | ---------------- | ------- | ------- | ---- | ----------- |
+      | value_1          |   22017 |   22017 |    0 | ✅           |
+      | value_2          |   39931 |   39931 |    0 | ✅           |
+
+      ## Arguments
+
+      - a_relation and b_relation: The Relations you want to compare.
+      - group_by: The column you want to group-by. This can be a string (`column_a`), or a list of string in csv format (`column_a,column_b`), or a list of string (`["column_a", "column_b"]`).
+
+      ## Usage
+
+      {% raw %}
+
+      ```sql
+
+      {% set old_relation = adapter.get_relation(
+            database = "old_database",
+            schema = "old_schema",
+            identifier = "fct_orders"
+      ) -%}
+
+      {% set dbt_relation = ref('fct_orders') %}
+
+      {{ audit_helper_ext.compare_row_counts_by_group_sql(
+          a_relation = old_relation,
+          b_relation = dbt_relation,
+          group_by = 'store_id'
+      ) }}
+
+      ```
+
+      {% endraw %}

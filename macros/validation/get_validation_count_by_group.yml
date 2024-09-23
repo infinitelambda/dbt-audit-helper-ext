@@ -1,0 +1,5 @@
+macros:
+  - name: get_validation_count_by_group
+    description: |
+      Execute the Audit Query returned by `audit_helper_ext.compare_row_counts_by_group_sql`, and
+      log the result into the validation log table.

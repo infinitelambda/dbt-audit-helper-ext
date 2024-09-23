@@ -1,0 +1,17 @@
+macros:
+  - name: convert_to_str_and_list
+    description: |
+      Given a variable of type string or list, and turn into a csv string and a list. This allows flexibility when running dbt operation with list as an argument.
+
+      Arguments:
+      - variable: can be either string, string in csv format, or a list of string
+
+      Returns: [str,list]
+
+      For example:
+          --args 'variable: value1'
+              Returns ['value1', ['value1']]
+          --args 'variable: value1,value2'
+              Returns ['value1,value2', ['value1', 'value2']]
+          --args 'variable: ["value1", "value2"]'
+              Returns ['value1,value2', ['value1', 'value2']]

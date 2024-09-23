@@ -1,0 +1,57 @@
+macros:
+  - name: show_columns_conflicts_sql
+    description: |
+      This macro does a comparison of columns' values in two relations. This macro is useful after you've run `audit_helper.compare_all_columns` and you want to dive deeper the different values and where the difference is.
+
+      ## Output
+
+      Be default, the generated query returns a summary of the count of conflicting values.
+
+      | store_name__a  | store_name__b  | count_conflicts |
+      | -------------- | -------------- | --------------- |
+      | Jaffle         | JAFFLE         |               2 |
+      | kika store     | KIKA STORE     |               1 |
+
+      Setting the `summarize` argument to `false` lets you see the specific row with primary key.
+
+      | id                                   | store_name  |  in_a |  in_b |
+      | ------------------------------------ | ----------- | ----- | ----- |
+      | 00098740-d7dc-453f-878b-f7e5d58ed908 | JAFFLE      | False |  True |
+      | 00098740-d7dc-453f-878b-f7e5d58ed908 | Jaffle      |  True | False |
+      | 001c128a-5248-40d2-80ed-7bfd067dc524 | JAFFLE      | False |  True |
+      | 001c128a-5248-40d2-80ed-7bfd067dc524 | Jaffle      |  True | False |
+      | 001d3e4d-bb1f-4f31-a244-aed39b5555e0 | KIKA STORE  | False |  True |
+      | 001d3e4d-bb1f-4f31-a244-aed39b5555e0 | kika store  |  True | False |
+
+      ## Arguments
+
+      - a_relation and b_relation: The Relations you want to compare.
+      - primary_keys: The primary key of the model. Used to sort unmatched results for row-by-row validation. Must be a unique key (unique and never null) in both tables, otherwise the join won't work as expected. This can be a string (`column_a`), or a list of string in csv format (`column_a,column_b`), or a list of string (`["column_a", "column_b"]`).
+      - columns_to_compare: Columns you want to see the conflicting values. This can be a string (`column_a`), or a list of string in csv format (`column_a,column_b`), or a list of string (`["column_a", "column_b"]`).
+      - summarize (optional): Allows you to switch between a summary or detailed view of the compared data. Defaults to true.
+      - limit (optional): Allows you to limit the number of rows returned. Defaults to 100.
+
+      ## Usage
+
+      {% raw %}
+
+      ```sql
+
+      {% set old_relation = adapter.get_relation(
+            database = "old_database",
+            schema = "old_schema",
+            identifier = "fct_orders"
+      ) -%}
+
+      {% set dbt_relation = ref('fct_orders') %}
+
+      {{ audit_helper_ext.show_columns_conflicts_sql(
+          a_relation = old_relation,
+          b_relation = dbt_relation,
+          primary_keys = 'id',
+          columns_to_compare = 'order_total'
+      ) }}
+
+      ```
+
+      {% endraw %}
