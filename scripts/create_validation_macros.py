@@ -167,6 +167,69 @@ def create_validations(model_name, model_dir, schema_name, database_name):
     return output_str
 
 
+def create_validation_count_by_group(model_name, schema_name, database_name):
+    """Template of `validation_count_by_group__model` macro"""
+    output_str = f"""
+{{# Row count by group #}}
+{{%- macro validation_count_by_group__{model_name.lower()}(group_by) %}}
+
+    {{% set dbt_identifier = '{model_name}' %}}
+
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
+    {{% set old_identifier = '{model_name}' %}}
+
+    {{% if execute %}}
+
+        {{{{ audit_helper_ext.get_validation_count_by_group(
+            dbt_identifier=dbt_identifier,
+            old_database=old_database,
+            old_schema=old_schema,
+            old_identifier=old_identifier,
+            group_by=group_by
+        ) }}}}
+
+    {{% endif %}}
+
+{{% endmacro %}}"""
+
+    return output_str
+
+
+def create_validation_col(model_name, model_dir, schema_name, database_name):
+    """Template of `validation_col__model` macro"""
+    output_str = f"""
+{{# Show column conflicts #}}
+{{%- macro validation_col__{model_name.lower()}(columns_to_compare, summarize=true, limit=100) -%}}
+
+    {{% set dbt_identifier = '{model_name}' %}}
+
+    {{% set old_database = {database_name} %}}
+    {{% set old_schema = {schema_name} %}}
+    {{% set old_identifier = '{model_name}' %}}
+
+    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
+
+    {{% if execute %}}
+
+        {{{{ audit_helper_ext.show_validation_columns_conflicts(
+            dbt_identifier=dbt_identifier,
+            old_database=old_database,
+            old_schema=old_schema,
+            old_identifier=old_identifier,
+            primary_keys=primary_keys,
+            columns_to_compare=columns_to_compare,
+            summarize=summarize,
+            limit=limit
+        ) }}}}
+
+    {{% endif %}}
+
+{{% endmacro %}}"""
+
+    return output_str
+
+
 def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):
     """Extract model config if exists"""
     with open(f"{model_path}.sql", "r") as f:
@@ -208,6 +271,8 @@ def create_validation_file(model: dict):
     )
     macro_full = create_validation_full(model_name, model_dir, schema_name, database_name)
     macro_all = create_validations(model_name, model_dir, schema_name, database_name)
+    macro_count_by_group = create_validation_count_by_group(model_name, schema_name, database_name)
+    macro_col = create_validation_col(model_name, model_dir, schema_name, database_name)
 
     output_str = (
         macro_count
@@ -217,6 +282,10 @@ def create_validation_file(model: dict):
         + macro_full
         + "\n\n"
         + macro_all
+        + "\n\n"
+        + macro_count_by_group
+        + "\n\n"
+        + macro_col
         + "\n"
     ).lstrip()
 

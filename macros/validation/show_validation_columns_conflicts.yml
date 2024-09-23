@@ -1,0 +1,4 @@
+macros:
+  - name: show_validation_columns_conflicts
+    description: |
+      Execute the Audit Query returned by `audit_helper_ext.show_columns_conflicts_sql`.
