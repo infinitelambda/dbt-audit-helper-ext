@@ -12,21 +12,72 @@ Supporting:
 
 ## Installation
 
-- Copy this repo to your dbt project. We will treat it as the local package until it's published
-- Add to `packages.yml` or `dependencies.yml` file:
+- **Add to `packages.yml` file**:
 
-```yml
-packages:
-  - local: dbt-audit-helper-ext
-```
+  ```yml
+  packages:
+    - package: infinitelambda/audit_helper_ext
+      version: [">=0.1.0", "<1.0.0"]
+      # keep an eye on the latest version, and change it accordingly
+  ```
 
-- Deploy the resources:
+  Or use the latest version from git:
 
-```bash
-dbt deps
-dbt run -s audit_helper_ext
-# it will create log table and the summary view on top
-```
+  ```yml
+  packages:
+    - git: "https://github.com/infinitelambda/dbt-tags"
+      revision: <release version or tag>
+  ```
+
+  And run `dbt deps` to install the package!
+
+- **Initialize the resources**:
+
+  ```bash
+  dbt deps
+  dbt run -s audit_helper_ext
+  ```
+
+  This step will create log table (`validation_log`) and the summary view on top (`validation_log_report`)
+
+- **Generate the validation macros**:
+
+  Firstly, we need to determine the location (database and schema) of the source tables:
+
+  ** _If all source tables are in the same location_, we can use the environment variable to set these values:
+
+  ```bash
+  export SOURCE_SCHEMA=MY_SOURCE_SCHEMA
+  export SOURCE_DATABASE=MY_SOURCE_DATABASE
+  ```
+
+  ** _If having multiple locations_, we can start to configure the location inside each dbt models' `config` block:
+
+  ```sql
+  {{
+    config(
+      ...
+      audit_helper__source_database = 'MY_SOURCE_SCHEMA',
+      audit_helper__source_schema = 'MY_SOURCE_DATABASE'
+    )
+  }}
+  ...
+  ```
+
+  Then, we can start generating the validation macro files now.
+  Let's say we need to validate all models in `03_mart` directory:
+
+  ```bash
+  python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
+  ```
+
+  Or just aim to validation a specific model which is `03_mart/dim_sales`:
+
+  ```bash
+  python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart dim_sales
+  ```
+
+  Finally, check out your dbt project at the directory named `macros/validation`!
 
 ## Validation Strategy
 
@@ -40,7 +91,7 @@ There are 3 main types of validation:
 
 Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_.
 
-Depending on projects, it might be vary in the strategy of validation. Therefore, in this package, we're suggesting 1 approach that we've used successfully in the real-life migration project (Informatica to dbt).
+Depending on projects, it might be vary in the strategy of validation. Therefore, in this package, we're suggesting 1 first approach that we've used successfully in the real-life migration project (Informatica to dbt).
 
 **Context**: Our dbt project has 3 layers (staging, intermediate, and mart). Each mart model will have the independant set of upstream models, or it is the isolated pipeline for each mart model. We want to validate mart models only.
 
@@ -88,7 +139,7 @@ Finnally, check the validation log report, and decide what to do next steps:
 
 👉 See [CONTRIBUTING guideline](./CONTRIBUTING.md)
 
-🌟 And finally, kudos to **our beloved OG Contributors** who orginally developed the macros and scripts in this package: [@william](https://gitlab.infinitelambda.com/william), [@duc](https://gitlab.infinitelambda.com/duc), [@csaba.elekes](https://gitlab.infinitelambda.com/csaba.elekes), [@adrien.boutreau](https://gitlab.infinitelambda.com/adrien.boutreau) & [@dat](https://gitlab.infinitelambda.com/dat)
+🌟 And finally, kudos to **our beloved OG Contributors** who orginally developed the macros and scripts in this package: [@William](https://www.linkedin.com/in/william-horel), [@Duc](https://www.linkedin.com/in/ducche), [@Csabi](https://www.linkedin.com/in/csaba-elekes-data), [@Adrien](https://www.linkedin.com/in/adrien-boutreau) & [@Dat](https://www.linkedin.com/in/datnguye)
 
 ## About Infinite Lambda
 

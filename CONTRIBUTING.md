@@ -90,7 +90,7 @@ See here for details for running existing integration tests and adding new ones:
 Once you've added all of these files, in the `poetry shell`, you should be able to run:
 
 ```bash
-poe audit-helper-test      # test the package and the audit-helper result
+poe all      # test the package and the audit-helper result
 ```
 
 ## Committing
@@ -107,7 +107,7 @@ There are 2 main checks:
 
 Code can be merged into the current development branch `main` by opening a pull request. A `dbt-audit-helper-ext` maintainer will review your PR. They may suggest code revision for style or clarity, or request that you add unit or integration test(s). These are good things! We believe that, with a little bit of help, anyone can contribute high-quality code.
 
-Automated tests run via GitHub Actions. If you're a first-time contributor, all tests (including code checks and unit tests) will require a maintainer to approve. Changes in the `dbt-audit-helper-ext` repository trigger integration tests against Snowflake 💰.
+Automated tests run via GitHub Actions or via manual runs. If you're a first-time contributor, all tests (including code checks and unit tests) will require a maintainer to approve. Changes in the `dbt-audit-helper-ext` repository trigger integration tests against Snowflake 💰.
 
 Once all tests are passing and your PR has been approved, a `dbt-audit-helper-ext` maintainer will merge your changes into the active development branch. And that's it!
 
