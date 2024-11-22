@@ -42,7 +42,7 @@ Supporting:
 
 - **Generate the validation macros**:
 
-  > Check `/scripts` directory for all the codegen utilities
+  > Check [`/scripts`](https://github.com/infinitelambda/dbt-audit-helper-ext/tree/main/scripts) directory for all the codegen utilities
 
   Firstly, we need to determine the location (database and schema) of the source tables:
 
@@ -76,7 +76,9 @@ Supporting:
   Or just aim to validation a specific model which is `03_mart/dim_sales`:
 
   ```bash
-  python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart dim_sales
+  python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py \
+    models/03_mart \
+    dim_sales
   ```
 
   Finally, check out your dbt project at the directory named `macros/validation`!
