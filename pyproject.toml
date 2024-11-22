@@ -92,11 +92,6 @@ gen = [
   {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart"},
   {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart"}
 ]
-git-push-github = [
-  {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
-  {cmd = "git push"},
-  {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"}
-]
 validate-sample-1 = [
   {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1"}
 ]
@@ -130,4 +125,15 @@ validate = [
 all = [
   {cmd = "poe init"},
   {cmd = "poe validate"},
+]
+git-push-github = [
+  {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
+  {cmd = "git push"},
+  {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"}
+]
+git-pull-github = [
+  {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
+  {cmd = "git pull"},
+  {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"},
+  {cmd = "git push"}
 ]
