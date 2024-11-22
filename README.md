@@ -42,6 +42,8 @@ Supporting:
 
 - **Generate the validation macros**:
 
+  > Check `/scripts` directory for all the codegen utilities
+
   Firstly, we need to determine the location (database and schema) of the source tables:
 
   ** _If all source tables are in the same location_, we can use the environment variable to set these values:
