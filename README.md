@@ -25,8 +25,8 @@ Supporting:
 
   ```yml
   packages:
-    - git: "https://github.com/infinitelambda/dbt-tags"
-      revision: <release version or tag>
+    - git: "https://github.com/infinitelambda/dbt-audit-helper-ext"
+      revision: <release version or tag> # 0.1.0
   ```
 
   And run `dbt deps` to install the package!
