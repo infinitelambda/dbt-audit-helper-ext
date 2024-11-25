@@ -5,10 +5,16 @@
 
 Extended Audit Helper solution 💪
 
-Supporting:
+This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
 
-- Snowflake (default)
-- BigQuery
+- _Historical Logging_: Automatically saving detailed validation results into a designated DWH table for comprehensive audit tracking
+- _Latest Summary Reporting_: Maintaining a concise, up-to-date summary table for quick insights into the current state of validations
+- _Codegen and Scripts_: Simplifying workflows, particularly valuable for migration projects by automating repetitive tasks
+
+Data Warehouses:
+
+- ❄️ Snowflake (default)
+- ☁️ BigQuery
 
 ## Installation
 
