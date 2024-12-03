@@ -1,9 +1,14 @@
 <!-- markdownlint-disable no-inline-html no-alt-text -->
 # dbt-audit-helper-ext
 
-<img align="right" width="150" height="150" src="./docs/assets/img/il-logo.png">
+<img align="right" width="150" height="150" src="https://raw.githubusercontent.com/infinitelambda/dbt-audit-helper-ext/main/docs/assets/img/il-logo.png">
 
-Extended Audit Helper solution 💪
+**Extended Audit Helper solution 💪**
+
+[![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
+[![support-snowflake](https://img.shields.io/badge/support-Snowflake-7faecd?logo=snowflake&logoColor=7faecd)](https://docs.snowflake.com?ref=infinitelambda)
+[![support-bigquery](https://img.shields.io/badge/support-BigQuery-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/bigquery/docs?ref=infinitelambda)
+[![support-dbt](https://img.shields.io/badge/support-dbt%20v1.7+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
 
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
 
@@ -11,7 +16,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 - _Latest Summary Reporting_: Maintaining a concise, up-to-date summary table for quick insights into the current state of validations
 - _Codegen and Scripts_: Simplifying workflows, particularly valuable for migration projects by automating repetitive tasks
 
-Data Warehouses:
+**Data Warehouses**:
 
 - ❄️ Snowflake (default)
 - ☁️ BigQuery
