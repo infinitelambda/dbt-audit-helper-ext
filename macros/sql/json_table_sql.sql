@@ -23,3 +23,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro sqlserver__json_table_sql(json_column) %}
+
+  {% set sql -%}
+    openjson({{ json_column }}) with (result nvarchar(max) '$' as json)
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

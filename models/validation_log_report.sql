@@ -8,13 +8,31 @@
 
 with latest_log as (
 
-  select *
-  from {{ ref('validation_log') }}
-  where 1=1
-  qualify row_number() over (
-    partition by mart_table, dbt_cloud_job_url, date_of_process, validation_type
-    order by dbt_cloud_job_start_at desc
-  ) = 1
+  {% if target.type == "sqlserver" -%}
+
+    select *
+    from (
+      select
+          *,
+          row_number() over (
+            partition by mart_table, dbt_cloud_job_url, date_of_process, validation_type
+            order by dbt_cloud_job_start_at desc
+          ) rn
+      from {{ ref('validation_log') }}
+    ) as T
+    where T.rn = 1
+    
+  {% else -%}
+
+    select *
+    from {{ ref('validation_log') }}
+    where 1=1
+    qualify row_number() over (
+      partition by mart_table, dbt_cloud_job_url, date_of_process, validation_type
+      order by dbt_cloud_job_start_at desc
+    ) = 1
+
+  {% endif %}
 
 ),
 
@@ -22,10 +40,22 @@ extract_data as (
 
   select
     mart_table,
-    {% set mart_paths -%}
-      split(mart_path, '/')
-    {%- endset %}
-    cast({{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as {{ dbt.type_string() }}) as mart_folder,
+    {% if target.type == "sqlserver" -%}
+      cast(
+        reverse(
+          substring(
+            reverse(mart_path), 
+            charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) + 1,
+            charindex('/', reverse(mart_path)) - charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) - 1
+          )
+        ) as {{ dbt.type_string() }}
+      ) as mart_folder,
+    {% else -%}
+      {% set mart_paths -%}
+        split(mart_path, '/')
+      {%- endset %}
+      cast({{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as {{ dbt.type_string() }}) as mart_folder,
+    {% endif %}
     dbt_cloud_job_url,
     dbt_cloud_job_run_url,
     date_of_process,
@@ -72,31 +102,62 @@ extract_data as (
             then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_dbt_row_count,
-    {{ string_agg_sql() }}(
-      case
-        when validation_type = 'upstream_row_count'
-          then concat(
-              case
-                when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
-                when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
-              end,
-              {{ json_field_sql('result', 'model_name') }}, ': ',
-              {{ json_field_sql('result', 'row_count') }}, ' row(s)',
-              '\n'
-            )
-        end
-      {% if target.type == "bigquery" -%}
-        order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer)
+    {% if target.type == "sqlserver" -%}
+      string_agg(
+        case
+          when validation_type = 'upstream_row_count'
+            then concat(
+                case
+                  when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
+                  when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
+                end,
+                {{ json_field_sql('result', 'model_name') }}, ': ',
+                {{ json_field_sql('result', 'row_count') }}, ' row(s)',
+                char(13) + char(10)
+              )
+          end, ''
+        ) within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
+    {% else -%}
+      {{ string_agg_sql() }}(
+        case
+          when validation_type = 'upstream_row_count'
+            then concat(
+                case
+                  when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
+                  when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
+                end,
+                {{ json_field_sql('result', 'model_name') }}, ': ',
+                {{ json_field_sql('result', 'row_count') }}, ' row(s)',
+                '\n'
+              )
+          end
+        {% if target.type == "bigquery" -%}
+          order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer)
+        {%- endif %}
+      )
+      {% if target.type == "snowflake" -%}
+        within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
       {%- endif %}
-    )
-    {% if target.type == "snowflake" -%}
-      within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
-    {%- endif %} as upstream_row_count,
+    {%- endif %} as upstream_row_count
 
   from
-    latest_log,
-    {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
+    latest_log
+    {% if target.type == "sqlserver" -%}
+    cross apply {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
+    {% else -%}
+    , {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
+    {% endif %}
+  {% if target.type == "sqlserver" -%}
+  group by 
+    mart_table,
+    mart_path,
+    dbt_cloud_job_url,
+    dbt_cloud_job_run_url,
+    date_of_process,
+    dbt_relation
+  {% else -%}
   group by all
+  {% endif %}
 
 ),
 
@@ -113,7 +174,7 @@ calculate_exp as (
       when {{ match_rate_percentage }} = 100 then '✅'
       when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then '🟡'
       else '❌'
-    end as match_rate_status,
+    end as match_rate_status
 
   from extract_data
 
@@ -136,6 +197,6 @@ select
   match_count,
   found_only_in_old_row_count,
   found_only_in_dbt_row_count,
-  upstream_row_count,
+  upstream_row_count
 
 from calculate_exp
