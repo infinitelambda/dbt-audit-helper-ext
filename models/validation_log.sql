@@ -8,7 +8,7 @@
       'validation_type'
     ],
     on_schema_change = "append_new_columns",
-    full_refresh = false,
+    full_refresh = var('audit_helper__full_refresh', 0) == 1,
     database = var('audit_helper__database', target.database),
     schema = var('audit_helper__schema', target.schema)
   )
