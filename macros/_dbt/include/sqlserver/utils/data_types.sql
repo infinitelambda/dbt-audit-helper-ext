@@ -1,3 +1,3 @@
 {% macro sqlserver__type_string() %}
-    {{ return("nvarchar(4000)") }}
+    {{ return("nvarchar(max)") }}
 {% endmacro %}

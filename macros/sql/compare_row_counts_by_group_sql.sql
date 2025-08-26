@@ -8,7 +8,7 @@
 
 {% macro default__compare_row_counts_by_group_sql(a_relation, b_relation, group_by) %}
 
-  {% set group_by_csv, _ = audit_helper_ext.convert_to_str_and_list(group_by) %}
+  {% set group_by_csv, group_bys = audit_helper_ext.convert_to_str_and_list(group_by) %}
 
   with a_relation_count as (
     select
@@ -27,7 +27,10 @@
   )
 
   select
-    {{ group_by_csv }},
+    {% for group_by in group_bys %}
+      a_relation_count.{{ group_by }} as {{ group_by }}_a,
+      b_relation_count.{{ group_by }} as {{ group_by }}_b,
+    {% endfor %}
 
     {% set count_a = "coalesce(count_a, 0)" -%}
     {{ count_a }} as count_a,
@@ -39,11 +42,17 @@
       abs({{ count_a }} - {{ count_b }})
     {%- endset -%}
     {{ diff }} as diff,
-
-    case when {{ diff }} > 0 then '❌' else '✅' end as diff_status
+    case
+      when {{ diff }} > 0 then {{ audit_helper_ext.unicode_prefix() }}'❌'
+      else {{ audit_helper_ext.unicode_prefix() }}'✅'
+    end as diff_status
 
   from a_relation_count
-  full outer join b_relation_count using ({{ group_by_csv }})
-  order by {{ group_by_csv }}
+  full outer join b_relation_count
+    {% for group_by in group_bys -%}
+      on {{ dbt.hash("a_relation_count." ~ group_by) }} = {{ dbt.hash("b_relation_count." ~ group_by) }}
+      {% if not loop.last %}and {% endif %}
+    {% endfor %}
+  order by diff desc
 
 {% endmacro %}
