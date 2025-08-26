@@ -2,49 +2,16 @@
 
 {% macro sqlserver__compare_queries(a_query, b_query, primary_key=None, summarize=true, limit=None) %}
 
-with a as (
-
-    {{ a_query }}
-
-),
-
-b as (
-
-    {{ b_query }}
-
-),
-
-a_intersect_b as (
-
-    select * from a
-    {{ dbt.intersect() }}
-    select * from b
-
-),
-
-a_except_b as (
-
-    select * from a
-    {{ dbt.except() }}
-    select * from b
-
-),
-
-b_except_a as (
-
-    select * from b
-    {{ dbt.except() }}
-    select * from a
-
-),
-
-all_records as (
-
+{%- set base_union_query -%}
     select
         *,
         1 as in_a,
         1 as in_b
-    from a_intersect_b
+    from (
+        select * from ({{ a_query }}) a
+        {{ dbt.intersect() }}
+        select * from ({{ b_query }}) b
+    ) a_intersect_b
 
     union all
 
@@ -52,7 +19,11 @@ all_records as (
         *,
         1 as in_a,
         0 as in_b
-    from a_except_b
+    from (
+        select * from ({{ a_query }}) a
+        {{ dbt.except() }}
+        select * from ({{ b_query }}) b
+    ) a_except_b
 
     union all
 
@@ -60,51 +31,40 @@ all_records as (
         *,
         0 as in_a,
         1 as in_b
-    from b_except_a
-
-),
+    from (
+        select * from ({{ b_query }}) b
+        {{ dbt.except() }}
+        select * from ({{ a_query }}) a
+    ) b_except_a
+{%- endset %}
 
 {%- if summarize %}
 
-summary_stats as (
-
+select
+    *,
+    round(100.0 * count / sum(count) over (), 2) as percent_of_total
+from (
     select
-
         in_a,
         in_b,
         count(*) as count
-
-    from all_records
+    from (
+        {{ base_union_query }}
+    ) all_records
     group by in_a, in_b
-
-),
-
-final as (
-
-    select
-
-        *,
-        round(100.0 * count / sum(count) over (), 2) as percent_of_total
-
-    from summary_stats
-
-)
+) summary_stats
 
 {%- else %}
 
-final as (
-    
-    select * from all_records
-    where not (in_a = 1 and in_b = 1)
-
-)
+select 
+{%- if limit %}
+top {{ limit }}
+{%- endif %} * 
+from (
+    {{ base_union_query }}
+) all_records
+where not (in_a = 1 and in_b = 1)
 
 {%- endif %}
-
-select 
-{%- if limit and not summarize %}
-top {{ limit }}
-{%- endif %} * from final
-
 
 {% endmacro %}
