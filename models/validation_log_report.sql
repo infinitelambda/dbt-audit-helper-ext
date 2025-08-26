@@ -79,8 +79,8 @@ extract_data as (
     max(
       case
         when validation_type = 'full'
-          and lower({{ json_field_sql('result', 'in_a') }}) = 'true'
-          and lower({{ json_field_sql('result', 'in_b') }}) = 'true'
+          and lower({{ json_field_sql('result', 'in_a') }}) in ('true', '1')
+          and lower({{ json_field_sql('result', 'in_b') }}) in ('true', '1')
           then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
       end
     ) as match_count,
@@ -88,8 +88,8 @@ extract_data as (
       max(
         case
           when validation_type = 'full'
-            and lower({{ json_field_sql('result', 'in_a') }}) = 'true'
-            and lower({{ json_field_sql('result', 'in_b') }}) = 'false'
+            and lower({{ json_field_sql('result', 'in_a') }}) in ('true', '1')
+            and lower({{ json_field_sql('result', 'in_b') }}) in ('false', '0')
             then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_old_row_count,
@@ -97,8 +97,8 @@ extract_data as (
       max(
         case
           when validation_type = 'full'
-            and lower({{ json_field_sql('result', 'in_a') }}) = 'false'
-            and lower({{ json_field_sql('result', 'in_b') }}) = 'true'
+            and lower({{ json_field_sql('result', 'in_a') }}) in ('false', '0')
+            and lower({{ json_field_sql('result', 'in_b') }}) in ('true', '1')
             then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_dbt_row_count,
