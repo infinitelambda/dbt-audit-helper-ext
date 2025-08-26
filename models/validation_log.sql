@@ -25,7 +25,7 @@ select
   cast(null as {{ dbt.type_string() }}) as old_relation,
   cast(null as {{ dbt.type_string() }}) as dbt_relation,
   cast(null as {{ dbt.type_string() }}) as mart_path,
-  cast(null as {{ dbt.type_string() }}) as validation_result_json,
+  cast(null as {{ dbt.type_string() }}) as validation_result_json
 
 from dummy
 where 1=0
