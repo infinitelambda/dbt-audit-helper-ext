@@ -21,6 +21,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 
 - ❄️ Snowflake (default)
 - ☁️ BigQuery
+- ⛱️ SQL Server
 
 ## Installation
 
@@ -37,11 +38,21 @@ This repository provides a collection of powerful macros designed to enhance dat
 
   ```yml
   packages:
-    - git: "https://github.com/infinitelambda/dbt-audit-helper-ext"
-      revision: <release version or tag> # 0.1.0
+    - git: "https://github.com/infinitelambda/dbt-audit-helper-ext.git"
+      version: <release version or tag> # 0.1.0
   ```
 
   And run `dbt deps` to install the package!
+
+- **Configure dispatch `search_order` in `dbt_project.yml` file** (only need for SQL Server):
+
+  ```yml
+  dispatch:
+    - macro_namespace: audit_helper
+      search_order: ['audit_helper_ext', 'audit_helper']
+    - macro_namespace: dbt
+      search_order: ['audit_helper_ext', 'dbt']
+  ```
 
 - **Initialize the resources**:
 
