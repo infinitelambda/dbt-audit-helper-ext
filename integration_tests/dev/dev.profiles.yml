@@ -19,3 +19,15 @@ audit_helper_ext:
       method: oauth
       priority: interactive
       threads: 10
+    mssql:
+      type: sqlserver
+      driver: 'ODBC Driver 18 for SQL Server'
+      server: localhost
+      port: 1433
+      database: demo
+      schema: dbo
+      user: ... # YOUR_VALUE
+      password: ... # YOUR_VALUE
+      authentication: sql
+      trust_cert: false
+      encrypt: true

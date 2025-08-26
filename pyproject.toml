@@ -94,25 +94,25 @@ gen = [
   {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart"}
 ]
 validate-sample-1 = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m sample_1"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m sample_1 -d models/03_mart/sample"}
 ]
 validate-customers = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m customers"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m customers -d models/03_mart/jaffle_shop"}
 ]
 validate-items = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m items"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m items -d models/03_mart/jaffle_shop"}
 ]
 validate-orders = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m orders"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m orders -d models/03_mart/jaffle_shop"}
 ]
 validate-products = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m products"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m products -d models/03_mart/jaffle_shop"}
 ]
 validate-stores = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m stores"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m stores -d models/03_mart/jaffle_shop"}
 ]
 validate-supplies = [
-  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__model.sh -m supplies"}
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m supplies -d models/03_mart/jaffle_shop"}
 ]
 validate = [
   {cmd = "poe validate-sample-1"},

@@ -8,6 +8,7 @@
 [![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
 [![support-snowflake](https://img.shields.io/badge/support-Snowflake-7faecd?logo=snowflake&logoColor=7faecd)](https://docs.snowflake.com?ref=infinitelambda)
 [![support-bigquery](https://img.shields.io/badge/support-BigQuery-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/bigquery/docs?ref=infinitelambda)
+[![support-sqlserver](https://img.shields.io/badge/support-SQL%20Server-CC2927?logo=microsoft%20sql%20server&logoColor=white)](https://docs.microsoft.com/en-us/sql/sql-server/?ref=infinitelambda)
 [![support-dbt](https://img.shields.io/badge/support-dbt%20v1.7+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
 
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
@@ -20,6 +21,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 
 - ❄️ Snowflake (default)
 - ☁️ BigQuery
+- ⛱️ SQL Server
 
 ## Installation
 
@@ -36,11 +38,21 @@ This repository provides a collection of powerful macros designed to enhance dat
 
   ```yml
   packages:
-    - git: "https://github.com/infinitelambda/dbt-audit-helper-ext"
-      revision: <release version or tag> # 0.1.0
+    - git: "https://github.com/infinitelambda/dbt-audit-helper-ext.git"
+      version: <release version or tag> # 0.1.0
   ```
 
   And run `dbt deps` to install the package!
+
+- **Configure dispatch `search_order` in `dbt_project.yml` file** (only need for SQL Server):
+
+  ```yml
+  dispatch:
+    - macro_namespace: audit_helper
+      search_order: ['audit_helper_ext', 'audit_helper']
+    - macro_namespace: dbt
+      search_order: ['audit_helper_ext', 'dbt']
+  ```
 
 - **Initialize the resources**:
 
