@@ -21,7 +21,7 @@ with latest_log as (
       from {{ ref('validation_log') }}
     ) as T
     where T.rn = 1
-    
+
   {% else -%}
 
     select *
@@ -44,7 +44,7 @@ extract_data as (
       cast(
         reverse(
           substring(
-            reverse(mart_path), 
+            reverse(mart_path),
             charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) + 1,
             charindex('/', reverse(mart_path)) - charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) - 1
           )
@@ -108,11 +108,11 @@ extract_data as (
           when validation_type = 'upstream_row_count'
             then concat(
                 case
-                  when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
-                  when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
+                  when {{ json_field_sql('result', 'row_count') }} <> '0' then {{ audit_helper_ext.unicode_prefix() }}'✅ '
+                  when {{ json_field_sql('result', 'row_count') }} = '0' then {{ audit_helper_ext.unicode_prefix() }}'🟡 '
                 end,
-                {{ json_field_sql('result', 'model_name') }}, ': ',
-                {{ json_field_sql('result', 'row_count') }}, ' row(s)',
+                {{ json_field_sql('result', 'model_name') }}, {{ audit_helper_ext.unicode_prefix() }}': ',
+                {{ json_field_sql('result', 'row_count') }}, {{ audit_helper_ext.unicode_prefix() }}' row(s)',
                 char(13) + char(10)
               )
           end, ''
@@ -148,7 +148,7 @@ extract_data as (
     , {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
     {% endif %}
   {% if target.type == "sqlserver" -%}
-  group by 
+  group by
     mart_table,
     mart_path,
     dbt_cloud_job_url,
@@ -169,11 +169,14 @@ calculate_exp as (
       cast(match_count as numeric) / (match_count + found_only_in_old_row_count + found_only_in_dbt_row_count) * 100
     {%- endset %}
     {{ match_rate_percentage }} as match_rate_percentage,
-    case when old_relation_row_count = dbt_relation_row_count then 'Yes ✅' else 'No 🟡' end as is_count_match,
     case
-      when {{ match_rate_percentage }} = 100 then '✅'
-      when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then '🟡'
-      else '❌'
+      when old_relation_row_count = dbt_relation_row_count then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
+      else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
+    end as is_count_match,
+    case
+      when {{ match_rate_percentage }} = 100 then {{ audit_helper_ext.unicode_prefix() }}'✅'
+      when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then {{ audit_helper_ext.unicode_prefix() }}'🟡'
+      else {{ audit_helper_ext.unicode_prefix() }}'❌'
     end as match_rate_status
 
   from extract_data

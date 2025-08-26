@@ -42,7 +42,15 @@
         '{{ mart_path }}',
         '{{ type }}',
         --escape double-quote in old_relation so that json is parsable
-        replace('{{ tojson(audit_helper_ext.convert_query_result_to_list(result)) }}', '{{ old_relation }}', replace('{{ old_relation }}', '"', '\\"'))
+        replace(
+          {{ audit_helper_ext.unicode_prefix() }}'{{ tojson(audit_helper_ext.convert_query_result_to_list(result)) }}', 
+          {{ audit_helper_ext.unicode_prefix() }}'{{ old_relation }}',
+          replace(
+            {{ audit_helper_ext.unicode_prefix() }}'{{ old_relation }}', 
+            {{ audit_helper_ext.unicode_prefix() }}'"', 
+            {{ audit_helper_ext.unicode_prefix() }}'\\"'
+          )
+        )
     ;
   {%- endset %}
 
