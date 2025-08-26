@@ -54,7 +54,7 @@ def create_validation_count(model_name, schema_name, database_name):
 def create_validation_full(model_name, model_dir, schema_name, database_name):
     """Template of `validation__model` macro"""
     output_str = f"""
-{{# Full validation #}}
+{{# Row-by-row validation #}}
 {{%- macro validation_full__{model_name.lower()}(summarize=true) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
