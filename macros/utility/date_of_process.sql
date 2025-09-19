@@ -16,7 +16,7 @@
   {% set allowed_dates = var('audit_helper__allowed_date_of_processes', []) | list %}
   {% if allowed_dates and date_str not in allowed_dates %}
     {{ exceptions.raise_compiler_error(
-      "Invalid `audit_helper__allowed_date_of_processes`.
+      "❌ Invalid `audit_helper__allowed_date_of_processes`.
       Expected `audit_helper__date_of_process` in " ~ allowed_dates ~ ", but got: " ~ date_str
     ) }}
   {% endif %}
