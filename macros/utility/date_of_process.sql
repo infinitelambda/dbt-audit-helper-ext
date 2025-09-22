@@ -22,16 +22,16 @@
   {% endif %}
 
   {% if use_prev %}
-    {% set prev_index = allowed_dates.index(date_str) -1 %}
-    {% if prev_index >= 0 %}
-      {% set date_str = allowed_dates[prev_index] %}
-      {{ log("📆 Looking at previous date: " ~ date_str, info=True) if execute }}
-    {% else %}
-      {% do exceptions.warn(
-        "⚠️  Cannot find previous date for '" ~ date_str 
-          ~ "' in `audit_helper__allowed_date_of_processes`. Using current one!"
-      ) %}
+    {% set prev_index = allowed_dates.index(date_str) - 1 %}
+    {% if not prev_index or prev_index < 0 %}
+      {{ exceptions.raise_compiler_error(
+        "❌ Cannot find previous date for '" ~ date_str 
+          ~ "' in `audit_helper__allowed_date_of_processes` = " ~ allowed_dates
+      ) }}
     {% endif %}
+
+    {% set date_str = allowed_dates[prev_index] %}
+    {{ log("📆 Looking at previous date: " ~ date_str, info=True) if execute }}
     
   {% endif %}
 
