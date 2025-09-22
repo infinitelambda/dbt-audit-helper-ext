@@ -1,10 +1,51 @@
 macros:
   - name: date_of_process
     description: |
-      Returns the source's snapshot date(time) which is configured by `audit_helper__date_of_process` variable.
+      Returns the source's snapshot date which is configured by the `audit_helper__date_of_process` variable.
+      Either it is YYYY-MM-DD or free text e.g. Day1, Day2
 
-      If not available, it uses the UTC now value
+      This macro provides a centralized way to handle date references across your audit helper operations,
+      making it easier to maintain consistent date logic throughout your dbt project.
+
+      **Behavior:**
+      - If `audit_helper__date_of_process` variable is set, uses that value
+      - If not available, defaults to current UTC date in YYYY-MM-DD format
+      - Validates the date against `audit_helper__allowed_date_of_processes` if configured
+      - Supports getting the previous date from the allowed dates list when `use_prev=true`
+      - Supports optional formatting to convert YYYY-MM-DD to YYYYMMDD format
+
+      **Variable Configuration:**
+      Set in your dbt_project.yml or profiles.yml:
+      ```yaml
+      vars:
+        audit_helper__date_of_process: "2024-01-15"
+        # audit_helper__date_of_process: "Day1"
+
+        # Optional: Define allowed dates for validation and previous date lookup
+        audit_helper__allowed_date_of_processes:
+          - "2024-01-10"
+          - "2024-01-15"
+          - "2024-01-20"
+          # - "Day1"
+          # - "Day2"
+          # - "Day3"
+      ```
+
+      **Validation & Previous Date Logic:**
+      - If `audit_helper__allowed_date_of_processes` is set, the current date must be in this list
+      - When `use_prev=true`, returns the previous date from the allowed dates list
+      - If no previous date exists, warns and uses the current date
     arguments:
       - name: format
         type: boolean
-        description: Turn it to `true` to format the date string to YYYYMMDD
+        description: |
+          When set to `true`, converts date from YYYY-MM-DD format to YYYYMMDD format.
+          Only applies when the date matches the YYYY-MM-DD pattern.
+          Defaults to `false`.
+      - name: use_prev
+        type: boolean
+        description: |
+          When set to `true`, returns the previous date from the `audit_helper__allowed_date_of_processes` list.
+          Requires `audit_helper__allowed_date_of_processes` to be configured.
+          If no previous date exists, warns and uses the current date.
+          Defaults to `false`.

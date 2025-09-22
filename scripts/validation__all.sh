@@ -32,6 +32,9 @@ OPTIONS:
     -p DATE     Audit helper date of process (e.g., "2024-01-01")
                 When specified, triggers clone operations from legacy data
                 When empty/omitted, skips cloning and runs with full-refresh
+    -c RUNNER   Command runner to use (default: poetry)
+                  poetry   - Use 'poetry run' for commands
+                  uv       - Use 'uv run' for commands
     -r          Skip model runs, validate only
                 Useful when models are already built and you only want validation
     -v          Run models only, skip validation
@@ -40,31 +43,36 @@ OPTIONS:
 EXAMPLES:
     # Run all validations with default settings
     $0
-    
+
     # Run specific validation types
     $0 -t count                                # Count validation only
     $0 -t all_row                              # Row-by-row validation
     $0 -t upstream_row_count                   # Get source row counts
-    
+
     # Target different model directories
     $0 -d models/02_intermediate               # Validate intermediate models
     $0 -d models/01_staging                    # Validate staging models
-    
+
     # Single model validation
     $0 -m exp_fsr_rol_plyr_anchr_id           # All validations for one model
     $0 -m exp_fsr_rol_plyr_anchr_id -t count  # Count validation for one model
     $0 -m exp_fsr_rol_plyr_anchr_id -r        # Skip runs, validate one model only
-    
+
+    # Use with different command runners
+    $0 -c poetry                              # Explicitly use poetry run (default)
+    $0 -c uv -t count                         # Use uv run instead of poetry run
+
     # Use with audit date (triggers clone operations)
     $0 -p "2024-01-01"                        # Clone from specific date
     $0 -p "2024-01-01" -t count               # Clone + count validation
-    
+
     # Skip operations for faster execution
     $0 -t count -r                            # Count validation only, skip model runs
     $0 -v                                     # Build models only, skip validation
-    
+
     # Complex combinations
     $0 -d models/03_mart -t all_row -p "2024-01-01" -r   # Row validation with clone, skip runs
+    $0 -c poetry -d models/03_mart -t count   # Use poetry run for count validation
 
 VALIDATION TYPES:
     count               Fast row count comparison between models and legacy data
@@ -124,12 +132,22 @@ log_operation() {
 # Validation functions
 validate_dependencies() {
     local missing_deps=()
-    
-    # Check for required commands
-    command -v poetry >/dev/null 2>&1 || missing_deps+=("poetry")
+
+    # Check for the configured command runner
+    if [[ "$COMMAND_RUNNER" == "poetry" ]]; then
+        command -v poetry >/dev/null 2>&1 || missing_deps+=("poetry")
+    elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
+        command -v uv >/dev/null 2>&1 || missing_deps+=("uv")
+    else
+        log_error "Invalid command runner: $COMMAND_RUNNER"
+        log_error "Valid options: uv, poetry"
+        exit 1
+    fi
+
+    # Check for other required commands
     command -v find >/dev/null 2>&1 || missing_deps+=("find")
     command -v sort >/dev/null 2>&1 || missing_deps+=("sort")
-    
+
     if [[ ${#missing_deps[@]} -gt 0 ]]; then
         log_error "Missing required dependencies: ${missing_deps[*]}"
         log_error "Please install missing dependencies and try again."
@@ -203,11 +221,21 @@ run_operation_for_all_models() {
         # Run the operation and capture output to model-specific log (append mode)
         {
             if [[ -n "$cmd_args" && "$cmd_args" != "" ]]; then
-                log_operation "Executing: poetry run dbt run-operation $macro_call --args '$cmd_args'"
-                poetry run dbt run-operation "$macro_call" --args "$cmd_args"
+                if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' ($DATE_OF_PROCESS)"
+                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+                else
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args'"
+                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args"
+                fi
             else
-                log_operation "Executing: poetry run dbt run-operation $macro_call"
-                poetry run dbt run-operation "$macro_call"
+                if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call ($DATE_OF_PROCESS)"
+                    $RUN_CMD dbt run-operation "$macro_call" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+                else
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call"
+                    $RUN_CMD dbt run-operation "$macro_call"
+                fi
             fi
             
             local exit_code=$?
@@ -226,42 +254,57 @@ run_operation_for_all_models() {
 # Function to run clone operations for models
 run_clone_for_all_models() {
     if [[ -n "$SINGLE_MODEL" ]]; then
-        log_info "🐑  Clone relation for single model: $SINGLE_MODEL from data version = $DATE_OF_PROCESS"
+        log_info "🐑  Clone relation for single model: $SINGLE_MODEL from PREVIOUS data version of $DATE_OF_PROCESS"
         log_operation "🐑  Cloning: $SINGLE_MODEL"
-        poetry run dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL'}" || log_error "Clone failed for $SINGLE_MODEL"
+        
+        set -x #echo on
+        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || log_error "Clone failed for $SINGLE_MODEL"
+        set +x #echo off
     else
-        log_info "🐑  Clone all relations from data version = $DATE_OF_PROCESS"
+        log_info "🐑  Clone all relations from PREVIOUS data version of $DATE_OF_PROCESS"
         for model in "${MODELS[@]}"; do
             log_operation "🐑  Cloning: $model"
-            poetry run dbt run-operation clone_relation --args "{'identifier': '$model'}" || log_error "Clone failed for $model, continuing..."
+
+            set -x #echo on
+            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || log_error "Clone failed for $model, continuing..."
+            set +x #echo off
         done
     fi
 }
 
 # Parse command-line options
-while getopts ht:d:m:p:vr flag; do
+while getopts ht:d:m:p:c:vr flag; do
     case "${flag}" in
         h) show_help; exit 0;;
         t) VALIDATION_TYPE=${OPTARG};;
         d) MART_DIR=${OPTARG};;
         m) SINGLE_MODEL=${OPTARG};;
         p) DATE_OF_PROCESS=${OPTARG};;
+        c) COMMAND_RUNNER=${OPTARG};;
         r) SKIP_RUN=true;;
         v) SKIP_VALIDATION=true;;
         ?) echo "Use -h for help" >&2; exit 1;;
     esac
 done
 
-# Validate dependencies first
-validate_dependencies
-
-# Set defaults and validate
+# Set defaults
 VALIDATION_TYPE="${VALIDATION_TYPE:-all}"
 MART_DIR="${MART_DIR:-models/03_mart}"
 SINGLE_MODEL="${SINGLE_MODEL:-}"
 DATE_OF_PROCESS="${DATE_OF_PROCESS:-}"
+COMMAND_RUNNER="${COMMAND_RUNNER:-poetry}"
 SKIP_RUN="${SKIP_RUN:-false}"
 SKIP_VALIDATION="${SKIP_VALIDATION:-false}"
+
+# Set the run command based on the runner
+if [[ "$COMMAND_RUNNER" == "poetry" ]]; then
+    RUN_CMD="poetry run"
+else
+    RUN_CMD="uv run"
+fi
+
+# Validate dependencies after setting COMMAND_RUNNER
+validate_dependencies
 
 # Validate configuration
 validate_validation_type "$VALIDATION_TYPE"
@@ -338,13 +381,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (with full-refresh)"
             echo ""
             set -x #echo on
-            poetry run dbt run -s +"$SINGLE_MODEL" --full-refresh
+            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh
             set +x #echo off
         else
             log_header "▶️  Run all models (with full-refresh)"
             echo ""
             set -x #echo on
-            poetry run dbt run -s +"$MART_DIR/" --full-refresh
+            $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh
             set +x #echo off
         fi
     else
@@ -357,13 +400,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (without full-refresh)"
             echo ""
             set -x #echo on
-            poetry run dbt run -s +"$SINGLE_MODEL"
+            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
             set +x #echo off
         else
             log_header "▶️  Run all models (without full-refresh)"
             echo ""
             set -x #echo on
-            poetry run dbt run -s +"$MART_DIR/"
+            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
             set +x #echo off
         fi
     fi
