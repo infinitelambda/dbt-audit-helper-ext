@@ -27,7 +27,7 @@ def create_validation_count(model_name, schema_name, database_name):
     """Template of `validation_count__model` macro"""
     output_str = f"""
 {{# Row count #}}
-{{%- macro validation_count__{model_name.lower()}() %}}
+{{%- macro validation_count__{model_name}() %}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -55,7 +55,7 @@ def create_validation_full(model_name, model_dir, schema_name, database_name):
     """Template of `validation__model` macro"""
     output_str = f"""
 {{# Row-by-row validation #}}
-{{%- macro validation_full__{model_name.lower()}(summarize=true) -%}}
+{{%- macro validation_full__{model_name}(summarize=true) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -89,7 +89,7 @@ def create_validation_all_col(model_name, model_dir, schema_name, database_name)
     """Template of `validation_all_col__model` macro"""
     output_str = f"""
 {{# Column comparison #}}
-{{%- macro validation_all_col__{model_name.lower()}(summarize=true) -%}}
+{{%- macro validation_all_col__{model_name}(summarize=true) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -171,7 +171,7 @@ def create_validation_count_by_group(model_name, schema_name, database_name):
     """Template of `validation_count_by_group__model` macro"""
     output_str = f"""
 {{# Row count by group #}}
-{{%- macro validation_count_by_group__{model_name.lower()}(group_by) %}}
+{{%- macro validation_count_by_group__{model_name}(group_by) %}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -200,7 +200,7 @@ def create_validation_col(model_name, model_dir, schema_name, database_name):
     """Template of `validation_col__model` macro"""
     output_str = f"""
 {{# Show column conflicts #}}
-{{%- macro validation_col__{model_name.lower()}(columns_to_compare, summarize=true, limit=100) -%}}
+{{%- macro validation_col__{model_name}(columns_to_compare, summarize=true, limit=100) -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -291,7 +291,7 @@ def create_validation_file(model: dict):
 
     base_dir = "macros/validation"
     validation_dir = f"{base_dir}/{model_dir[6:]}"
-    if os.path.isdir(validation_dir) == False:
+    if not os.path.isdir(validation_dir):
         os.makedirs(validation_dir)
     validation_file = f"{validation_dir}/validation__{model_name}.sql"
     with open(validation_file, "w") as f:
@@ -304,7 +304,7 @@ if __name__ == "__main__":
 
     models = get_models(directory=mart_dir, name=model_name)
     for m in models:
-        print(f"🏃 Working on the model: {m.get('model_name').upper()} ...")
+        print(f"🏃 Working on the model: {m.get('model_name')} ...")
         create_validation_file(model=m)
-        print(f"◾◾◾")
-    print(f"🚏🚏🚏")
+        print("◾◾◾")
+    print("🚏🚏🚏")

@@ -89,7 +89,7 @@ jobs:
       - "dbt run-operation clone_relation --args 'identifier: {model}'"
       - "dbt build -s +{model} --exclude {model} --full-refresh"
       - "dbt build -s {model}"
-      - "dbt run-operation validations__{model.lower()}"
+      - "dbt run-operation validations__{model}"
     schedule:
       cron: "{cron_expression}"
     triggers:
