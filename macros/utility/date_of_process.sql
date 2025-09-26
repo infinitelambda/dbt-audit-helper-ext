@@ -23,7 +23,7 @@
 
   {% if use_prev %}
     {% set prev_index = allowed_dates.index(date_str) - 1 %}
-    {% if not prev_index or prev_index < 0 %}
+    {% if prev_index is none or prev_index < 0 %}
       {{ exceptions.raise_compiler_error(
         "❌ Cannot find previous date for '" ~ date_str 
           ~ "' in `audit_helper__allowed_date_of_processes` = " ~ allowed_dates

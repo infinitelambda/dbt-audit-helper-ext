@@ -258,7 +258,7 @@ run_clone_for_all_models() {
         log_operation "🐑  Cloning: $SINGLE_MODEL"
         
         set -x #echo on
-        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || log_error "Clone failed for $SINGLE_MODEL"
+        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
         set +x #echo off
     else
         log_info "🐑  Clone all relations from PREVIOUS data version of $DATE_OF_PROCESS"
@@ -266,7 +266,7 @@ run_clone_for_all_models() {
             log_operation "🐑  Cloning: $model"
 
             set -x #echo on
-            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || log_error "Clone failed for $model, continuing..."
+            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || { log_error "Clone failed for $model"; exit 1; }
             set +x #echo off
         done
     fi
