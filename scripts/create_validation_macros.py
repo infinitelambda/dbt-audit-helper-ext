@@ -23,11 +23,11 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from scripts.common import get_args, get_models
 
 
-def create_validation_count(model_name, schema_name, database_name):
-    """Template of `validation_count__model` macro"""
+def create_validation_config(model_name, model_dir, schema_name, database_name):
+    """Template of `get_validation_config__model` macro"""
     output_str = f"""
-{{# Row count #}}
-{{%- macro validation_count__{model_name}() %}}
+{{# Validation config #}}
+{{%- macro get_validation_config__{model_name}() -%}}
 
     {{% set dbt_identifier = '{model_name}' %}}
 
@@ -35,13 +35,38 @@ def create_validation_count(model_name, schema_name, database_name):
     {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = '{model_name}' %}}
 
-    {{% if execute %}}
+    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
+    {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
 
-        {{{{ audit_helper_ext.get_validation_count(
+    {{{{ log('👀  ' ~ old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier ~ ' vs. ' ~ ref(dbt_identifier), true) if execute }}}}
+    {{{{ return(namespace(
             dbt_identifier=dbt_identifier,
             old_database=old_database,
             old_schema=old_schema,
-            old_identifier=old_identifier
+            old_identifier=old_identifier,
+            primary_keys=primary_keys,
+            exclude_columns=exclude_columns,
+    )) }}}}
+
+{{% endmacro %}}"""
+
+    return output_str
+
+
+def create_validation_count(model_name, schema_name, database_name):
+    """Template of `validation_count__model` macro"""
+    output_str = f"""
+{{# Row count #}}
+{{%- macro validation_count__{model_name}() %}}
+
+    {{% set validation_config = get_validation_config__{model_name}() %}}
+    {{% if execute %}}
+
+        {{{{ audit_helper_ext.get_validation_count(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}}}
 
     {{% endif %}}
@@ -57,24 +82,16 @@ def create_validation_full(model_name, model_dir, schema_name, database_name):
 {{# Row-by-row validation #}}
 {{%- macro validation_full__{model_name}(summarize=true) -%}}
 
-    {{% set dbt_identifier = '{model_name}' %}}
-
-    {{% set old_database = {database_name} %}}
-    {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
-
-    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
-    {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
-
+    {{% set validation_config = get_validation_config__{model_name}() %}}
     {{% if execute %}}
 
         {{{{ audit_helper_ext.get_validation_full(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}}}
 
@@ -91,24 +108,16 @@ def create_validation_all_col(model_name, model_dir, schema_name, database_name)
 {{# Column comparison #}}
 {{%- macro validation_all_col__{model_name}(summarize=true) -%}}
 
-    {{% set dbt_identifier = '{model_name}' %}}
-
-    {{% set old_database = {database_name} %}}
-    {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
-
-    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
-    {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
-
+    {{% set validation_config = get_validation_config__{model_name}() %}}
     {{% if execute %}}
 
         {{{{ audit_helper_ext.get_validation_all_col(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}}}
 
@@ -128,36 +137,35 @@ def create_validations(model_name, model_dir, schema_name, database_name):
 {{# Validations for All #}}
 {{%- macro validations__{model_name}(summarize=true) -%}}
 
-    {{% set dbt_identifier = '{model_name}' %}}
-
-    {{% set old_database = {database_name} %}}
-    {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
-
-    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
-    {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
-
+    {{% set validation_config = get_validation_config__{model_name}() %}}
     {{% if execute %}}
 
         {{{{ audit_helper_ext.get_upstream_row_count(
-            dbt_identifier=dbt_identifier
+            dbt_identifier=validation_config.dbt_identifier
+        ) }}}}
+
+        {{{{ audit_helper_ext.get_validation_schema(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}}}
 
         {{{{ audit_helper_ext.get_validation_full(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}}}
 
         {{{{ audit_helper_ext.get_validation_count(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}}}
 
     {{% endif %}}
@@ -173,19 +181,14 @@ def create_validation_count_by_group(model_name, schema_name, database_name):
 {{# Row count by group #}}
 {{%- macro validation_count_by_group__{model_name}(group_by) %}}
 
-    {{% set dbt_identifier = '{model_name}' %}}
-
-    {{% set old_database = {database_name} %}}
-    {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
-
+    {{% set validation_config = get_validation_config__{model_name}() %}}
     {{% if execute %}}
 
         {{{{ audit_helper_ext.get_validation_count_by_group(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
             group_by=group_by
         ) }}}}
 
@@ -202,25 +205,41 @@ def create_validation_col(model_name, model_dir, schema_name, database_name):
 {{# Show column conflicts #}}
 {{%- macro validation_col__{model_name}(columns_to_compare, summarize=true, limit=100) -%}}
 
-    {{% set dbt_identifier = '{model_name}' %}}
-
-    {{% set old_database = {database_name} %}}
-    {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
-
-    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
-
+    {{% set validation_config = get_validation_config__{model_name}() %}}
     {{% if execute %}}
 
         {{{{ audit_helper_ext.show_validation_columns_conflicts(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
             columns_to_compare=columns_to_compare,
             summarize=summarize,
             limit=limit
+        ) }}}}
+
+    {{% endif %}}
+
+{{% endmacro %}}"""
+
+    return output_str
+
+
+def create_validation_schema(model_name, schema_name, database_name):
+    """Template of `validation_schema__model` macro"""
+    output_str = f"""
+{{# Schema diff validation #}}
+{{%- macro validation_schema__{model_name}() -%}}
+
+    {{% set validation_config = get_validation_config__{model_name}() %}}
+    {{% if execute %}}
+
+        {{{{ audit_helper_ext.get_validation_schema(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}}}
 
     {{% endif %}}
@@ -265,7 +284,9 @@ def create_validation_file(model: dict):
     if database_name == "''":
         database_name =  "var('audit_helper__source_database', target.database)"
 
+    macro_config = create_validation_config(model_name, model_dir, schema_name, database_name)
     macro_count = create_validation_count(model_name, schema_name, database_name)
+    macro_schema = create_validation_schema(model_name, schema_name, database_name)
     macro_all_col = create_validation_all_col(
         model_name, model_dir, schema_name, database_name
     )
@@ -275,7 +296,11 @@ def create_validation_file(model: dict):
     macro_col = create_validation_col(model_name, model_dir, schema_name, database_name)
 
     output_str = (
-        macro_count
+        macro_config
+        + "\n\n"
+        + macro_count
+        + "\n\n"
+        + macro_schema
         + "\n\n"
         + macro_all_col
         + "\n\n"
