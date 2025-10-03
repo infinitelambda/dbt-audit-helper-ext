@@ -1,5 +1,5 @@
-{# Row count #}
-{%- macro validation_count__customers() %}
+{# Validation config #}
+{%- macro get_validation_config__customers() -%}
 
     {% set dbt_identifier = 'customers' %}
 
@@ -7,13 +7,51 @@
     {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'customers' %}
 
-    {% if execute %}
+    {%- set primary_keys = ['id'] -%}
+    {%- set exclude_columns = [] -%}
 
-        {{ audit_helper_ext.get_validation_count(
+    {{ log('👀  ' ~ old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier ~ ' vs. ' ~ ref(dbt_identifier), true) if execute }}
+    {{ return(namespace(
             dbt_identifier=dbt_identifier,
             old_database=old_database,
             old_schema=old_schema,
-            old_identifier=old_identifier
+            old_identifier=old_identifier,
+            primary_keys=primary_keys,
+            exclude_columns=exclude_columns,
+    )) }}
+
+{% endmacro %}
+
+
+{# Row count #}
+{%- macro validation_count__customers() %}
+
+    {% set validation_config = get_validation_config__customers() %}
+    {% if execute %}
+
+        {{ audit_helper_ext.get_validation_count(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
+        ) }}
+
+    {% endif %}
+
+{% endmacro %}
+
+
+{# Schema diff validation #}
+{%- macro validation_schema__customers() -%}
+
+    {% set validation_config = get_validation_config__customers() %}
+    {% if execute %}
+
+        {{ audit_helper_ext.get_validation_schema(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}
 
     {% endif %}
@@ -24,24 +62,16 @@
 {# Column comparison #}
 {%- macro validation_all_col__customers(summarize=true) -%}
 
-    {% set dbt_identifier = 'customers' %}
-
-    {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'customers' %}
-
-    {%- set primary_keys = ['id'] -%}
-    {%- set exclude_columns = [] -%}
-
+    {% set validation_config = get_validation_config__customers() %}
     {% if execute %}
 
         {{ audit_helper_ext.get_validation_all_col(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}
 
@@ -50,27 +80,19 @@
 {% endmacro %}
 
 
-{# Full validation #}
+{# Row-by-row validation #}
 {%- macro validation_full__customers(summarize=true) -%}
 
-    {% set dbt_identifier = 'customers' %}
-
-    {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'customers' %}
-
-    {%- set primary_keys = ['id'] -%}
-    {%- set exclude_columns = [] -%}
-
+    {% set validation_config = get_validation_config__customers() %}
     {% if execute %}
 
         {{ audit_helper_ext.get_validation_full(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}
 
@@ -82,36 +104,35 @@
 {# Validations for All #}
 {%- macro validations__customers(summarize=true) -%}
 
-    {% set dbt_identifier = 'customers' %}
-
-    {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'customers' %}
-
-    {%- set primary_keys = ['id'] -%}
-    {%- set exclude_columns = [] -%}
-
+    {% set validation_config = get_validation_config__customers() %}
     {% if execute %}
 
         {{ audit_helper_ext.get_upstream_row_count(
-            dbt_identifier=dbt_identifier
+            dbt_identifier=validation_config.dbt_identifier
+        ) }}
+
+        {{ audit_helper_ext.get_validation_schema(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}
 
         {{ audit_helper_ext.get_validation_full(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
-            exclude_columns=exclude_columns,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
+            exclude_columns=validation_config.exclude_columns,
             summarize=summarize
         ) }}
 
         {{ audit_helper_ext.get_validation_count(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
         ) }}
 
     {% endif %}
@@ -122,19 +143,14 @@
 {# Row count by group #}
 {%- macro validation_count_by_group__customers(group_by) %}
 
-    {% set dbt_identifier = 'customers' %}
-
-    {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'customers' %}
-
+    {% set validation_config = get_validation_config__customers() %}
     {% if execute %}
 
         {{ audit_helper_ext.get_validation_count_by_group(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
             group_by=group_by
         ) }}
 
@@ -146,22 +162,15 @@
 {# Show column conflicts #}
 {%- macro validation_col__customers(columns_to_compare, summarize=true, limit=100) -%}
 
-    {% set dbt_identifier = 'customers' %}
-
-    {% set old_database = var('audit_helper__source_database', target.database) %}
-    {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'customers' %}
-
-    {%- set primary_keys = ['id'] -%}
-
+    {% set validation_config = get_validation_config__customers() %}
     {% if execute %}
 
         {{ audit_helper_ext.show_validation_columns_conflicts(
-            dbt_identifier=dbt_identifier,
-            old_database=old_database,
-            old_schema=old_schema,
-            old_identifier=old_identifier,
-            primary_keys=primary_keys,
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier,
+            primary_keys=validation_config.primary_keys,
             columns_to_compare=columns_to_compare,
             summarize=summarize,
             limit=limit

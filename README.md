@@ -113,10 +113,15 @@ This repo contains the **useful macros** to support for saving the historical va
 There are 3 main types of validation:
 
 - Count (`count`, [source](./macros/validation/get_validation_count.sql))
-- Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
+- Schema (`schema`, [source](./macros/validation/get_validation_schema.sql))
 - Row by Row (`full`, [source](./macros/validation/get_validation_full.sql))
 
 Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_.
+
+For DX, we also have serveral other types:
+- Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
+- Count by Group (not available in `sh` script, [source](./macros/validation/get_validation_count_by_group.sql))
+- Show Column Conflicts (not available in `sh` script, [source](./macros/validation/show_validation_columns_conflicts.sql))
 
 Depending on projects, it might be vary in the strategy of validation. Therefore, in this package, we're suggesting 1 first approach that we've used successfully in the real-life migration project (Informatica to dbt).
 
