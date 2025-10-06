@@ -8,31 +8,11 @@
 
 with latest_log as (
 
-  {% if target.type == "sqlserver" -%}
-
-    select *
-    from (
-      select
-          *,
-          row_number() over (
-            partition by mart_table, dbt_cloud_job_url, date_of_process, validation_type
-            order by dbt_cloud_job_start_at desc
-          ) rn
-      from {{ ref('validation_log') }}
-    ) as T
-    where T.rn = 1
-
-  {% else -%}
-
-    select *
-    from {{ ref('validation_log') }}
-    where 1=1
-    qualify row_number() over (
-      partition by mart_table, dbt_cloud_job_url, date_of_process, validation_type
-      order by dbt_cloud_job_start_at desc
-    ) = 1
-
-  {% endif %}
+  {{ audit_helper_ext.deduplicate_with_row_number_sql(
+      source_relation=ref('validation_log').
+      partition_by_fields=['mart_table', 'dbt_cloud_job_url', 'date_of_process', 'validation_type'],
+      order_by_fields=['dbt_cloud_job_start_at desc']
+  ) }}
 
 ),
 
@@ -40,22 +20,7 @@ extract_data as (
 
   select
     mart_table,
-    {% if target.type == "sqlserver" -%}
-      cast(
-        reverse(
-          substring(
-            reverse(mart_path),
-            charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) + 1,
-            charindex('/', reverse(mart_path)) - charindex('/', reverse(mart_path), charindex('/', reverse(mart_path)) + 1) - 1
-          )
-        ) as {{ dbt.type_string() }}
-      ) as mart_folder,
-    {% else -%}
-      {% set mart_paths -%}
-        split(mart_path, '/')
-      {%- endset %}
-      cast({{ mart_paths }}[{{ array_length_sql() }}({{ mart_paths }}) - 2] as {{ dbt.type_string() }}) as mart_folder,
-    {% endif %}
+    {{ audit_helper_ext.extract_mart_folder_sql("mart_path") }} as mart_folder,
     dbt_cloud_job_url,
     dbt_cloud_job_run_url,
     date_of_process,
@@ -102,52 +67,11 @@ extract_data as (
             then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
         end
       ), 0) as found_only_in_dbt_row_count,
-    {% if target.type == "sqlserver" -%}
-      string_agg(
-        case
-          when validation_type = 'upstream_row_count'
-            then concat(
-                case
-                  when {{ json_field_sql('result', 'row_count') }} <> '0' then {{ audit_helper_ext.unicode_prefix() }}'✅ '
-                  when {{ json_field_sql('result', 'row_count') }} = '0' then {{ audit_helper_ext.unicode_prefix() }}'🟡 '
-                end,
-                {{ json_field_sql('result', 'model_name') }}, {{ audit_helper_ext.unicode_prefix() }}': ',
-                {{ json_field_sql('result', 'row_count') }}, {{ audit_helper_ext.unicode_prefix() }}' row(s)',
-                char(13) + char(10)
-              )
-          end, ''
-        ) within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
-    {% else -%}
-      {{ string_agg_sql() }}(
-        case
-          when validation_type = 'upstream_row_count'
-            then concat(
-                case
-                  when {{ json_field_sql('result', 'row_count') }} <> '0' then '✅ '
-                  when {{ json_field_sql('result', 'row_count') }} = '0' then '🟡 '
-                end,
-                {{ json_field_sql('result', 'model_name') }}, ': ',
-                {{ json_field_sql('result', 'row_count') }}, ' row(s)',
-                '\n'
-              )
-          end
-        {% if target.type == "bigquery" -%}
-          order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer)
-        {%- endif %}
-      )
-      {% if target.type == "snowflake" -%}
-        within group (order by {{ safe_cast_sql() }}({{ json_field_sql('result', 'row_count') }} as integer))
-      {%- endif %}
-    {%- endif %} as upstream_row_count
+    {{ audit_helper_ext.aggregate_upstream_row_count_sql() }} as upstream_row_count,
 
   from
-    latest_log
-    {% if target.type == "sqlserver" -%}
-    cross apply {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
-    {% else -%}
-    , {{ audit_helper_ext.json_table_sql('validation_result_json') }} as result
-    {% endif %}
-  {% if target.type == "sqlserver" -%}
+    latest_log 
+    {{ audit_helper_ext.join_json_table_sql("validation_result_json") }} as result
   group by
     mart_table,
     mart_path,
@@ -155,9 +79,6 @@ extract_data as (
     dbt_cloud_job_run_url,
     date_of_process,
     dbt_relation
-  {% else -%}
-  group by all
-  {% endif %}
 
 ),
 

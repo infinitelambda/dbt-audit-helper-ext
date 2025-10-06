@@ -1,0 +1,13 @@
+macros:
+  - name: deduplicate_with_row_number_sql
+    description: Deduplicates rows using ROW_NUMBER() with database-specific syntax (subquery with WHERE for SQL Server, QUALIFY for others)
+    arguments:
+      - name: source_relation
+        type: string
+        description: The source table or ref() to deduplicate
+      - name: partition_by_fields
+        type: list
+        description: List of field names for PARTITION BY clause
+      - name: order_by_fields
+        type: list
+        description: List of field(s) with sort order for ORDER BY clause (e.g., ['column_name desc'])

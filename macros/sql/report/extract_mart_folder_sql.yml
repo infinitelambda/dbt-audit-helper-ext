@@ -1,0 +1,7 @@
+macros:
+  - name: extract_mart_folder_sql
+    description: Extracts the mart folder (second-to-last element) from a path string by splitting on '/'
+    arguments:
+      - name: mart_path
+        type: string
+        description: The full path to extract the mart folder from
