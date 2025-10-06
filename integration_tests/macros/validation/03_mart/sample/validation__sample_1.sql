@@ -8,7 +8,7 @@
     {% set old_identifier = 'sample_1' %}
 
     {%- set primary_keys = ['name'] -%}
-    {%- set exclude_columns = [] -%}
+    {%- set exclude_columns = ["sample_1_sk"] -%}
 
     {{ log('👀  ' ~ old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier ~ ' vs. ' ~ ref(dbt_identifier), true) if execute }}
     {{ return(namespace(
