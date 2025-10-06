@@ -5,7 +5,7 @@
 
     {% set old_database = var('audit_helper__source_database', target.database) %}
     {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
-    {% set old_identifier = 'sample_1' %}
+    {% set old_identifier = audit_helper_ext.get_old_identifier_name('sample_1') %}
 
     {%- set primary_keys = ['name'] -%}
     {%- set exclude_columns = ["sample_1_sk"] -%}

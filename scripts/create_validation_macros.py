@@ -23,7 +23,7 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from scripts.common import get_args, get_models
 
 
-def create_validation_config(model_name, model_dir, schema_name, database_name):
+def create_validation_config(model_name, model_dir, schema_name, database_name, old_identifier):
     """Template of `get_validation_config__model` macro"""
     output_str = f"""
 {{# Validation config #}}
@@ -33,7 +33,7 @@ def create_validation_config(model_name, model_dir, schema_name, database_name):
 
     {{% set old_database = {database_name} %}}
     {{% set old_schema = {schema_name} %}}
-    {{% set old_identifier = '{model_name}' %}}
+    {{% set old_identifier = {old_identifier} %}}
 
     {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
     {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
@@ -284,7 +284,18 @@ def create_validation_file(model: dict):
     if database_name == "''":
         database_name =  "var('audit_helper__source_database', target.database)"
 
-    macro_config = create_validation_config(model_name, model_dir, schema_name, database_name)
+    # Extract old_identifier configuration
+    old_identifier_config = get_model_config(
+        model_path,
+        config_attr="audit_helper__old_identifier",
+        config_attr_type="string",
+    )
+    if old_identifier_config:
+        old_identifier = f"'{old_identifier_config}'"
+    else:
+        old_identifier = f"audit_helper_ext.get_old_identifier_name('{model_name}')"
+
+    macro_config = create_validation_config(model_name, model_dir, schema_name, database_name, old_identifier)
     macro_count = create_validation_count(model_name, schema_name, database_name)
     macro_schema = create_validation_schema(model_name, schema_name, database_name)
     macro_all_col = create_validation_all_col(
