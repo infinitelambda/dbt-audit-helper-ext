@@ -68,7 +68,7 @@ extract_data as (
         end
       ), 0) as found_only_in_dbt_row_count,
     {{ audit_helper_ext.aggregate_upstream_row_count_sql() }} as upstream_row_count,
-    {{ audit_helper_ext.aggregate_data_type_mismatch_detail_sql() }} as data_type_mismatch_detail
+    {{ audit_helper_ext.aggregate_data_type_mismatches_sql() }} as data_type_mismatches
 
   from
     latest_log 
@@ -96,7 +96,7 @@ calculate_exp as (
       else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
     end as is_count_match,
     case
-      when coalesce(data_type_mismatch_detail, '') = '' then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
+      when coalesce(data_type_mismatches, '') = '' then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
       else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
     end as is_data_type_match,
     case
@@ -123,7 +123,7 @@ select
   is_count_match,
   is_data_type_match,
   match_rate_percentage,
-  data_type_mismatch_detail,
+  data_type_mismatches,
   match_rate_status,
   match_count,
   found_only_in_old_row_count,

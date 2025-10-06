@@ -1,7 +1,7 @@
 version: 2
 
 macros:
-  - name: aggregate_data_type_mismatch_detail_sql
+  - name: aggregate_data_type_mismatches_sql
     description: |
       Aggregates schema validation data type mismatches into a formatted string.
 

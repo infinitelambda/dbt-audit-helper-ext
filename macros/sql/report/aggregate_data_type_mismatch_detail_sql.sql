@@ -1,16 +1,16 @@
 
-{% macro aggregate_data_type_mismatch_detail_sql(
+{% macro aggregate_data_type_mismatches_sql(
   validation_type_field='validation_type',
   result_field='result'
 ) %}
-  {{ return(adapter.dispatch('aggregate_data_type_mismatch_detail_sql', 'audit_helper_ext')(
+  {{ return(adapter.dispatch('aggregate_data_type_mismatches_sql', 'audit_helper_ext')(
     validation_type_field,
     result_field
   )) }}
 {% endmacro %}
 
 
-{% macro sqlserver__aggregate_data_type_mismatch_detail_sql(
+{% macro sqlserver__aggregate_data_type_mismatches_sql(
   validation_type_field,
   result_field
 ) %}
@@ -40,7 +40,7 @@
 {% endmacro %}
 
 
-{% macro bigquery__aggregate_data_type_mismatch_detail_sql(
+{% macro bigquery__aggregate_data_type_mismatches_sql(
   validation_type_field,
   result_field
 ) %}
@@ -71,7 +71,7 @@
 {% endmacro %}
 
 
-{% macro default__aggregate_data_type_mismatch_detail_sql(
+{% macro default__aggregate_data_type_mismatches_sql(
   validation_type_field,
   result_field
 ) %}
