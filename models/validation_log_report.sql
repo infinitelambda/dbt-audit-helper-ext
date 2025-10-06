@@ -68,6 +68,7 @@ extract_data as (
         end
       ), 0) as found_only_in_dbt_row_count,
     {{ audit_helper_ext.aggregate_upstream_row_count_sql() }} as upstream_row_count,
+    {{ audit_helper_ext.aggregate_data_type_mismatch_detail_sql() }} as data_type_mismatch_detail
 
   from
     latest_log 
@@ -95,10 +96,14 @@ calculate_exp as (
       else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
     end as is_count_match,
     case
+      when coalesce(data_type_mismatch_detail, '') = '' then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
+      else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
+    end as is_data_type_match,
+    case
       when {{ match_rate_percentage }} = 100 then {{ audit_helper_ext.unicode_prefix() }}'✅'
       when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then {{ audit_helper_ext.unicode_prefix() }}'🟡'
       else {{ audit_helper_ext.unicode_prefix() }}'❌'
-    end as match_rate_status
+    end as match_rate_status,
 
   from extract_data
 
@@ -116,11 +121,13 @@ select
   old_relation_row_count,
   dbt_relation_row_count,
   is_count_match,
+  is_data_type_match,
+  data_type_mismatch_detail,
   match_rate_percentage,
   match_rate_status,
   match_count,
   found_only_in_old_row_count,
   found_only_in_dbt_row_count,
-  upstream_row_count
+  upstream_row_count,
 
 from calculate_exp
