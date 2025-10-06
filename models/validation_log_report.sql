@@ -9,7 +9,7 @@
 with latest_log as (
 
   {{ audit_helper_ext.deduplicate_with_row_number_sql(
-      source_relation=ref('validation_log').
+      source_relation=ref('validation_log'),
       partition_by_fields=['mart_table', 'dbt_cloud_job_url', 'date_of_process', 'validation_type'],
       order_by_fields=['dbt_cloud_job_start_at desc']
   ) }}
