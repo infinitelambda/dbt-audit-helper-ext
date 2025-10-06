@@ -28,9 +28,10 @@
           then concat(
               {{ json_field_sql(result_field, 'column_name') }}, ': ',
               {{ json_field_sql(result_field, 'a_data_type') }}, {{ audit_helper_ext.unicode_prefix() }}' → ',
-              {{ json_field_sql(result_field, 'b_data_type') }}
+              {{ json_field_sql(result_field, 'b_data_type') }},
+              char(13) + char(10)
             )
-        end, '; '
+        end, ''
       ) within group (order by {{ json_field_sql(result_field, 'column_name') }})
   {%- endset %}
 
@@ -57,7 +58,8 @@
           then concat(
               {{ json_field_sql(result_field, 'column_name') }}, ': ',
               {{ json_field_sql(result_field, 'a_data_type') }}, ' → ',
-              {{ json_field_sql(result_field, 'b_data_type') }}
+              {{ json_field_sql(result_field, 'b_data_type') }},
+              '\n'
             )
         end
         order by {{ json_field_sql(result_field, 'column_name') }}
@@ -87,9 +89,10 @@
           then concat(
               {{ json_field_sql(result_field, 'column_name') }}, ': ',
               {{ json_field_sql(result_field, 'a_data_type') }}, ' → ',
-              {{ json_field_sql(result_field, 'b_data_type') }}
+              {{ json_field_sql(result_field, 'b_data_type') }},
+              '\n'
             )
-        end, '; '
+        end
       )
       within group (order by {{ json_field_sql(result_field, 'column_name') }})
   {%- endset %}

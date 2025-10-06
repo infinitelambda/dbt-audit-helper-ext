@@ -1,11 +1,11 @@
-name,age,city
-Alice,29,New York
-Bob,34,Los Angeles
-Charlie,22,Chicago
-Diana,28,Houston
-Eve,45,Phoenix
-Frank,36,Philadelphia
-Grace,31,San Antonio
-Hannah,30,San Diego
-Ian,24,Dallas
-Jack,39,San Jose
+name,age,city,life_time_value
+Alice,29,New York,99.0
+Bob,34,Los Angeles,150.5
+Charlie,22,Chicago,200.0
+Diana,28,Houston,75.0
+Eve,45,Phoenix,120.0
+Frank,36,Philadelphia,180.0
+Grace,31,San Antonio,110.0
+Hannah,30,San Diego,130.0
+Ian,24,Dallas,160.0
+Jack,39,San Jose,140.0

@@ -5,7 +5,7 @@ macros:
     description: |
       Aggregates schema validation data type mismatches into a formatted string.
 
-      Returns a semicolon-separated list of columns with data type mismatches,
+      Returns a endline list of columns with data type mismatches,
       formatted as: "column_name: a_data_type → b_data_type"
 
       Cross-platform implementation:
