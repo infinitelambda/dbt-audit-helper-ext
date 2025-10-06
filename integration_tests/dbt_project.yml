@@ -18,31 +18,25 @@ on-run-start:
     create schema if not exists {{ target.schema }}
 
 on-run-end:
-  - > # freeze the source with __YYYYMMDD version = audit_helper_ext_seed__YYYYMMDD
+  - > # clone from `audit_helper_ext_seed` to `audit_helper_ext_seed__20240912`
     {% if flags.WHICH in ["seed", "build"] %}
       {{ audit_helper_ext.clone_schema(source_schema="audit_helper_ext_seed") }}
     {% endif %}
 
 seeds:
   audit_helper_ext_test:
-    +schema: audit_helper_ext_seed # try to mimic the source (legacy data)
+    +schema: audit_helper_ext_seed # Target Day 1 -- will be cloned to `audit_helper_ext_seed__20240912`
     sample:
-      sample_source_1:
+      sample_target_1:
         +alias: sample_1
-    jaffle_shop:
-      raw_customers:
-        +alias: customers
-      raw_items:
-        +alias: items
-      raw_orders:
-        +alias: orders
-      raw_products:
-        +alias: products
-      raw_stores:
-        +alias: stores
-      raw_supplies:
-        +alias: supplies
+      sample_target_2:
+        +schema: audit_helper_ext_seed__20240913 # Target Day 2
+        +alias: sample_1
 
 vars:
+  audit_helper__allowed_date_of_processes: ['2024-09-12', '2024-09-13']
   audit_helper__date_of_process: "2024-09-12"
   audit_helper__source_schema: audit_helper_ext_seed
+  audit_helper__old_identifier_naming_convention:
+    pattern: '^(.*)$'
+    replacement: 'raw_\1' # prefix raw_
