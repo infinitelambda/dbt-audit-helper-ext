@@ -1,0 +1,87 @@
+macros:
+  - name: get_old_identifier_name
+    description: |
+      Resolves the old (source/legacy) table identifier name for a given dbt model,
+      supporting both explicit configuration and systematic naming convention transformations.
+
+      This macro is essential for migration projects where legacy tables follow different
+      naming conventions than the new dbt models. It provides a flexible, DRY approach to
+      defining how model names map to their corresponding legacy table names.
+
+      **Resolution Priority:**
+      1. **Model Config** (Highest) - Checks for `audit_helper__old_identifier` in model config
+      2. **Naming Convention** - Applies regex pattern from `audit_helper__old_identifier_naming_convention` variable
+      3. **Fallback** (Lowest) - Returns the model name as-is
+
+      **Configuration Methods:**
+
+      **Method 1: Model-level Config (Explicit Override)**
+      {% raw %}
+      ```sql
+      -- models/03_mart/customers.sql
+      {{
+        config(
+          materialized = 'table',
+          audit_helper__old_identifier = 'dim_customers'
+        )
+      }}
+      select * from {{ ref('raw_customers') }}
+      ```
+      {% endraw %}
+      Result: `customers` → `dim_customers`
+
+      **Method 2: Global Naming Convention (Systematic)**
+      ```yaml
+      # dbt_project.yml
+      vars:
+        audit_helper__old_identifier_naming_convention:
+          pattern: '^(.*)$'
+          replacement: 'dim_\\1'
+      ```
+      Result: All models like `customers` → `dim_customers`
+
+      **Common Naming Convention Patterns:**
+      ```yaml
+      # Add prefix
+      audit_helper__old_identifier_naming_convention:
+        pattern: '^(.*)$'
+        replacement: 'dim_\\1'
+      # customers → dim_customers
+
+      # Add suffix
+      audit_helper__old_identifier_naming_convention:
+        pattern: '^(.*)$'
+        replacement: '\\1_legacy'
+      # customers → customers_legacy
+
+      # Replace prefix
+      audit_helper__old_identifier_naming_convention:
+        pattern: '^(dim|fact)_(.*)$'
+        replacement: 'legacy_\\2'
+      # dim_customers → legacy_customers
+
+      # Remove prefix
+      audit_helper__old_identifier_naming_convention:
+        pattern: '^(stg|int)_(.*)$'
+        replacement: '\\2'
+      # stg_customers → customers
+      ```
+
+      **Use Cases:**
+      - Migration from legacy systems with different table naming conventions
+      - Validating dbt models against source tables with systematic prefix/suffix patterns
+      - Supporting one-off naming exceptions via model config
+      - Centralizing naming transformation logic (DRY principle)
+    arguments:
+      - name: model_name
+        type: string
+        description: |
+          The name of the dbt model for which to resolve the old identifier.
+          This is typically the model's filename without the `.sql` extension.
+      - name: convention
+        type: dict
+        description: |
+          Optional naming convention override. If provided, this takes precedence over
+          the `audit_helper__old_identifier_naming_convention` variable.
+          Should contain `pattern` and `replacement` keys for regex substitution.
+          Defaults to `none`, which uses the global variable if available.

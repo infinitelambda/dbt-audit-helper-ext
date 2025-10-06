@@ -11,9 +11,12 @@
 {% macro default__clone_relation(identifier, source_database, source_schema, use_prev) %}
     {% set copy_mode = 'clone' %}
 
+    {# Resolve source_identifier using naming convention #}
+    {% set source_identifier = audit_helper_ext.get_old_identifier_name(identifier) %}
+
     {# get source location #}
     {% set source_database = source_database or target.database %}
-    {% set source_schema = source_schema 
+    {% set source_schema = source_schema
                             or audit_helper_ext.get_versioned_name(
                                     name=var('audit_helper__source_schema', target.schema),
                                     use_prev=use_prev
@@ -22,7 +25,7 @@
 
     {# checking source table #}
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(
-        identifier=identifier,
+        identifier=source_identifier,
         identifier_database=source_database,
         identifier_schema=source_schema
     ) %}
