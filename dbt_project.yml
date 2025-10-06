@@ -17,3 +17,6 @@ vars:
   # audit_helper__allowed_date_of_processes: ['2024-09-09', '2024-09-10']
   # audit_helper__source_database: ???
   # audit_helper__source_schema: ???
+  # audit_helper__old_identifier_naming_convention:
+  #   pattern: '^(.*)$'
+  #   replacement: 'dim_\1' # dbt=customers vs old=dim_customers
