@@ -22,6 +22,7 @@ OPTIONS:
     -t TYPE     Validation type (default: all)
                   all                - Run all validation types
                   count              - Row count validation only
+                  schema             - Schema/column comparison validation
                   all_row            - Row-by-row validation
                   all_col            - Column-by-column validation (debug)
                   upstream_row_count - Get upstream source counts
@@ -46,6 +47,7 @@ EXAMPLES:
 
     # Run specific validation types
     $0 -t count                                # Count validation only
+    $0 -t schema                               # Schema validation only
     $0 -t all_row                              # Row-by-row validation
     $0 -t upstream_row_count                   # Get source row counts
 
@@ -76,6 +78,7 @@ EXAMPLES:
 
 VALIDATION TYPES:
     count               Fast row count comparison between models and legacy data
+    schema              Schema and column structure comparison between models
     all_row             Detailed row-by-row comparison with summarized results
     all_col             Column-by-column validation for debugging data differences
     upstream_row_count  Check source table row counts before validation
@@ -165,7 +168,7 @@ validate_directory() {
 
 validate_validation_type() {
     local type="$1"
-    local valid_types=("all" "count" "all_row" "all_col" "upstream_row_count")
+    local valid_types=("all" "count" "schema" "all_row" "all_col" "upstream_row_count")
     
     for valid_type in "${valid_types[@]}"; do
         if [[ "$type" == "$valid_type" ]]; then
@@ -421,6 +424,10 @@ if [[ "$SKIP_VALIDATION" != "true" ]]; then
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "COUNT" ]]; then
         run_operation_for_all_models "Count validation" "Validate count" "validation_count" "" "true"
+    fi
+
+    if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "SCHEMA" ]]; then
+        run_operation_for_all_models "Schema validation" "Validate schema" "validation_schema" "" "true"
     fi
 
     if [[ "$VALIDATION_TYPE_UPPER" == "ALL" || "$VALIDATION_TYPE_UPPER" == "ALL_ROW" ]]; then

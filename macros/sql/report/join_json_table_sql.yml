@@ -1,0 +1,10 @@
+macros:
+  - name: join_json_table_sql
+    description: Generates database-specific syntax for joining with a JSON table (CROSS APPLY for SQL Server, comma join for others)
+    arguments:
+      - name: json_column
+        type: string
+        description: The JSON column name to parse
+      - name: table_alias
+        type: string
+        description: The alias for the JSON table (default 'result')

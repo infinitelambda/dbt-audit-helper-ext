@@ -1,0 +1,16 @@
+macros:
+  - name: aggregate_upstream_row_count_sql
+    description: Aggregates upstream row count validation results with conditional emoji formatting (✅ for non-zero, 🟡 for zero row counts) and ordering
+    arguments:
+      - name: validation_type_field
+        type: string
+        description: The column name to filter validation type (default 'validation_type')
+      - name: result_field
+        type: string
+        description: The JSON column containing the result data (default 'result')
+      - name: row_count_field
+        type: string
+        description: The JSON field name for row count (default 'row_count')
+      - name: model_name_field
+        type: string
+        description: The JSON field name for model name (default 'model_name')

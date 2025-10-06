@@ -1,0 +1,21 @@
+version: 2
+
+macros:
+  - name: aggregate_data_type_mismatches_sql
+    description: |
+      Aggregates schema validation data type mismatches into a formatted string.
+
+      Returns a endline list of columns with data type mismatches,
+      formatted as: "column_name: a_data_type → b_data_type"
+
+      Cross-platform implementation:
+      - Snowflake: Uses LISTAGG
+      - BigQuery: Uses STRING_AGG with inline ORDER BY
+      - SQL Server: Uses STRING_AGG with WITHIN GROUP ORDER BY
+    arguments:
+      - name: validation_type_field
+        type: string
+        description: Field name containing validation type (default 'validation_type')
+      - name: result_field
+        type: string
+        description: Field name containing JSON result data (default 'result')

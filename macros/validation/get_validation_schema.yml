@@ -1,0 +1,5 @@
+macros:
+  - name: get_validation_schema
+    description: |
+      Execute the Audit Query returned by `audit_helper.compare_relation_columns`, and
+      log the result into the validation log table
