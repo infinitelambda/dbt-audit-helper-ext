@@ -330,7 +330,7 @@ def create_validation_file(model: dict):
     if not os.path.isdir(validation_dir):
         os.makedirs(validation_dir)
     validation_file = f"{validation_dir}/validation__{model_name}.sql"
-    with open(validation_file, "w") as f:
+    with open(validation_file, "w", encoding="utf-8") as f:
         f.write(output_str)
     print(f"    ✅ {validation_file} created or updated!")
 
