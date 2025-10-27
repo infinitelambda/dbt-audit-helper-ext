@@ -324,16 +324,18 @@ fi
 # Dynamically get models from the specified directory or use single model
 MODELS=()
 if [[ -n "$SINGLE_MODEL" ]]; then
-    # Validate that the single model file exists
-    model_file="$MART_DIR/$SINGLE_MODEL.sql"
-    if [[ ! -f "$model_file" ]]; then
-        log_error "Model file does not exist: $model_file"
+    # Search for the model file recursively within MART_DIR
+    model_file=$(find "$MART_DIR" -name "$SINGLE_MODEL.sql" -type f | head -1)
+
+    if [[ -z "$model_file" || ! -f "$model_file" ]]; then
+        log_error "Model file does not exist: $SINGLE_MODEL.sql in $MART_DIR/"
         log_error "Available models in $MART_DIR/:"
         find "$MART_DIR" -name "*.sql" -type f -exec basename {} .sql \; | sort
         exit 1
     fi
     MODELS=("$SINGLE_MODEL")
     log_info "📋  Validating single model: $SINGLE_MODEL"
+    log_info "    Located at: $model_file"
 else
     # Get all models from the directory
     while IFS= read -r -d '' file; do

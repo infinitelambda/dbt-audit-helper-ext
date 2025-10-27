@@ -18,8 +18,9 @@
       ['path']
   %}
 
+  {% set log_relation = ref('validation_log') %}
   {% set insert_query -%}
-    insert into {{ ref('validation_log') }} (
+    insert into {{ log_relation }} (
         mart_table,
         dbt_cloud_job_url,
         dbt_cloud_job_run_url,
@@ -56,7 +57,13 @@
 
   {% if execute %}
     {% do run_query(insert_query) %}
-    {{ log("ℹ️  Validation result of " ~ dbt_identifier ~ " " ~ type ~ " was inserted!", info=True) }}
+    {{ log("ℹ️  Validation result of " ~ dbt_identifier ~ " " ~ type ~ " was inserted at " ~ log_relation, info=True) }}
+
+    {# Apply data quality checks based on validation type #}
+    {{ audit_helper_ext.print_table_result(
+        result=result,
+        validation_type=type
+    ) }}
   {% endif %}
 
 {% endmacro %}

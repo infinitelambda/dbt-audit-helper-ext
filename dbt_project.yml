@@ -20,3 +20,5 @@ vars:
   # audit_helper__old_identifier_naming_convention:
   #   pattern: '^(.*)$'
   #   replacement: 'dim_\1' # dbt=customers vs old=dim_customers
+  # audit_helper__print_table_enabled: yes
+
