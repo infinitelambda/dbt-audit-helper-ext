@@ -1,5 +1,5 @@
 macros:
-  - name: print_table_result
+  - name: print_validation_result_status
     description: |
       Evaluate validation result filters and display pass/fail status with visual indicators.
 
@@ -28,7 +28,7 @@ macros:
       ```sql
       {% raw %}
       {% set result = run_query(audit_query) %}
-      {{ audit_helper_ext.print_table_result(
+      {{ audit_helper_ext.print_validation_result_status(
           result=result,
           validation_type='full'
       ) }}

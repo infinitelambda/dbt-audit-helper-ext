@@ -60,7 +60,7 @@
     {{ log("ℹ️  Validation result of " ~ dbt_identifier ~ " " ~ type ~ " was inserted at " ~ log_relation, info=True) }}
 
     {# Apply data quality checks based on validation type #}
-    {{ audit_helper_ext.print_table_result(
+    {{ audit_helper_ext.print_validation_result_status(
         result=result,
         validation_type=type
     ) }}

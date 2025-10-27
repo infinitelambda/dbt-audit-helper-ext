@@ -1,12 +1,12 @@
-{% macro print_table_result(result, validation_type) %}
-  {{ return(adapter.dispatch('print_table_result', 'audit_helper_ext')(
+{% macro print_validation_result_status(result, validation_type) %}
+  {{ return(adapter.dispatch('print_validation_result_status', 'audit_helper_ext')(
     result=result,
     validation_type=validation_type
   )) }}
 {% endmacro %}
 
 
-{% macro default__print_table_result(result, validation_type) %}
+{% macro default__print_validation_result_status(result, validation_type) %}
   {% if execute %}
     {# Get the list of filters for this validation type #}
     {% set filters = audit_helper_ext.get_validation_filters(validation_type) %}
