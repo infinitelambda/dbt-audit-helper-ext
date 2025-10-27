@@ -5,7 +5,7 @@ macros:
 
       This utility macro displays query results in a clean, formatted table with proper alignment and borders.
       Table printing can be disabled via the `audit_helper__print_table_enabled` variable (default: true).
-      Table printing is automatically disabled on dbt Cloud.
+      Table printing is automatically disabled on dbt Cloud but `audit_helper__print_table_enabled` will take precedence.
 
       Example usage:
       ```sql

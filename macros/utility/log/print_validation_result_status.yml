@@ -11,6 +11,7 @@ macros:
       The macro uses `get_validation_filters()` to retrieve the list of filters for each validation type.
 
       Built-in validation types:
+      - `upstream_row_count`: Validates upstream models' row count should be > 0
       - `count`: Validates row counts match between tables
       - `schema`: Validates column types match between tables
       - `full`: Validates full data comparison (rows in A not B, B not A, and mismatches)
@@ -32,17 +33,6 @@ macros:
           result=result,
           validation_type='full'
       ) }}
-      {% endraw %}
-      ```
-
-      Example custom filter override:
-      ```sql
-      {% raw %}
-      {# Override in your project to customize behavior #}
-      {% macro filter_count_validation(row) %}
-        {# Custom logic: fail only if difference is > 10 #}
-        {{ return((row['in_a'] - row['in_b']) | abs > 10) }}
-      {% endmacro %}
       {% endraw %}
       ```
     arguments:

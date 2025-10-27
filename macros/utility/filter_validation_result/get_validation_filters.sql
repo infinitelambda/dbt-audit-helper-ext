@@ -1,5 +1,3 @@
-{# Generic filter dispatcher - routes to appropriate filter based on validation type #}
-
 {% macro get_validation_filters(validation_type) %}
   {{ return(adapter.dispatch('get_validation_filters', 'audit_helper_ext')(validation_type=validation_type)) }}
 {% endmacro %}
