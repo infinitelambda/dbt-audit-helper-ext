@@ -15,10 +15,10 @@
     {% set is_print_table_enabled = var('audit_helper__print_table_enabled', '') %}
     {% set is_dbt_cloud = env_var('DBT_CLOUD_PROJECT_ID', '') != '' %}
 
-    {% if is_dbt_cloud and is_print_table_enabled is none %}
+    {% if is_dbt_cloud and is_print_table_enabled == '' %}
       {% set print_enabled = false %}
     {% else %}
-      {% set print_enabled = is_print_table_enabled in ["yes", "true", "1"] %}
+      {% set print_enabled = is_print_table_enabled in ["yes", "true", "1", ""] %}
     {% endif %}
 
     {# Get column information #}
