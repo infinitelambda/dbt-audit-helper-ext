@@ -12,9 +12,13 @@
   {% if execute %}
     {# For security reason, we might want NOT to print data table in log #}
     {% set print_enabled = true %}
+    {% set is_print_table_enabled = var('audit_helper__print_table_enabled', '') %}
     {% set is_dbt_cloud = env_var('DBT_CLOUD_PROJECT_ID', '') != '' %}
-    {% if is_dbt_cloud and var('audit_helper__print_table_enabled') %}
-      {% set print_enabled = var('audit_helper__print_table_enabled') in ["yes", "true", "1"] %}
+
+    {% if is_dbt_cloud and is_print_table_enabled is none %}
+      {% set print_enabled = false %}
+    {% else %}
+      {% set print_enabled = is_print_table_enabled in ["yes", "true", "1"] %}
     {% endif %}
 
     {# Get column information #}
@@ -75,7 +79,7 @@
 
     {# If printing is disabled, log message and skip rows #}
     {% if not print_enabled or is_dbt_cloud %}
-      {% set reason = 'disabled by dbt variable' if not print_enabled else 'disabled on dbt Cloud' %}
+      {% set reason = 'disabled on dbt Cloud or by dbt variable' if not print_enabled else 'enabled' %}
       {% do audit_helper_ext.log_data('✋  Table data printing is ' ~ reason) %}
     {% else %}
       {# Log rows #}
