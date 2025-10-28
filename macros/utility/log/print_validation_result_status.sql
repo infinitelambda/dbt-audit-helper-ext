@@ -16,23 +16,15 @@
       {{ return('') }}
     {% endif %}
 
-    {# Evaluate each filter and display results with emoji indicators #}
+    {# Evaluate each filter using Agate's bulk where() method #}
     {% for filter_config in filters %}
-      {% set filter_name = filter_config.name %}
       {% set filter_description = filter_config.description %}
       {% set filter_macro = filter_config.macro %}
+      {% set filter_macro_call = context[filter_macro] or audit_helper_ext[filter_macro] %}
 
-      {# Apply filter to each row #}
-      {% set filtered_rows = [] %}
-      {% for row in result.rows %}
-        {% set filter_macro_call = context[filter_macro] or audit_helper_ext[filter_macro] %}
-        {% set should_include = filter_macro_call(row) %}
-        {% if should_include %}
-          {% do filtered_rows.append(row) %}
-        {% endif %}
-      {% endfor %}
-
-      {% set row_count = filtered_rows | length %}
+      {# Use Agate's where() method for bulk filtering instead of row-by-row iteration #}
+      {% set filtered_table = result.where(filter_macro_call) %}
+      {% set row_count = filtered_table.rows | length %}
 
       {# Determine emoji based on row count #}
       {% if row_count == 0 %}
