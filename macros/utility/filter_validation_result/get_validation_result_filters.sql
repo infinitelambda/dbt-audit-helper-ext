@@ -38,13 +38,6 @@
       failed_calc=namespace(agg='sum', column='COUNT')
     ),
     namespace(
-      name='full__mismatch',
-      description='Rows exist in both A and B but column values differ',
-      macro='filter_full_validation_mismatch',
-      validation_type='full',
-      failed_calc=namespace(agg='sum', column='COUNT')
-    ),
-    namespace(
       name='upstream_row_count__equal_zero',
       description='Upstream row count is zero',
       macro='filter_upstream_row_count_validation_equal_zero',
