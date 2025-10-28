@@ -26,17 +26,15 @@
       {% set filtered_table = result.where(filter_macro_call) %}
       {% set row_count = filtered_table.rows | length %}
 
-      {# Determine emoji based on row count #}
-      {% if row_count == 0 %}
-        {% set emoji = '✅' %}
-        {% set status = 'PASS' %}
-      {% else %}
-        {% set emoji = '❌' %}
-        {% set status = 'FAIL' %}
-      {% endif %}
+      {# Define status indicators list with conditions based on row_count #}
+      {% set status_indicators = [
+        namespace(condition=row_count == 0, emoji='✅', text='PASS'),
+        namespace(condition=row_count > 0, emoji='❌', text='FAIL')
+      ] %}
+      {% set status = status_indicators | selectattr('condition') | first %}
 
-      {# Log the filter result with emoji #}
-      {% do audit_helper_ext.log_data(emoji ~ ' ' ~ status ~ ' - ' ~ filter_description ~ ' (' ~ row_count ~ ' failures)') %}
+      {# Log the filter result with status indicators #}
+      {% do audit_helper_ext.log_data(status.emoji ~ ' ' ~ status.text ~ ' - ' ~ filter_description ~ ' (' ~ row_count ~ ' failures)') %}
     {% endfor %}
   {% endif %}
 {% endmacro %}
