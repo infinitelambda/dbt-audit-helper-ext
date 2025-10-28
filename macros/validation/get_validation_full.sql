@@ -55,6 +55,7 @@
         {{ audit_helper_ext.log_validation_result('full', audit_results, dbt_identifier, dbt_relation, old_relation) }}
       {% else %}
         {% if audit_results and audit_results | length > 0 %}
+          {# Print sample query #}
           {% set sample_query = audit_helper_ext.generate_sample_query(
               old_relation=old_relation,
               dbt_relation=dbt_relation,

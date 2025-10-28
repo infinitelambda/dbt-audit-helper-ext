@@ -30,7 +30,7 @@
   {% set first_row = audit_results[0] %}
 
   {# Build WHERE conditions #}
-  {% set pk_conditions = [] %}
+  {% set pk_conditions = ["1=1"] %}
   {% for pk_col in primary_keys %}
     {% set pk_value = first_row[pk_col] %}
     {% if pk_value is number %}
@@ -43,7 +43,7 @@
     {% endif %}
   {% endfor %}
 
-  {% set where_clause = pk_conditions | join(' AND ') %}
+  {% set where_clause = pk_conditions | join('\n      and ') %}
 
   {# Get columns filter out excluded columns #}
   {% set column_names = [] %}
