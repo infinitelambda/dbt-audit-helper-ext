@@ -8,19 +8,7 @@ macros:
       - `name`: Unique identifier for the filter
       - `description`: Human-readable description of what the filter checks
       - `macro`: Name of the dbt macro to execute for filtering
-
-      Built-in validation types and their filters:
-      - `count`: Row count validation
-        - `count_mismatch`: Rows where in_a != in_b
-        - `count_zero`: Rows where in_a = in_b = 0
-      - `schema`: Schema/column type validation
-        - `schema_mismatch`: Columns where a_data_type != b_data_type
-      - `full`: Full data comparison validation
-        - `in_a_not_b`: Rows in A but not in B
-        - `in_b_not_a`: Rows in B but not in A
-        - `mismatch`: Rows in both but values do not match
-      - `upstream_row_count`: Upstream model row count validation
-        - `row_count_zero`: Rows where row count = 0
+      - `validation_type`: The type of validation this filter belongs to
 
       To add custom validation types or override existing filters, override this macro in your project
       and return a list of namespace objects with the required properties.
@@ -30,24 +18,6 @@ macros:
       {% raw %}
       {% set filters = audit_helper_ext.get_validation_filters('full') %}
       {# Returns: [in_a_not_b, in_b_not_a, mismatch] #}
-      {% endraw %}
-      ```
-
-      Custom validation type example:
-      ```sql
-      {% raw %}
-      {% macro get_validation_filters(validation_type) %}
-        {% if validation_type == 'my_custom_type' %}
-          {% set custom_filter = namespace(
-            name='custom_check',
-            description='My custom validation check',
-            macro='my_custom_filter_macro'
-          ) %}
-          {{ return([custom_filter]) }}
-        {% else %}
-          {{ return(audit_helper_ext.default__get_validation_filters(validation_type)) }}
-        {% endif %}
-      {% endmacro %}
       {% endraw %}
       ```
     arguments:
