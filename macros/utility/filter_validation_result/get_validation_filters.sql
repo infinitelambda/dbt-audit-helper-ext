@@ -27,19 +27,22 @@
       name='full__in_a_not_b',
       description='Rows exist in A but missing in B',
       macro='filter_full_validation_in_a_not_b',
-      validation_type='full'
+      validation_type='full',
+      failed_calc=namespace(agg='sum', column='COUNT')
     ),
     namespace(
       name='full__in_b_not_a',
       description='Rows exist in B but missing in A',
       macro='filter_full_validation_in_b_not_a',
-      validation_type='full'
+      validation_type='full',
+      failed_calc=namespace(agg='sum', column='COUNT')
     ),
     namespace(
       name='full__mismatch',
       description='Rows exist in both A and B but column values differ',
       macro='filter_full_validation_mismatch',
-      validation_type='full'
+      validation_type='full',
+      failed_calc=namespace(agg='sum', column='COUNT')
     ),
     namespace(
       name='upstream_row_count__equal_zero',
