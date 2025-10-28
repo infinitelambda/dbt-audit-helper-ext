@@ -1,5 +1,5 @@
 macros:
-  - name: get_validation_filters
+  - name: get_validation_result_filters
     description: |
       Get the list of filters to apply for a specific validation type.
 
@@ -9,14 +9,18 @@ macros:
       - `description`: Human-readable description of what the filter checks
       - `macro`: Name of the dbt macro to execute for filtering
       - `validation_type`: The type of validation this filter belongs to
+      - `failed_calc` (optional): Namespace object with `agg` and `column` for calculating failure counts
 
-      To add custom validation types or override existing filters, override this macro in your project
-      and return a list of namespace objects with the required properties.
+      The macro first checks for a custom filter list in the dbt variable `audit_helper__validation_result_filters`.
+      If not set, it uses the default built-in filters.
+
+      To customize validation filters, set the `audit_helper__validation_result_filters` variable in your `dbt_project.yml`.
+      Alternatively, you can override this macro in your project and return a list of namespace objects with the required properties.
 
       Example usage:
       ```sql
       {% raw %}
-      {% set filters = audit_helper_ext.get_validation_filters('full') %}
+      {% set filters = audit_helper_ext.get_validation_result_filters('full') %}
       {# Returns: [in_a_not_b, in_b_not_a, mismatch] #}
       {% endraw %}
       ```

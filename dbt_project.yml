@@ -21,4 +21,15 @@ vars:
   #   pattern: '^(.*)$'
   #   replacement: 'dim_\1' # dbt=customers vs old=dim_customers
   # audit_helper__print_table_enabled: yes
-
+  # audit_helper__validation_result_filters: # used for reporting in-terminal
+  #   - name: count__mismatch
+  #     description: Row counts do not match between A and B
+  #     macro: filter_count_validation_mismatch
+  #     validation_type: count
+  #   - name: full__in_a_not_b
+  #     description: Rows exist in A but missing in B
+  #     macro: filter_full_validation_in_a_not_b
+  #     validation_type: full
+  #     failed_calc:
+  #       agg: sum
+  #       column: COUNT

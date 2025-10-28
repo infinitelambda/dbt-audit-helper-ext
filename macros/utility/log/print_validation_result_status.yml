@@ -8,7 +8,7 @@ macros:
       - ❌ (red) when filter returns >0 rows (FAIL) - shows filter name, description, status and row count
 
       Filters are defined as dbt macros and can be customized by overriding them.
-      The macro uses `get_validation_filters()` to retrieve the list of filters for each validation type.
+      The macro uses `get_validation_result_filters()` to retrieve the list of filters for each validation type.
 
       Built-in validation types:
       - `upstream_row_count`: Validates upstream models' row count should be > 0
@@ -23,7 +23,7 @@ macros:
       - `filter_full_validation_in_b_not_a(row)`: For full validation (B - A)
       - `filter_full_validation_mismatch(row)`: For full validation (mismatches)
 
-      To add custom validation types, override `get_validation_filters(validation_type)`.
+      To add custom validation types, override `get_validation_result_filters(validation_type)`.
 
       Example usage:
       ```sql
@@ -44,4 +44,4 @@ macros:
         description: |
           Validation type to determine which filters to apply.
           Built-in types: full, count, schema.
-          Custom types can be defined by overriding `get_validation_filters()`.
+          Custom types can be defined by overriding `get_validation_result_filters()`.

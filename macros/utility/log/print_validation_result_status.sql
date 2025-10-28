@@ -8,7 +8,7 @@
 
 {% macro default__print_validation_result_status(result, validation_type) %}
 
-  {% set filters = audit_helper_ext.get_validation_filters(validation_type) %}
+  {% set filters = audit_helper_ext.get_validation_result_filters(validation_type) %}
   {% if not execute or (filters | length == 0) %}
       {{ return('') }}
   {% endif %}
@@ -26,7 +26,7 @@
     {% if failed_calc_config.agg is none %}
       {% set failure_count = filtered_table.rows | length %}
     {% else %}
-      {% set column_values = filtered_table.columns[failed_calc_config.column].values() %}
+      {% set column_values = filtered_table.columns[failed_calc_config.column | upper].values() %}
       {% set aggregates = {
         'sum': column_values | sum,
         'max': column_values | max,

@@ -1,10 +1,10 @@
-{% macro get_validation_filters(validation_type) %}
-  {{ return(adapter.dispatch('get_validation_filters', 'audit_helper_ext')(validation_type=validation_type)) }}
+{% macro get_validation_result_filters(validation_type) %}
+  {{ return(adapter.dispatch('get_validation_result_filters', 'audit_helper_ext')(validation_type=validation_type)) }}
 {% endmacro %}
 
-{% macro default__get_validation_filters(validation_type) %}
+{% macro default__get_validation_result_filters(validation_type) %}
 
-  {% set all_filters = [
+  {% set all_filters = var('audit_helper__validation_result_filters', [
     namespace(
       name='count__mismatch',
       description='Row counts do not match between A and B',
@@ -50,7 +50,7 @@
       macro='filter_upstream_row_count_validation_equal_zero',
       validation_type='upstream_row_count'
     )
-  ] %}
+  ]) %}
 
   {% set filtered_list = all_filters | selectattr('validation_type', 'equalto', validation_type | lower) | list %}
   {{ return(filtered_list) }}
