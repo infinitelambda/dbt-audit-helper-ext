@@ -25,7 +25,7 @@
       {# Apply filter to each row #}
       {% set filtered_rows = [] %}
       {% for row in result.rows %}
-        {% set should_include = audit_helper_ext[filter_macro](row) %}
+        {% set should_include = context[filter_macro](row) %}
         {% if should_include %}
           {% do filtered_rows.append(row) %}
         {% endif %}
