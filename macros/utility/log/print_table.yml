@@ -3,9 +3,8 @@ macros:
     description: |
       Print an agate table result in a formatted table layout.
 
-      This utility macro displays query results in a clean, formatted table with proper alignment and borders.
-      Table printing can be disabled via the `audit_helper__print_table_enabled` variable (default: true).
-      Table printing is automatically disabled on dbt Cloud but `audit_helper__print_table_enabled` will take precedence.
+      - Local dev: Always prints (default true)
+      - dbt Cloud: Only prints if `audit_helper__print_table_enabled` is explicitly set to "yes", "true", or "1" in dbt_project.yml or via CLI
 
       Example usage:
       ```sql

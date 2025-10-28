@@ -10,11 +10,11 @@
 
 {% macro default__print_table(result, max_rows, max_columns, max_column_width) %}
   {% if execute %}
-    {# For security reason, we need want NOT to print data table in log #}
+    {# For security reason, we might want NOT to print data table in log #}
     {% set print_enabled = true %}
     {% set is_dbt_cloud = env_var('DBT_CLOUD_PROJECT_ID', '') != '' %}
-    {% if not is_dbt_cloud %}
-      {% set print_enabled = var('audit_helper__print_table_enabled', "1") in ["yes", "true", "1"] %}
+    {% if is_dbt_cloud and var('audit_helper__print_table_enabled') %}
+      {% set print_enabled = var('audit_helper__print_table_enabled') in ["yes", "true", "1"] %}
     {% endif %}
 
     {# Get column information #}
