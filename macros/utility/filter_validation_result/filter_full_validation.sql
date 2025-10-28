@@ -1,5 +1,3 @@
-{# Full validation filter macros #}
-
 {% macro filter_full_validation_in_a_not_b(row) %}
   {{ return(row['IN_A'] and not row['IN_B']) }}
 {% endmacro %}

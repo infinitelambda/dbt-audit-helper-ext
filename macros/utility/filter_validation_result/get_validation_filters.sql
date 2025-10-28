@@ -14,13 +14,13 @@
     namespace(
       name='count__equal_zero',
       description='Rows where in_a = in_b = 0',
-      macro='filter_count_validation_zero',
+      macro='filter_count_validation_equal_zero',
       validation_type='count'
     ),
     namespace(
       name='schema__mismatch_data_type',
       description='Columns where a_data_type != b_data_type',
-      macro='filter_schema_validation',
+      macro='filter_schema_validation_mismatch_data_type',
       validation_type='schema'
     ),
     namespace(
@@ -44,7 +44,7 @@
     namespace(
       name='upstream_row_count__equal_zero',
       description='Rows where row count = 0',
-      macro='filter_upstream_row_count_validation_zero',
+      macro='filter_upstream_row_count_validation_equal_zero',
       validation_type='upstream_row_count'
     )
   ] %}
