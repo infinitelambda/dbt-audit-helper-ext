@@ -10,7 +10,10 @@
     {%- set primary_keys = ['name'] -%}
     {%- set exclude_columns = ["sample_1_sk", "not_exist_in_dbt"] -%}
 
-    {{ log('👀  ' ~ old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier ~ ' vs. ' ~ ref(dbt_identifier), true) if execute }}
+    {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
+        ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))
+    , true) if execute }}
+    
     {{ return(namespace(
             dbt_identifier=dbt_identifier,
             old_database=old_database,
