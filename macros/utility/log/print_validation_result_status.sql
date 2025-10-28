@@ -20,19 +20,33 @@
     {% set filter_macro_call = context[filter_macro] or audit_helper_ext[filter_macro] %}
     {% set failed_calc_config = filter_config.failed_calc | default(namespace(agg=none)) %}
 
-    {% set filtered_table = result.where(filter_macro_call) %}
+    {# For count validation: table level #}
+    {% if validation_type == 'count' %}
+      {% set filter_result = filter_macro_call(result) %}
+      {% if filter_result and (result.rows | length) == 2 %}
+        {% set count_a = result.rows[0][failed_calc_config.column] %}
+        {% set count_b = result.rows[1][failed_calc_config.column] %}
+        {% set failure_count = (count_a - count_b) | abs %}
+      {% else %}
+        {% set failure_count = 1 if filter_result else 0 %}
+      {% endif %}
 
-    {# Calculate failure count based on aggregate method in config #}
-    {% if failed_calc_config.agg is none %}
-      {% set failure_count = filtered_table.rows | length %}
     {% else %}
-      {% set column_values = filtered_table.columns[failed_calc_config.column | upper].values() %}
-      {% set aggregates = {
-        'sum': column_values | sum,
-        'max': column_values | max,
-        'min': column_values | min
-      } %}
-      {% set failure_count = aggregates[failed_calc_config.agg] %}
+      {# For other validation: row level #}
+      {% set filtered_table = result.where(filter_macro_call) %}
+
+      {# Calculate failure count based on aggregate method in config #}
+      {% if failed_calc_config.agg is none %}
+        {% set failure_count = filtered_table.rows | length %}
+      {% else %}
+        {% set column_values = filtered_table.columns[failed_calc_config.column | upper].values() %}
+        {% set aggregates = {
+          'sum': column_values | sum,
+          'max': column_values | max,
+          'min': column_values | min
+        } %}
+        {% set failure_count = aggregates[failed_calc_config.agg] %}
+      {% endif %}
     {% endif %}
 
     {# Log the filter result with status indicators #}

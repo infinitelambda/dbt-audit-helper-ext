@@ -9,7 +9,8 @@
       name='count__mismatch',
       description='Row counts do not match between A and B',
       macro='filter_count_validation_mismatch',
-      validation_type='count'
+      validation_type='count',
+      failed_calc=namespace(agg='<irrelevant>', column='TOTAL_RECORDS')
     ),
     namespace(
       name='count__equal_zero',
