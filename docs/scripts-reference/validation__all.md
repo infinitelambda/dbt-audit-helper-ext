@@ -31,6 +31,7 @@
   - [Environment Configuration](#environment-configuration)
     - [Command Runner Detection](#command-runner-detection)
     - [Setting Default Runner](#setting-default-runner)
+    - [Activating Virtual Environment](#activating-virtual-environment)
   - [Workflow Modes](#workflow-modes)
     - [Mode 1: Full Workflow (Default)](#mode-1-full-workflow-default)
     - [Mode 2: With Date-Based Cloning](#mode-2-with-date-based-cloning)
@@ -41,7 +42,7 @@
     - [Example 1: Quick Count Validation](#example-1-quick-count-validation)
     - [Example 2: Single Model Full Validation](#example-2-single-model-full-validation)
     - [Example 3: Validate Without Rebuilding](#example-3-validate-without-rebuilding)
-    - [Example 4: Use UV Runner](#example-4-use-uv-runner)
+    - [Example 4: Use Alternative Runners](#example-4-use-alternative-runners)
     - [Example 5: Date-Based Validation](#example-5-date-based-validation)
     - [Example 6: Build Models for Later](#example-6-build-models-for-later)
     - [Example 7: Intermediate Models Validation](#example-7-intermediate-models-validation)
@@ -92,7 +93,7 @@ This script is the workhorse of your validation pipeline. It:
 - Provides flexible execution modes (validate-only, build-only, specific validation types)
 - Generates organized logs per model
 - Handles both single model and bulk validations
-- Supports different command runners (poetry, uv)
+- Supports different command runners (venv, poetry, uv)
 
 ## Prerequisites
 
@@ -100,8 +101,9 @@ This script is the workhorse of your validation pipeline. It:
 
 - **bash** shell (version 4.0+)
 - **dbt-core** (1.7.0+)
-- **Command runner**: Either:
-  - `poetry` (default)
+- **Command runner**: One of:
+  - `venv` (default - activated virtual environment, no wrapper needed)
+  - `poetry` (alternative)
   - `uv` (alternative)
 - Standard Unix utilities: `find`, `sort`, `date`, `tee`
 
@@ -147,7 +149,7 @@ This script is the workhorse of your validation pipeline. It:
 | `-d DIR` | Models directory path | `models/03_mart` | `-d models/02_intermediate` |
 | `-m MODEL` | Single model name | _(all models)_ | `-m customer_fact` |
 | `-p DATE` | Audit helper date of process | _(empty)_ | `-p "2024-01-01"` |
-| `-c RUNNER` | Command runner | `poetry` | `-c uv` |
+| `-c RUNNER` | Command runner | `venv` | `-c poetry` or `-c uv` |
 | `-r` | Skip model runs, validate only | `false` | `-r` |
 | `-v` | Run models only, skip validation | `false` | `-v` |
 
@@ -214,14 +216,24 @@ Triggers clone operations from legacy data at a specific date:
 Choose which command runner to use:
 
 ```bash
-# Use poetry (default)
+# Use activated virtual environment (default - no wrapper)
+source .venv/bin/activate  # Activate first
+./scripts/validation__all.sh
+
+# Or explicitly specify venv
+./scripts/validation__all.sh -c venv
+
+# Use poetry
 ./scripts/validation__all.sh -c poetry
 
 # Use uv
 ./scripts/validation__all.sh -c uv
 ```
 
-The script automatically prepends `poetry run` or `uv run` to all dbt commands.
+**Behavior**:
+- **`venv`** (default): Runs dbt commands directly (no wrapper), requires pre-activated virtual environment
+- **`poetry`**: Prepends `poetry run` to all dbt commands
+- **`uv`**: Prepends `uv run` to all dbt commands
 
 #### `-r` - Skip Model Runs
 
@@ -344,10 +356,13 @@ Build models but skip validation steps:
 
 ### Command Runner Detection
 
-The script validates that the selected command runner is installed:
+The script validates that the selected command runner is available:
 
 ```bash
-# Poetry runner (default)
+# Virtual environment (default) - checks for dbt
+command -v dbt || error
+
+# Poetry runner
 command -v poetry || error
 
 # UV runner
@@ -356,16 +371,31 @@ command -v uv || error
 
 ### Setting Default Runner
 
-You can set a default in your shell profile:
+By default, the script uses activated virtual environment (`venv`). You can change the default in your shell profile:
 
 ```bash
 # In ~/.bashrc or ~/.zshrc
-export COMMAND_RUNNER=uv
+export COMMAND_RUNNER=poetry  # or uv, or venv
 ```
 
 Then run without `-c` flag:
 ```bash
 ./scripts/validation__all.sh  # Uses COMMAND_RUNNER env var
+```
+
+### Activating Virtual Environment
+
+When using the default `venv` runner, activate your environment first:
+
+```bash
+# Linux/macOS
+source .venv/bin/activate
+
+# Windows
+.venv\Scripts\activate
+
+# Then run the script
+./scripts/validation__all.sh
 ```
 
 ## Workflow Modes
@@ -472,13 +502,19 @@ Then run without `-c` flag:
 
 Skips model building, runs count validation on existing models.
 
-### Example 4: Use UV Runner
+### Example 4: Use Alternative Runners
 
 ```bash
+# Use poetry runner
+./scripts/validation__all.sh -c poetry -t schema
+
+# Use uv runner
 ./scripts/validation__all.sh -c uv -t schema
 ```
 
-Uses `uv run` instead of `poetry run` for dbt commands.
+Uses `poetry run` or `uv run` instead of direct commands.
+
+**Note**: Default behavior uses activated virtual environment (no wrapper).
 
 ### Example 5: Date-Based Validation
 
@@ -706,6 +742,34 @@ fi
 
 **Error**:
 ```
+dbt command not found in current environment
+Please activate your virtual environment first:
+  source .venv/bin/activate  # Linux/macOS
+  .venv\Scripts\activate    # Windows
+```
+
+**Solution** (for default `venv` runner):
+```bash
+# Activate your virtual environment first
+source .venv/bin/activate  # Linux/macOS
+# or
+.venv\Scripts\activate    # Windows
+
+# Then run the script
+./scripts/validation__all.sh
+```
+
+**Alternative Solution**: Use a different runner:
+```bash
+# Use poetry (if installed)
+./scripts/validation__all.sh -c poetry
+
+# Use uv (if installed)
+./scripts/validation__all.sh -c uv
+```
+
+**Error** (for poetry/uv runners):
+```
 Missing required dependencies: poetry
 Please install missing dependencies and try again.
 ```
@@ -837,11 +901,18 @@ set -x  # Add after set -e, set -u
 
 Test dbt commands independently:
 ```bash
+# Activate virtual environment first (if using default venv runner)
+source .venv/bin/activate
+
 # Test model build
-poetry run dbt run -s customer_fact
+dbt run -s customer_fact
 
 # Test validation macro
-poetry run dbt run-operation validation_count__customer_fact
+dbt run-operation validation_count__customer_fact
+
+# Or with poetry/uv
+poetry run dbt run -s customer_fact
+uv run dbt run -s customer_fact
 ```
 
 #### Review Logs in Real-Time
@@ -857,14 +928,22 @@ tail -f logs/validation__customer_fact.log
 #### Check Environment
 
 ```bash
-# Verify command runner installed
+# Verify virtual environment is activated
+echo $VIRTUAL_ENV  # Should show path to .venv
+
+# Verify command runner installed (if using poetry/uv)
 which poetry  # or which uv
 
 # Verify dbt installed
-poetry run dbt --version
+dbt --version  # With activated venv
+# or
+poetry run dbt --version  # With poetry
+uv run dbt --version  # With uv
 
 # Check dbt profiles
-poetry run dbt debug
+dbt debug  # With activated venv
+# or
+poetry run dbt debug  # With poetry
 ```
 
 ---
