@@ -26,6 +26,8 @@ vars:
   #     description: Row counts do not match between A and B
   #     macro: filter_count_validation_mismatch
   #     validation_type: count
+  #     failed_calc:
+  #       column: TOTAL_RECORDS
   #   - name: full__in_a_not_b
   #     description: Rows exist in A but missing in B
   #     macro: filter_full_validation_in_a_not_b

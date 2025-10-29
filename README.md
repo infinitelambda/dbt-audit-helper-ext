@@ -5,6 +5,8 @@
 
 **Extended Audit Helper solution 💪**
 
+[![docs](https://img.shields.io/badge/docs-visit%20folder-blue?style=flat&logo=gitbook&logoColor=white)](https://github.com/infinitelambda/dbt-audit-helper-ext/tree/main/docs)
+
 [![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
 [![support-snowflake](https://img.shields.io/badge/support-Snowflake-7faecd?logo=snowflake&logoColor=7faecd)](https://docs.snowflake.com?ref=infinitelambda)
 [![support-bigquery](https://img.shields.io/badge/support-BigQuery-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/bigquery/docs?ref=infinitelambda)
