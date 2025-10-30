@@ -33,7 +33,8 @@ OPTIONS:
     -p DATE     Audit helper date of process (e.g., "2024-01-01")
                 When specified, triggers clone operations from legacy data
                 When empty/omitted, skips cloning and runs with full-refresh
-    -c RUNNER   Command runner to use (default: poetry)
+    -c RUNNER   Command runner to use (default: venv)
+                  venv     - Use activated virtual environment (no wrapper)
                   poetry   - Use 'poetry run' for commands
                   uv       - Use 'uv run' for commands
     -r          Skip model runs, validate only
@@ -61,8 +62,9 @@ EXAMPLES:
     $0 -m exp_fsr_rol_plyr_anchr_id -r        # Skip runs, validate one model only
 
     # Use with different command runners
-    $0 -c poetry                              # Explicitly use poetry run (default)
-    $0 -c uv -t count                         # Use uv run instead of poetry run
+    $0                                        # Use venv (default - requires activated environment)
+    $0 -c poetry                              # Explicitly use poetry run
+    $0 -c uv -t count                         # Use uv run
 
     # Use with audit date (triggers clone operations)
     $0 -p "2024-01-01"                        # Clone from specific date
@@ -141,9 +143,18 @@ validate_dependencies() {
         command -v poetry >/dev/null 2>&1 || missing_deps+=("poetry")
     elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
         command -v uv >/dev/null 2>&1 || missing_deps+=("uv")
+    elif [[ "$COMMAND_RUNNER" == "venv" ]]; then
+        # For venv, check if dbt is available in the current environment
+        command -v dbt >/dev/null 2>&1 || {
+            log_error "dbt command not found in current environment"
+            log_error "Please activate your virtual environment first:"
+            log_error "  source .venv/bin/activate  # Linux/macOS"
+            log_error "  .venv\\Scripts\\activate    # Windows"
+            exit 1
+        }
     else
         log_error "Invalid command runner: $COMMAND_RUNNER"
-        log_error "Valid options: uv, poetry"
+        log_error "Valid options: poetry, uv, venv"
         exit 1
     fi
 
@@ -295,19 +306,29 @@ VALIDATION_TYPE="${VALIDATION_TYPE:-all}"
 MART_DIR="${MART_DIR:-models/03_mart}"
 SINGLE_MODEL="${SINGLE_MODEL:-}"
 DATE_OF_PROCESS="${DATE_OF_PROCESS:-}"
-COMMAND_RUNNER="${COMMAND_RUNNER:-poetry}"
+COMMAND_RUNNER="${COMMAND_RUNNER:-venv}"
 SKIP_RUN="${SKIP_RUN:-false}"
 SKIP_VALIDATION="${SKIP_VALIDATION:-false}"
 
 # Set the run command based on the runner
 if [[ "$COMMAND_RUNNER" == "poetry" ]]; then
     RUN_CMD="poetry run"
-else
+elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
     RUN_CMD="uv run"
+else
+    # venv - no wrapper needed, commands run directly
+    RUN_CMD=""
 fi
 
 # Validate dependencies after setting COMMAND_RUNNER
 validate_dependencies
+
+# Log the command runner being used
+if [[ "$COMMAND_RUNNER" == "venv" ]]; then
+    log_info "🐍  Using activated virtual environment (no wrapper)"
+else
+    log_info "🐍  Using command runner: $COMMAND_RUNNER"
+fi
 
 # Validate configuration
 validate_validation_type "$VALIDATION_TYPE"
@@ -324,16 +345,18 @@ fi
 # Dynamically get models from the specified directory or use single model
 MODELS=()
 if [[ -n "$SINGLE_MODEL" ]]; then
-    # Validate that the single model file exists
-    model_file="$MART_DIR/$SINGLE_MODEL.sql"
-    if [[ ! -f "$model_file" ]]; then
-        log_error "Model file does not exist: $model_file"
+    # Search for the model file recursively within MART_DIR
+    model_file=$(find "$MART_DIR" -name "$SINGLE_MODEL.sql" -type f | head -1)
+
+    if [[ -z "$model_file" || ! -f "$model_file" ]]; then
+        log_error "Model file does not exist: $SINGLE_MODEL.sql in $MART_DIR/"
         log_error "Available models in $MART_DIR/:"
         find "$MART_DIR" -name "*.sql" -type f -exec basename {} .sql \; | sort
         exit 1
     fi
     MODELS=("$SINGLE_MODEL")
     log_info "📋  Validating single model: $SINGLE_MODEL"
+    log_info "    Located at: $model_file"
 else
     # Get all models from the directory
     while IFS= read -r -d '' file; do

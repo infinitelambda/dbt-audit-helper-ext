@@ -1,4 +1,42 @@
 macros:
   - name: run_audit_query
     description: |
-      Execute the Audit Query, and print the result to the console
+      Execute an audit query and print the formatted results to the console.
+
+      This macro runs a SQL query, optionally filters the results, and prints them
+      in a formatted way. It supports both summarized output (default) and detailed
+      CSV format output. The results can be filtered using Agate's where() syntax
+      to narrow down specific validation issues.
+
+    arguments:
+      - name: query
+        type: string
+        description: |
+          The SQL query to execute for auditing. This should be a complete SQL
+          query that returns validation results or comparison data.
+
+      - name: summarize
+        type: boolean
+        description: |
+          Controls the output format of audit results:
+          - `true` (default): Prints a summarized view of the results
+          - `false`: Prints detailed results in CSV format (limited to first 100 rows)
+
+          When set to false, a reminder message is logged indicating that only
+          the first 100 rows are shown and the full results should be checked
+          in the data warehouse query history.
+
+      - name: filter
+        type: macro call
+        description: |
+          Optional filter macro to apply to the audit results using Agate's where() method.
+          Should be a macro call that returns a lambda function or filter expression to
+          narrow down specific rows.
+
+          Examples:
+          - `audit_helper_ext["filter_in_a_not_in_b"]` - Find records only in source A
+          - `audit_helper_ext["filter_count_mismatch"]` - Find records with count differences
+          - `context["your_custom_macro"]` - Create your custom macro here
+
+          The macro should return a lambda expression compatible with Agate's where() method.
+          If not provided, all results from the query are returned.

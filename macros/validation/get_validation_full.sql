@@ -53,6 +53,27 @@
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
       {% if summarize %}
         {{ audit_helper_ext.log_validation_result('full', audit_results, dbt_identifier, dbt_relation, old_relation) }}
+      {% else %}
+        {% if audit_results and audit_results | length > 0 %}
+          {# Print sample query #}
+          {% set sample_query = audit_helper_ext.generate_sample_query(
+              old_relation=old_relation,
+              dbt_relation=dbt_relation,
+              primary_keys=primary_keys,
+              exclude_columns=exclude_columns,
+              audit_results=audit_results
+          ) %}
+          {% if sample_query %}
+            {{ log('💡 Investigation query suggestion (first discrepancy row):', true) }}
+            {{ audit_helper_ext.log_debug(sample_query) }}
+          {% endif %}
+
+          {# Print lineage information #}
+          {% set lineage_paths = audit_helper_ext.get_upstream_lineage(dbt_identifier) %}
+          {% set lineage_output = audit_helper_ext.format_lineage(lineage_paths) %}
+            {{ log('💡 Upstream Lineage:', true) }}
+          {{ audit_helper_ext.log_debug(lineage_output) }}
+        {% endif %}
       {% endif %}
     {% endif %}
 

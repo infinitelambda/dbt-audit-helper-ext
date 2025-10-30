@@ -7,7 +7,7 @@
     {{ log('ℹ️  The result of validation are below:', true) }}
 
     {% if format == 'table' %}
-        {{ result.print_table(max_rows=100, max_columns=10, max_column_width=none) }}
+        {{ audit_helper_ext.print_table(result, max_rows=100, max_columns=10, max_column_width=none) }}
     {% elif format == 'csv' %}
         {{ result.limit(100).print_csv() }}
     {% endif %}

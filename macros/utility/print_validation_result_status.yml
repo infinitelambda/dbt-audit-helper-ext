@@ -1,0 +1,47 @@
+macros:
+  - name: print_validation_result_status
+    description: |
+      Evaluate validation result filters and display pass/fail status with visual indicators.
+
+      This macro applies configured validation filters to an agate table result and displays:
+      - ✅ (green) when filter returns 0 rows (PASS) - shows filter name, description and status
+      - ❌ (red) when filter returns >0 rows (FAIL) - shows filter name, description, status and row count
+
+      Filters are defined as dbt macros and can be customized by overriding them.
+      The macro uses `get_validation_result_filters()` to retrieve the list of filters for each validation type.
+
+      Built-in validation types:
+      - `upstream_row_count`: Validates upstream models' row count should be > 0
+      - `count`: Validates row counts match between tables
+      - `schema`: Validates column types match between tables
+      - `full`: Validates full data comparison (rows in A not B, B not A, and mismatches)
+
+      To customize filters, override the specific filter macros:
+      - `filter_count_validation(row)`: For count validation
+      - `filter_schema_validation(row)`: For schema validation
+      - `filter_full_validation_in_a_not_b(row)`: For full validation (A - B)
+      - `filter_full_validation_in_b_not_a(row)`: For full validation (B - A)
+      - `filter_full_validation_mismatch(row)`: For full validation (mismatches)
+
+      To add custom validation types, override `get_validation_result_filters(validation_type)`.
+
+      Example usage:
+      ```sql
+      {% raw %}
+      {% set result = run_query(audit_query) %}
+      {{ audit_helper_ext.print_validation_result_status(
+          result=result,
+          validation_type='full'
+      ) }}
+      {% endraw %}
+      ```
+    arguments:
+      - name: result
+        type: agate.Table
+        description: The agate table result to evaluate
+      - name: validation_type
+        type: string
+        description: |
+          Validation type to determine which filters to apply.
+          Built-in types: full, count, schema.
+          Custom types can be defined by overriding `get_validation_result_filters()`.

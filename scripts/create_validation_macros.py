@@ -38,7 +38,10 @@ def create_validation_config(model_name, model_dir, schema_name, database_name, 
     {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
     {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
 
-    {{{{ log('👀  ' ~ old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier ~ ' vs. ' ~ ref(dbt_identifier), true) if execute }}}}
+    {{{{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
+        ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))
+    , true) if execute }}}}
+    
     {{{{ return(namespace(
             dbt_identifier=dbt_identifier,
             old_database=old_database,
@@ -144,6 +147,13 @@ def create_validations(model_name, model_dir, schema_name, database_name):
             dbt_identifier=validation_config.dbt_identifier
         ) }}}}
 
+        {{{{ audit_helper_ext.get_validation_count(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
+        ) }}}}
+
         {{{{ audit_helper_ext.get_validation_schema(
             dbt_identifier=validation_config.dbt_identifier,
             old_database=validation_config.old_database,
@@ -159,13 +169,6 @@ def create_validations(model_name, model_dir, schema_name, database_name):
             primary_keys=validation_config.primary_keys,
             exclude_columns=validation_config.exclude_columns,
             summarize=summarize
-        ) }}}}
-
-        {{{{ audit_helper_ext.get_validation_count(
-            dbt_identifier=validation_config.dbt_identifier,
-            old_database=validation_config.old_database,
-            old_schema=validation_config.old_schema,
-            old_identifier=validation_config.old_identifier
         ) }}}}
 
     {{% endif %}}

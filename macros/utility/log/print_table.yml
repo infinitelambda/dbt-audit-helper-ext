@@ -1,0 +1,33 @@
+macros:
+  - name: print_table
+    description: |
+      Print an agate table result in a formatted table layout.
+
+      - dbt Cloud: Only prints if `audit_helper__print_table_enabled` is explicitly set to "yes", "true", or "1" in dbt_project.yml or via CLI
+      - Local dev: default true and follow `audit_helper__print_table_enabled` configured value
+
+      Example usage:
+      ```sql
+      {% raw %}
+      {% set result = run_query(some_query) %}
+      {{ audit_helper_ext.print_table(
+          result=result,
+          max_rows=100,
+          max_columns=10,
+          max_column_width=50
+      ) }}
+      {% endraw %}
+      ```
+    arguments:
+      - name: result
+        type: agate.Table
+        description: The agate table result to print
+      - name: max_rows
+        type: integer
+        description: Maximum number of rows to display (default 100)
+      - name: max_columns
+        type: integer
+        description: Maximum number of columns to display (default 10)
+      - name: max_column_width
+        type: integer
+        description: Maximum width for column values, longer values will be truncated (default none)
