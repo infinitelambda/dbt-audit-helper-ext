@@ -25,6 +25,7 @@ def get_models(directory: str = "models/03_mart", name=None) -> dict:
                 )
     return sorted(models, key=operator.itemgetter("model_name"))
 
+
 def get_args() -> tuple[str, str]:
     """Extract the CLI arguments"""
     mart_dir = "models/03_mart"

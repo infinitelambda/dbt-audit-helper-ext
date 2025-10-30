@@ -1,9 +1,12 @@
 {{
   config(
     materialized = 'incremental',
-    unique_key = ['name'],
-    audit_helper__exclude_columns=["sample_1_sk", "not_exist_in_dbt"],
-    audit_helper__old_identifier="sample_1"
+    unique_key = ['sample_1_sk'],
+    meta = {
+      "audit_helper__exclude_columns": ["sample_1_sk", "not_exist_in_dbt"],
+      "audit_helper__old_identifier": "sample_1",
+      "audit_helper__unique_key": ["name"],
+    }
   )
 }}
 

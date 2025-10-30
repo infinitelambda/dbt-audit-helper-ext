@@ -12,11 +12,11 @@ import yaml
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from scripts.common import get_args, get_models
+from scripts.common import get_args, get_models  # noqa: E402
 
 
 CRON_BASE = "0 17 * * 1-5"  # At 17:00 on every day-of-week from Monday through Friday.
-MINUTES_BETWEEN_RUNS = 15   # We don't run all jobs at once to avoid OOM issue
+MINUTES_BETWEEN_RUNS = 15  # We don't run all jobs at once to avoid OOM issue
 BASE_JOB_CONFIG = f"""\
   compile: &val_job # Using this as the job template
     name: "Compile"
@@ -77,11 +77,11 @@ jobs:
                 hours = (hours + 1) % 24
         cron_expression = f"{minutes} {hours} * * 1-5"
         scheduled = True
-        job_type = 'scheduled'
+        job_type = "scheduled"
 
         job_config = f"""\
 
-  {job_id}: # { model }
+  {job_id}: # {model}
     <<: *val_job
     name: "{model}"
     execute_steps:
