@@ -2,6 +2,7 @@
   config(
     materialized = 'incremental',
     unique_key = ['sample_1_sk'],
+    on_schema_change = 'sync_all_columns',
     meta = {
       "audit_helper__exclude_columns": ["sample_1_sk", "not_exist_in_dbt"],
       "audit_helper__old_identifier": "sample_1",
