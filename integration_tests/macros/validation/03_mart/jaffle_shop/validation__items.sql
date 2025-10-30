@@ -114,6 +114,13 @@
             dbt_identifier=validation_config.dbt_identifier
         ) }}
 
+        {{ audit_helper_ext.get_validation_count(
+            dbt_identifier=validation_config.dbt_identifier,
+            old_database=validation_config.old_database,
+            old_schema=validation_config.old_schema,
+            old_identifier=validation_config.old_identifier
+        ) }}
+
         {{ audit_helper_ext.get_validation_schema(
             dbt_identifier=validation_config.dbt_identifier,
             old_database=validation_config.old_database,
@@ -129,13 +136,6 @@
             primary_keys=validation_config.primary_keys,
             exclude_columns=validation_config.exclude_columns,
             summarize=summarize
-        ) }}
-
-        {{ audit_helper_ext.get_validation_count(
-            dbt_identifier=validation_config.dbt_identifier,
-            old_database=validation_config.old_database,
-            old_schema=validation_config.old_schema,
-            old_identifier=validation_config.old_identifier
         ) }}
 
     {% endif %}
