@@ -53,8 +53,25 @@ The good news? We've got you covered with two flexible configuration methods.
 
 Perfect for one-off exceptions or when only a handful of models need special treatment.
 
-Add the `audit_helper__old_identifier` config to your model:
+Add the `audit_helper__old_identifier` config to your model's `meta` block (preferred):
 
+```sql
+-- models/03_mart/customers.sql
+{{
+  config(
+    materialized='table',
+    meta={
+      'audit_helper__old_identifier': 'dim_customers',
+      'audit_helper__unique_key': ['customer_id'],
+      'audit_helper__exclude_columns': ['created_at', 'updated_at']
+    }
+  )
+}}
+
+select * from {{ ref('raw_customers') }}
+```
+
+**Alternative (legacy format - still supported):**
 ```sql
 -- models/03_mart/customers.sql
 {{
@@ -68,6 +85,12 @@ select * from {{ ref('raw_customers') }}
 ```
 
 **Result**: Your dbt model `customers` will be validated against the legacy table `dim_customers`.
+
+**Why use `meta` block?**
+- Better organization: All audit helper configs in one place
+- Future-proof: Aligns with dbt best practices for metadata
+- Prevents collision: Avoids potential conflicts with other dbt config keys
+- Still flexible: Both formats work, choose what fits your style
 
 **When to use this:**
 - Specific models with unique legacy names
@@ -161,18 +184,33 @@ audit_helper__old_identifier_naming_convention:
 
 When determining the legacy table name, the system follows this priority order:
 
-1. **Model Config** (Highest Priority)
-   - Checks for `audit_helper__old_identifier` in the model's config block
-   - Use for explicit overrides
+1. **Model Meta Config** (Highest Priority)
+   - Checks for `config.meta.audit_helper__old_identifier` first
+   - **NEW preferred format** for better organization
+   - Example: `meta={'audit_helper__old_identifier': 'legacy_customers'}`
 
-2. **Naming Convention** (Medium Priority)
+2. **Model Direct Config** (High Priority)
+   - Checks for `config.audit_helper__old_identifier`
+   - Legacy format, still fully supported
+   - Example: `audit_helper__old_identifier='legacy_customers'`
+
+3. **Naming Convention** (Medium Priority)
    - Applies the `audit_helper__old_identifier_naming_convention` pattern
-   - Use for systematic transformations
+   - Use for systematic transformations across all models
+   - Example: Pattern to add `dim_` prefix to all model names
 
-3. **Fallback** (Lowest Priority)
+4. **Fallback** (Lowest Priority)
    - Returns the model name as-is (the lift-and-shift assumption)
-   - This is the default behavior
+   - This is the default behavior when nothing else is configured
 
 **Example**: If you define both a global naming convention AND a model-level config, the model-level config wins. This lets you set a pattern for 95% of your models and override the troublesome 5% individually.
+
+**Note on Unique Keys and Exclude Columns**: The same priority system applies to:
+- `audit_helper__unique_key` (fallback: `config.unique_key`)
+- `audit_helper__exclude_columns`
+- `audit_helper__source_database`
+- `audit_helper__source_schema`
+
+All these configs benefit from being organized in the `meta` block for cleaner, more maintainable code.
 
 _🐞 Enjoy the Bug, finally!_

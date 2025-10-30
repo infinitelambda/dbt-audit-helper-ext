@@ -200,6 +200,17 @@ vars:
 ```sql
 {{
   config(
+    meta={
+      'audit_helper__source_database': 'specific_legacy_db'
+    }
+  )
+}}
+```
+
+Or using the legacy format (still supported):
+```sql
+{{
+  config(
     audit_helper__source_database='specific_legacy_db'
   )
 }}
@@ -241,6 +252,17 @@ With `audit_helper__date_of_process: "2024-09-09"`, this resolves to `legacy__20
 
 **Model-level override**:
 
+```sql
+{{
+  config(
+    meta={
+      'audit_helper__source_schema': 'specific_legacy_schema'
+    }
+  )
+}}
+```
+
+Or using the legacy format (still supported):
 ```sql
 {{
   config(
@@ -315,7 +337,13 @@ vars:
 - You want DRY configuration instead of model-by-model overrides
 - You're migrating many tables with consistent naming differences
 
-**Resolution priority**: Model-level `audit_helper__old_identifier` config takes precedence over this variable. See [configure-legacy-table-name.md](./configure-legacy-table-name.md) for details.
+**Resolution priority**: The package searches for the old identifier in this order:
+1. `config.meta.audit_helper__old_identifier` (NEW preferred format)
+2. `config.audit_helper__old_identifier` (legacy format, still supported)
+3. This variable pattern (`audit_helper__old_identifier_naming_convention`)
+4. Model name as-is (fallback)
+
+See [configure-legacy-table-name.md](./configure-legacy-table-name.md) for details.
 
 ---
 

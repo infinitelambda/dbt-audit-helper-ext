@@ -87,6 +87,21 @@ For projects with source tables scattered across different locations, add this t
 {{
   config(
     materialized='table',
+    meta={
+      'audit_helper__source_database': 'my_source_db',
+      'audit_helper__source_schema': 'my_source_schema'
+    }
+  )
+}}
+
+select * from {{ source('my_source', 'my_table') }}
+```
+
+**Alternative (legacy format - still supported):**
+```sql
+{{
+  config(
+    materialized='table',
     audit_helper__source_database='my_source_db',
     audit_helper__source_schema='my_source_schema'
   )
