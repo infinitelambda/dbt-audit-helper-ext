@@ -20,10 +20,12 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 
-from scripts.common import get_args, get_models
+from scripts.common import get_args, get_models  # noqa: E402
 
 
-def create_validation_config(model_name, model_dir, schema_name, database_name, old_identifier):
+def create_validation_config(
+    model_name, model_dir, schema_name, database_name, old_identifier
+):
     """Template of `get_validation_config__model` macro"""
     output_str = f"""
 {{# Validation config #}}
@@ -35,7 +37,7 @@ def create_validation_config(model_name, model_dir, schema_name, database_name, 
     {{% set old_schema = {schema_name} %}}
     {{% set old_identifier = {old_identifier} %}}
 
-    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "unique_key")}] -%}}
+    {{%- set primary_keys = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__unique_key")}] -%}}
     {{%- set exclude_columns = [{get_model_config(f"{model_dir}/{model_name}", "audit_helper__exclude_columns")}] -%}}
 
     {{{{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
@@ -253,15 +255,70 @@ def create_validation_schema(model_name, schema_name, database_name):
 
 
 def get_model_config(model_path, config_attr="unique_key", config_attr_type="list"):
-    """Extract model config if exists"""
-    with open(f"{model_path}.sql", "r") as f:
+    """
+    Extract model config if exists.
+    Find order:
+    1. config.meta.audit_helper__key (NEW preferred format)
+    2. config.audit_helper__key (EXISTING format)
+    3. config.key (FALLBACK - strips audit_helper__ prefix if present)
+
+    Example: If config_attr is 'audit_helper__unique_key':
+    - First tries: meta.audit_helper__unique_key
+    - Then tries: audit_helper__unique_key
+    - Finally tries: unique_key (fallback)
+    """
+    with open(f"{model_path}.sql", "r", encoding="utf-8") as f:
         content = f.read()
 
     result = ""
-    pattern = f"\\b{config_attr}\\s*=\\s*\\[(.*?)\\]"
-    if config_attr_type != "list":
-        pattern = f"\\b{config_attr}\\s*=\\s*'(.*?)'"
-    match = re.search(pattern, content)
+
+    # Priority 1: Try meta.audit_helper__key first (NEW preferred format)
+    # Look for meta = { 'audit_helper__key': value } pattern
+    if config_attr_type == "list":
+        # For lists: 'audit_helper__key': ['value1', 'value2']
+        meta_pattern = r"['\"]" + re.escape(config_attr) + r"['\"]:\s*\[(.*?)\]"
+    else:
+        # For strings: 'audit_helper__key': 'value'
+        meta_pattern = (
+            r"['\"]" + re.escape(config_attr) + r"['\"]:\s*['\"]([^'\"]*)['\"]"
+        )
+
+    # Check if pattern is inside meta block
+    meta_block_pattern = r"meta\s*=\s*\{([^}]*" + meta_pattern + r"[^}]*)\}"
+    meta_match = re.search(meta_block_pattern, content, re.DOTALL)
+    if meta_match:
+        # Extract the actual value from the meta block
+        value_match = re.search(meta_pattern, meta_match.group(1), re.DOTALL)
+        if value_match:
+            result = value_match.group(1)
+            return result
+
+    # Priority 2: Try direct config.audit_helper__key (EXISTING format)
+    if config_attr.startswith("audit_helper__"):
+        if config_attr_type == "list":
+            pattern = rf"\b{re.escape(config_attr)}\s*=\s*\[(.*?)\]"
+        else:
+            pattern = rf"\b{re.escape(config_attr)}\s*=\s*['\"]([^'\"]*)['\"]"
+
+        match = re.search(pattern, content, re.DOTALL)
+        if match:
+            result = match.group(1)
+            return result
+
+    # Priority 3: Fallback to config.key (remove audit_helper__ prefix and search for base key)
+    # Extract base key name if it starts with audit_helper__
+    base_config_attr = (
+        config_attr.replace("audit_helper__", "", 1)
+        if config_attr.startswith("audit_helper__")
+        else config_attr
+    )
+
+    if config_attr_type == "list":
+        pattern = rf"\b{re.escape(base_config_attr)}\s*=\s*\[(.*?)\]"
+    else:
+        pattern = rf"\b{re.escape(base_config_attr)}\s*=\s*['\"]([^'\"]*)['\"]"
+
+    match = re.search(pattern, content, re.DOTALL)
     if match:
         result = match.group(1)
 
@@ -272,20 +329,26 @@ def create_validation_file(model: dict):
     """Create the model's validation file contains all macos"""
     model_name, model_dir = model.get("model_name"), model.get("model_dir")
     model_path = f"{model_dir}/{model_name}"
-    schema_name = f"""'{get_model_config(
-        model_path,
-        config_attr="audit_helper__source_schema",
-        config_attr_type="string",
-    ) or os.environ.get("SOURCE_SCHEMA", "") }'"""
+    schema_name = f"""'{
+        get_model_config(
+            model_path,
+            config_attr="audit_helper__source_schema",
+            config_attr_type="string",
+        )
+        or os.environ.get("SOURCE_SCHEMA", "")
+    }'"""
     if schema_name == "''":
         schema_name = "audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema))"
-    database_name = f"""'{get_model_config(
-        model_path,
-        config_attr="audit_helper__source_database",
-        config_attr_type="string",
-    ) or os.environ.get("SOURCE_DATABASE", "")}'"""
+    database_name = f"""'{
+        get_model_config(
+            model_path,
+            config_attr="audit_helper__source_database",
+            config_attr_type="string",
+        )
+        or os.environ.get("SOURCE_DATABASE", "")
+    }'"""
     if database_name == "''":
-        database_name =  "var('audit_helper__source_database', target.database)"
+        database_name = "var('audit_helper__source_database', target.database)"
 
     # Extract old_identifier configuration
     old_identifier_config = get_model_config(
@@ -298,15 +361,21 @@ def create_validation_file(model: dict):
     else:
         old_identifier = f"audit_helper_ext.get_old_identifier_name('{model_name}')"
 
-    macro_config = create_validation_config(model_name, model_dir, schema_name, database_name, old_identifier)
+    macro_config = create_validation_config(
+        model_name, model_dir, schema_name, database_name, old_identifier
+    )
     macro_count = create_validation_count(model_name, schema_name, database_name)
     macro_schema = create_validation_schema(model_name, schema_name, database_name)
     macro_all_col = create_validation_all_col(
         model_name, model_dir, schema_name, database_name
     )
-    macro_full = create_validation_full(model_name, model_dir, schema_name, database_name)
+    macro_full = create_validation_full(
+        model_name, model_dir, schema_name, database_name
+    )
     macro_all = create_validations(model_name, model_dir, schema_name, database_name)
-    macro_count_by_group = create_validation_count_by_group(model_name, schema_name, database_name)
+    macro_count_by_group = create_validation_count_by_group(
+        model_name, schema_name, database_name
+    )
     macro_col = create_validation_col(model_name, model_dir, schema_name, database_name)
 
     output_str = (

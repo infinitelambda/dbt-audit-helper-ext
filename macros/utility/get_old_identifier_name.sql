@@ -7,11 +7,25 @@
 
 
 {% macro default__get_old_identifier_name(model_name, convention) %}
-  {# 1. First priority: Check model config for audit_helper__old_identifier #}
+  {#
+    Find order:
+    1. config.meta.audit_helper__old_identifier (NEW preferred format)
+    2. config.audit_helper__old_identifier (EXISTING format)
+    3. Apply naming convention from variable
+    4. Fallback: Return model name as-is
+  #}
   {% if execute %}
     {% for node in graph.nodes.values() %}
       {% if node.resource_type == 'model' and node.name == model_name %}
-        {% set model_config_old_id = node.config.get('audit_helper__old_identifier', none) %}
+        {# Priority 1: Check meta.audit_helper__old_identifier #}
+        {% set meta_config = node.config.get('meta', {}) %}
+        {% set model_config_old_id = meta_config.get('audit_helper__old_identifier', none) %}
+
+        {# Priority 2: Check direct config.audit_helper__old_identifier #}
+        {% if model_config_old_id is none %}
+          {% set model_config_old_id = node.config.get('audit_helper__old_identifier', none) %}
+        {% endif %}
+
         {% if model_config_old_id is not none %}
           {{ return(model_config_old_id) }}
         {% endif %}
@@ -19,7 +33,7 @@
     {% endfor %}
   {% endif %}
 
-  {# 2. Second priority: Apply naming convention from variable #}
+  {# Priority 3: Apply naming convention from variable #}
   {% set convention = convention or var('audit_helper__old_identifier_naming_convention', none) %}
 
   {% if convention is not none %}
@@ -27,6 +41,6 @@
     {{ return(modules.re.sub(convention.get('pattern'), convention.get('replacement'), model_name)) }}
   {% endif %}
 
-  {# 3. Fallback: Return model name as-is #}
+  {# Priority 4: Fallback: Return model name as-is #}
   {{ return(model_name) }}
 {% endmacro %}
