@@ -23,6 +23,21 @@
 {% endmacro %}
 
 
+{% macro postgres__extract_mart_folder_sql(mart_path) %}
+
+  {% set mart_paths -%}
+    string_to_array({{ mart_path }}, '/')
+  {%- endset %}
+
+  {% set sql -%}
+    cast(({{ mart_paths }})[array_length({{ mart_paths }}, 1) - 1] as {{ dbt.type_string() }})
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
 {% macro default__extract_mart_folder_sql(mart_path) %}
 
   {% set mart_paths -%}

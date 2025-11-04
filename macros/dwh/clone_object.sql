@@ -27,3 +27,26 @@
     {{ return(clone_statement) }}
 
 {% endmacro %}
+
+
+{% macro postgres__clone_object(object_name, source_object_name, object_type, replace, dry_run) %}
+
+    {% set clone_statement -%}
+      begin;
+      {% if replace -%}
+        drop {{ object_type }} if exists {{ object_name }};
+      {%- endif %}
+      create {{ object_type }} {{ object_name }}
+      as select * from {{ source_object_name }};
+      commit;
+    {%- endset %}
+
+    {{ log("ℹ️ 🐣  The " ~ object_type ~ " `" ~ object_name ~ "` will be created using `" ~ source_object_name ~ "`.", true) }}
+    {{ log_debug("\n" ~ clone_statement, info=True) if dry_run }}
+    {% if dry_run == false %}
+      {% do run_query(clone_statement) %}
+    {% endif %}
+
+    {{ return(clone_statement) }}
+
+{% endmacro %}

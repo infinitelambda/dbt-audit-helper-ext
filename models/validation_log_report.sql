@@ -103,7 +103,7 @@ calculate_exp as (
       when {{ match_rate_percentage }} = 100 then {{ audit_helper_ext.unicode_prefix() }}'✅'
       when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then {{ audit_helper_ext.unicode_prefix() }}'🟡'
       else {{ audit_helper_ext.unicode_prefix() }}'❌'
-    end as match_rate_status,
+    end as match_rate_status
 
   from extract_data
 
@@ -128,6 +128,6 @@ select
   match_count,
   found_only_in_old_row_count,
   found_only_in_dbt_row_count,
-  upstream_row_count,
+  upstream_row_count
 
 from calculate_exp

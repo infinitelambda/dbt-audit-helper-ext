@@ -5,7 +5,19 @@
 
 {% macro default__run_audit_query(query, summarize, filter) %}
 
-    {% set audit_results = run_query(query) %}
+    {% set query_pre_hooks = audit_helper_ext.get_audit_query_pre_hooks() %}
+    {% set statement_separator = audit_helper_ext.get_audit_query_statement_separator() %}
+    {% set audit_query -%}
+      {% if query_pre_hooks | length > 0 -%}
+        /* pre-hooks statements */
+        {{ query_pre_hooks | join(statement_separator ~ '\n') }}
+        {{ statement_separator }}
+      {%- endif %}
+      /* main query */
+      {{ query }}
+    {%- endset %}
+
+    {% set audit_results = run_query(audit_query) %}
     {% if filter %}
       {% set audit_results = audit_results.where(filter) %}
     {% endif %}

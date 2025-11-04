@@ -166,3 +166,4 @@ cython_debug/
 
 .secrets
 CLAUDE.md
+.user.yml

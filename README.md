@@ -11,6 +11,7 @@
 [![support-snowflake](https://img.shields.io/badge/support-Snowflake-7faecd?logo=snowflake&logoColor=7faecd)](https://docs.snowflake.com?ref=infinitelambda)
 [![support-bigquery](https://img.shields.io/badge/support-BigQuery-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/bigquery/docs?ref=infinitelambda)
 [![support-sqlserver](https://img.shields.io/badge/support-SQL%20Server-CC2927?logo=microsoft%20sql%20server&logoColor=white)](https://docs.microsoft.com/en-us/sql/sql-server/?ref=infinitelambda)
+[![support-postgres](https://img.shields.io/badge/support-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/docs/?ref=infinitelambda)
 [![support-dbt](https://img.shields.io/badge/support-dbt%20v1.7+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
 
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
@@ -24,6 +25,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 - ❄️ Snowflake (default)
 - ☁️ BigQuery
 - ⛱️ SQL Server
+- 🐘 PostgreSQL
 
 ## Installation
 
@@ -107,6 +109,34 @@ This repository provides a collection of powerful macros designed to enhance dat
   ```
 
   Finally, check out your dbt project at the directory named `macros/validation`!
+
+## Configuration
+
+### Query Pre-Hook
+
+For adapter-specific query configurations (e.g., disabling parallel execution in PostgreSQL), you can use the `audit_helper__audit_query_pre_hooks` variable to execute SQL statements before each audit query:
+
+```yaml
+vars:
+  # PostgreSQL: Disable parallel execution to improve match rate
+  # (helps with window functions and double precision data type consistency)
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
+```
+
+You can specify multiple pre-hook queries as a list. Each query will be executed sequentially before the audit query runs.
+
+**Example: Multiple pre-hooks**
+```yaml
+vars:
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
+    - 'SET work_mem = "256MB"'
+```
+
+**Use cases:**
+- **PostgreSQL**: Disable parallel execution to avoid discrepancies with window functions or double precision types
+- **Other adapters**: Set session-level configurations for performance tuning or behavior consistency
 
 ## Validation Strategy
 

@@ -1,0 +1,55 @@
+macros:
+  - name: get_audit_query_pre_hooks
+    description: |
+      Get the list of audit query pre-hooks from dbt variables.
+      Returns a list of SQL statements to execute before each audit query.
+
+      This macro is useful for adapter-specific query configurations, such as:
+      - Disabling parallel execution in PostgreSQL
+      - Setting session-level parameters
+      - Configuring query performance options
+
+      **Returns**: A list of SQL statements (strings) to execute before each audit query
+
+      **Usage Examples**:
+
+      In dbt_project.yml:
+      ```yaml
+      vars:
+        # PostgreSQL: Disable parallel execution to improve match rate
+        audit_helper__audit_query_pre_hooks:
+          - 'SET max_parallel_workers_per_gather = 0'
+          - 'SET work_mem = "256MB"'
+      ```
+
+      Via CLI:
+      ```bash
+      dbt run-operation validation_count__my_model \
+        --vars '{"audit_helper__audit_query_pre_hooks": ["SET max_parallel_workers_per_gather = 0"]}'
+      ```
+
+  - name: get_audit_query_statement_separator
+    description: |
+      Get the statement separator used to join pre-hook SQL statements.
+      Returns a string separator (defaults to ';').
+
+      This macro is useful for adapter-specific batch separators:
+      - SQL Server uses 'GO'
+      - Most other databases use ';'
+
+      **Returns**: A string representing the statement separator
+
+      **Usage Examples**:
+
+      In dbt_project.yml:
+      ```yaml
+      vars:
+        # SQL Server: Use GO as statement separator
+        audit_helper__audit_query_statement_separator: 'GO'
+      ```
+
+      Via CLI:
+      ```bash
+      dbt run-operation validation_count__my_model \
+        --vars '{"audit_helper__audit_query_statement_separator": "GO"}'
+      ```

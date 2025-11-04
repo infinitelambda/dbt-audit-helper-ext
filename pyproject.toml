@@ -21,6 +21,7 @@ python = ">=3.9"
 dbt-core = "^1.7.0"
 dbt-snowflake = "^1.7.0"
 dbt-bigquery = "^1.7.0"
+dbt-postgres = "^1.7.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^2.17.0"
@@ -89,6 +90,19 @@ init = [
 build = [
   {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
 ]
+init-sf = { cmd = "poe init" }
+init-bq = { cmd = "poe init" }
+init-mssql = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe init" }
+init-pg = [
+  {cmd = "poe pg-up"},
+  {env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe init"},
+]
+
+build-sf = { cmd = "poe build" }
+build-bq = { cmd = "poe build" }
+build-mssql = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe build" }
+build-pg = { env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe build" }
+
 gen = [
   {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart"},
   {shell = "cd integration_tests && python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart"}
@@ -131,10 +145,31 @@ validate = [
   {cmd = "poe validate-supplies"},
   {cmd = "poe validate--disable-print-table"},
 ]
+validate-sf = { cmd = "poe validate" }
+validate-bq = { cmd = "poe validate" }
+validate-mssql = { env = { DBT_PROFILES_DIR = "dev", DBT_TARGET = "mssql" }, cmd = "poe validate" }
+validate-pg = { env = { DBT_PROFILES_DIR = "dev/postgres", DBT_TARGET = "pg" }, cmd = "poe validate" }
+
 all = [
   {cmd = "poe init"},
   {cmd = "poe validate"},
 ]
+validate-all-warehouses = [
+  {cmd = "poe validate-sf"},
+  {cmd = "poe validate-bq"},
+  {cmd = "poe validate-mssql"},
+  {cmd = "poe validate-pg"},
+]
+
+# PostgreSQL Docker management
+pg-up = [
+  {shell = "cd integration_tests/dataops && docker compose -f docker-compose.postgres.yml up -d"},
+  {shell = "echo 'Waiting for PostgreSQL to be ready...' && sleep 5"},
+]
+pg-down = [
+  {shell = "cd integration_tests/dataops && docker compose -f docker-compose.postgres.yml down -v"},
+]
+
 git-push-github = [
   {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
   {cmd = "git push"},

@@ -26,3 +26,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro postgres__json_field_sql(json_table_alias, json_field) %}
+
+  {% set sql -%}
+    ({{ json_table_alias }}->>'{{ json_field }}')
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

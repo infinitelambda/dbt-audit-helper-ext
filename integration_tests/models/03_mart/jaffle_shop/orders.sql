@@ -5,9 +5,14 @@
   )
 }}
 
-select * replace(
+select
+    id,
+    customer,
+    ordered_at,
+    store_id,
+    subtotal,
+    tax_paid,
     order_total + 1 as order_total
-  )
 from {{ ref('raw_orders') }}
 where tax_paid = 42
 

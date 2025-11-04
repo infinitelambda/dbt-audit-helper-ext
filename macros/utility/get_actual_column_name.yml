@@ -1,0 +1,33 @@
+macros:
+  - name: get_actual_column_name
+    description: |
+      Retrieves a column value from a row using case-insensitive column name matching.
+
+      This macro handles different database casing rules (e.g., PostgreSQL's lowercase
+      vs Snowflake's uppercase column names) by finding the actual column name in the
+      row that matches the provided column name case-insensitively, then returning
+      the real name of that column.
+
+      ## Usage Example
+
+      ```jinja
+      {% raw %}
+      {% set in_a = audit_helper_ext.get_actual_column_name(row, 'IN_A') %}
+      {% set row_count = audit_helper_ext.get_actual_column_name(row, 'ROW_COUNT') %}
+      {% endraw %}
+      ```
+
+    arguments:
+      - name: row
+        type: dict
+        description: |
+          A dictionary representing a database row, where keys are column names
+          and values are the column values.
+
+      - name: column_name
+        type: string
+        description: |
+          The column name to search for (case-insensitive). This can be in any case
+          (e.g., 'TOTAL_RECORDS', 'total_records', 'Total_Records') and will match
+          the actual column name in the row regardless of casing.
+

@@ -42,3 +42,5 @@ vars:
   audit_helper__old_identifier_naming_convention:
     pattern: '^(.*)$'
     replacement: 'raw_\1' # prefix raw_
+  audit_helper__audit_query_pre_hooks:
+    - SELECT '1' AS test_hook_timestamp

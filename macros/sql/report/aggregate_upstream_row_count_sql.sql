@@ -73,6 +73,35 @@
 {% endmacro %}
 
 
+{% macro postgres__aggregate_upstream_row_count_sql(
+  validation_type_field,
+  result_field,
+  row_count_field,
+  model_name_field
+) %}
+
+  {% set sql -%}
+    string_agg(
+      case
+        when {{ validation_type_field }} = 'upstream_row_count'
+          then concat(
+              case
+                when {{ json_field_sql(result_field, row_count_field) }} <> '0' then '✅ '
+                when {{ json_field_sql(result_field, row_count_field) }} = '0' then '🟡 '
+              end,
+              {{ json_field_sql(result_field, model_name_field) }}, ': ',
+              {{ json_field_sql(result_field, row_count_field) }}, ' row(s)',
+              E'\n'
+            )
+        end, '' order by cast({{ json_field_sql(result_field, row_count_field) }} as integer)
+      )
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
 {% macro default__aggregate_upstream_row_count_sql(
   validation_type_field,
   result_field,

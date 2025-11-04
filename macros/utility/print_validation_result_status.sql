@@ -39,13 +39,27 @@
       {% if failed_calc_config.agg is none %}
         {% set failure_count = filtered_table.rows | length %}
       {% else %}
-        {% set column_values = filtered_table.columns[failed_calc_config.column | upper].values() %}
-        {% set aggregates = {
-          'sum': column_values | sum,
-          'max': column_values | max,
-          'min': column_values | min
-        } %}
-        {% set failure_count = aggregates[failed_calc_config.agg] %}
+        {# Find column name case-insensitively to handle different database casing rules #}
+        {% set config_column = failed_calc_config.column %}
+        {% set actual_column = none %}
+        {% for col_name in filtered_table.column_names %}
+          {% if col_name | upper == config_column | upper %}
+            {% set actual_column = col_name %}
+          {% endif %}
+        {% endfor %}
+
+        {% if actual_column %}
+          {% set column_values = filtered_table.columns[actual_column].values() %}
+          {% set aggregates = {
+            'sum': column_values | sum,
+            'max': column_values | max,
+            'min': column_values | min
+          } %}
+          {% set failure_count = aggregates[failed_calc_config.agg] %}
+        {% else %}
+          {% set failure_count = 0 %}
+          {% do log("⚠️  Warning: Column '" ~ target_column ~ "' not found in result. Available columns: " ~ filtered_table.column_names | join(', '), info=True) %}
+        {% endif %}
       {% endif %}
     {% endif %}
 

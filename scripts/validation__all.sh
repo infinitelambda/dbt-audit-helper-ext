@@ -236,25 +236,25 @@ run_operation_for_all_models() {
         {
             if [[ -n "$cmd_args" && "$cmd_args" != "" ]]; then
                 if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' ($DATE_OF_PROCESS)"
-                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' ($DATE_OF_PROCESS) $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
                 else
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args'"
-                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args"
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" $DBT_ARGS
                 fi
             else
                 if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call ($DATE_OF_PROCESS)"
-                    $RUN_CMD dbt run-operation "$macro_call" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call ($DATE_OF_PROCESS) $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
                 else
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call"
-                    $RUN_CMD dbt run-operation "$macro_call"
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" $DBT_ARGS
                 fi
             fi
-            
+
             local exit_code=$?
             echo ""
-            
+
         } 2>&1 | tee -a "$model_log" || {
             log_error "$operation_type failed for $model, continuing..."
             echo "ERROR: $operation_type failed for $model at $(date)" >> "$model_log"
@@ -270,9 +270,9 @@ run_clone_for_all_models() {
     if [[ -n "$SINGLE_MODEL" ]]; then
         log_info "🐑  Clone relation for single model: $SINGLE_MODEL from PREVIOUS data version of $DATE_OF_PROCESS"
         log_operation "🐑  Cloning: $SINGLE_MODEL"
-        
+
         set -x #echo on
-        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
+        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
         set +x #echo off
     else
         log_info "🐑  Clone all relations from PREVIOUS data version of $DATE_OF_PROCESS"
@@ -280,7 +280,7 @@ run_clone_for_all_models() {
             log_operation "🐑  Cloning: $model"
 
             set -x #echo on
-            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" || { log_error "Clone failed for $model"; exit 1; }
+            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS || { log_error "Clone failed for $model"; exit 1; }
             set +x #echo off
         done
     fi
@@ -318,6 +318,18 @@ elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
 else
     # venv - no wrapper needed, commands run directly
     RUN_CMD=""
+fi
+
+# Build DBT arguments from environment variables
+DBT_ARGS=""
+if [[ -n "${DBT_PROFILES_DIR:-}" ]]; then
+    DBT_ARGS="$DBT_ARGS --profiles-dir $DBT_PROFILES_DIR"
+fi
+if [[ -n "${DBT_PROJECT_DIR:-}" ]]; then
+    DBT_ARGS="$DBT_ARGS --project-dir $DBT_PROJECT_DIR"
+fi
+if [[ -n "${DBT_TARGET:-}" ]]; then
+    DBT_ARGS="$DBT_ARGS --target $DBT_TARGET"
 fi
 
 # Validate dependencies after setting COMMAND_RUNNER
@@ -407,13 +419,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (with full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh
+            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh $DBT_ARGS
             set +x #echo off
         else
             log_header "▶️  Run all models (with full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh
+            $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh $DBT_ARGS
             set +x #echo off
         fi
     else
@@ -426,13 +438,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
             set +x #echo off
         else
             log_header "▶️  Run all models (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}"
+            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
             set +x #echo off
         fi
     fi

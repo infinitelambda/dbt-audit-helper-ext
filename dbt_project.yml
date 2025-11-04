@@ -21,6 +21,10 @@ vars:
   #   pattern: '^(.*)$'
   #   replacement: 'dim_\1' # dbt=customers vs old=dim_customers
   # audit_helper__print_table_enabled: yes
+  # audit_helper__audit_query_pre_hooks: [] # list of SQL queries to execute before each audit query
+  # audit_helper__audit_query_pre_hooks: # PostgreSQL: disable parallel execution to improve match rate
+  #   - 'SET max_parallel_workers_per_gather = 0'
+  # audit_helper__audit_query_statement_separator: ';' # statement separator for pre-hooks (use 'GO' for SQL Server)
   # audit_helper__validation_result_filters: # used for reporting in-terminal
   #   - name: count__mismatch
   #     description: Row counts do not match between A and B

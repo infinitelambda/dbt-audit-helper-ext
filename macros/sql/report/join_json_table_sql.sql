@@ -15,6 +15,17 @@
 {% endmacro %}
 
 
+{% macro postgres__join_json_table_sql(json_column) %}
+
+  {% set sql -%}
+    cross join lateral {{ audit_helper_ext.json_table_sql(json_column) }}
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
 {% macro default__join_json_table_sql(json_column) %}
 
   {% set sql -%}
