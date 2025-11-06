@@ -35,5 +35,10 @@ select
     name,
     age,
     city,
-    cast(life_time_value as {{ dbt.type_float() }}) as life_time_value
+    {% if target.type in ["biquery", "snowflake"] -%}
+      cast(life_time_value as {{ dbt.type_string() }}) as life_time_value
+    {%- else %}
+      cast(life_time_value as {{ dbt.type_float() }}) as life_time_value
+    {%- endif %}
+
 from source_data

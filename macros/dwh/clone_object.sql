@@ -50,3 +50,25 @@
     {{ return(clone_statement) }}
 
 {% endmacro %}
+
+
+{% macro sqlserver__clone_object(object_name, source_object_name, object_type, replace, dry_run) %}
+
+    {% set clone_statement -%}
+      {% if replace -%}
+        drop {{ object_type }} if exists {{ object_name }}
+      {%- endif %}
+      select * 
+      into {{ object_name }}
+      from {{ source_object_name }}
+    {%- endset %}
+
+    {{ log("ℹ️ 🐣  The " ~ object_type ~ " `" ~ object_name ~ "` will be created using `" ~ source_object_name ~ "`.", true) }}
+    {{ log_debug("\n" ~ clone_statement, info=True) if dry_run }}
+    {% if dry_run == false %}
+      {% do run_query(clone_statement) %}
+    {% endif %}
+
+    {{ return(clone_statement) }}
+
+{% endmacro %}

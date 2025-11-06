@@ -7,8 +7,3 @@
   {% set separator = var('audit_helper__audit_query_statement_separator', ';') %}
   {{ return(separator) }}
 {% endmacro %}
-
-{% macro sqlserver__get_audit_query_statement_separator() %}
-  {% set separator = var('audit_helper__audit_query_statement_separator', 'GO') %}
-  {{ return(separator) }}
-{% endmacro %}

@@ -9,10 +9,14 @@
     {% set statement_separator = audit_helper_ext.get_audit_query_statement_separator() %}
     {% set audit_query -%}
       {% if query_pre_hooks | length > 0 -%}
-        /* pre-hooks statements */
-        {{ audit_helper_ext.log_debug("Pre-hooked with:\n- " ~ (query_pre_hooks | join("\n- "))) }}
-        {{ query_pre_hooks | join(statement_separator ~ '\n') }}
-        {{ statement_separator }}
+        {{ audit_helper_ext.log_debug("Pre-hooking with:\n- " ~ (query_pre_hooks | join("\n- "))) }}
+        {% set query_hooks = query_pre_hooks | join(statement_separator ~ '\n') %}
+        {% if target.type not in ["sqlserver"] -%}
+          /* pre-hooks statements */
+          {{ query_hooks }}{{ statement_separator }}
+        {%- else %}
+          {% do run_query(query_hooks) %}
+        {%- endif %}
       {%- endif %}
       /* main query */
       {{ query }}
