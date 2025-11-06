@@ -1,0 +1,35 @@
+macros:
+  - name: get_actual_column_name
+    description: |
+      Find the actual column name that matches the configured column name (case-insensitive).
+
+      This helper macro performs case-insensitive column name matching and works with both agate.Table
+      and agate.Row objects. It's primarily used in validation filter macros to handle column names
+      that may vary in case across different databases (e.g., 'TOTAL_RECORDS' vs 'total_records').
+
+      The macro tries an exact match first, then falls back to case-insensitive matching. If no match
+      is found, it raises a clear error message listing all available columns.
+
+      Example usage:
+      ```sql
+      {% raw %}
+      {# For agate.Table objects #}
+      {% set actual_col = audit_helper_ext.get_actual_column_name(result, 'TOTAL_RECORDS') %}
+      {% set value = result.rows[0][actual_col] %}
+
+      {# For agate.Row objects #}
+      {% set actual_col = audit_helper_ext.get_actual_column_name(row, 'IN_A') %}
+      {% set value = row[actual_col] %}
+      {% endraw %}
+      ```
+    arguments:
+      - name: agate_object
+        type: agate.Table or agate.Row
+        description: |
+          The agate object to search for the column name.
+          Can be either an agate.Table or an agate.Row object.
+      - name: configured_column_name
+        type: string
+        description: |
+          The column name as configured in the filter (e.g., 'TOTAL_RECORDS', 'COUNT', 'IN_A').
+          The macro will search for this column name case-insensitively.
