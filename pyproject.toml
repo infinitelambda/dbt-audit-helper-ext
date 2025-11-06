@@ -92,7 +92,7 @@ build = [
 ]
 init-sf = { cmd = "poe init" }
 init-bq = { cmd = "poe init" }
-init-mssql = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe init" }
+init-ms = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe init" }
 init-pg = [
   {cmd = "poe pg-up"},
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe init"},
@@ -100,7 +100,7 @@ init-pg = [
 
 build-sf = { cmd = "poe build" }
 build-bq = { cmd = "poe build" }
-build-mssql = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe build" }
+build-ms = { env = { DBT_PROFILES_DIR = "integration_tests/dev", DBT_TARGET = "mssql" }, cmd = "poe build" }
 build-pg = { env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe build" }
 
 gen = [
@@ -134,6 +134,10 @@ validate-supplies = [
 validate--disable-print-table = [
   {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__print_table_enabled: no}'"}
 ]
+validate--pg-single-max-parallel = [
+  {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__audit_query_pre_hooks: [\"SET max_parallel_workers_per_gather = 1\"]}' --profiles-dir dev/postgres --target pg"}
+]
+
 validate = [
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
@@ -147,8 +151,11 @@ validate = [
 ]
 validate-sf = { cmd = "poe validate" }
 validate-bq = { cmd = "poe validate" }
-validate-mssql = { env = { DBT_PROFILES_DIR = "dev", DBT_TARGET = "mssql" }, cmd = "poe validate" }
-validate-pg = { env = { DBT_PROFILES_DIR = "dev/postgres", DBT_TARGET = "pg" }, cmd = "poe validate" }
+validate-ms = { env = { DBT_PROFILES_DIR = "dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe validate" }
+validate-pg = [
+  {env = { DBT_PROFILES_DIR = "dev/postgres", DBT_TARGET = "pg" }, cmd = "poe validate"},
+  {cmd = "poe validate--pg-single-max-parallel"},
+]
 
 all = [
   {cmd = "poe init"},
@@ -157,7 +164,7 @@ all = [
 validate-all-warehouses = [
   {cmd = "poe validate-sf"},
   {cmd = "poe validate-bq"},
-  {cmd = "poe validate-mssql"},
+  {cmd = "poe validate-ms"},
   {cmd = "poe validate-pg"},
 ]
 

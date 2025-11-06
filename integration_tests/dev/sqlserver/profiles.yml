@@ -1,0 +1,14 @@
+audit_helper_ext:
+  target: mssql
+  mssql:
+    type: sqlserver
+    driver: ODBC Driver 18 for SQL Server
+    authentication: sql
+    server: localhost
+    database: audit_helper_ext
+    schema: dbo
+    encrypt: true
+    port: 1433
+    trust_cert: false
+    user: dbt_user
+    password: dbt_password

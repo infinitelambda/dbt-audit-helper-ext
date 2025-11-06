@@ -21,5 +21,7 @@ Describe your changes, and why you're making them.
 - [ ] I have verified that these changes work locally on the following warehouses:
   - [ ] Snowflake
   - [ ] BigQuery
+  - [ ] SQLServer
+  - [ ] PostgreSQL
 - [ ] I have updated the README.md (if applicable)
 - [ ] I have added tests & descriptions to my models (and macros if applicable)

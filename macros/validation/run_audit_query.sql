@@ -10,6 +10,7 @@
     {% set audit_query -%}
       {% if query_pre_hooks | length > 0 -%}
         /* pre-hooks statements */
+        {{ audit_helper_ext.log_debug("Pre-hooked with:\n- " ~ (query_pre_hooks | join("\n- "))) }}
         {{ query_pre_hooks | join(statement_separator ~ '\n') }}
         {{ statement_separator }}
       {%- endif %}
