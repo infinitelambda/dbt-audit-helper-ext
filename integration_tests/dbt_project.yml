@@ -4,6 +4,16 @@ config-version: 2
 
 profile: 'audit_helper_ext'
 
+dispatch:
+  - macro_namespace: audit_helper
+    search_order:
+      - audit_helper_ext
+      - audit_helper
+  - macro_namespace: dbt
+    search_order:
+      - audit_helper_ext
+      - dbt
+
 clean-targets:
   - "target"
   - "dbt_packages"
@@ -13,9 +23,9 @@ dbt-cloud: # for dbt Cloud CLI
   project-id: 380261
   account-host: cloud.getdbt.com
 
-on-run-start:
-  - > # create target.schema if not exists
-    create schema if not exists {{ target.schema }}
+# on-run-start:
+#   - > # create target.schema if not exists
+#     create schema if not exists {{ target.schema }}
 
 on-run-end:
   - > # clone from `audit_helper_ext_seed` to `audit_helper_ext_seed__20240912`
@@ -30,10 +40,12 @@ seeds:
       sample_target_1:
         +alias: sample_1
         +column_types:
-          life_time_value: string
+          life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
       sample_target_2:
         +schema: audit_helper_ext_seed__20240913 # Target Day 2
         +alias: sample_1
+        +column_types:
+          life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
 
 vars:
   audit_helper__allowed_date_of_processes: ['2024-09-12', '2024-09-13']
@@ -42,3 +54,5 @@ vars:
   audit_helper__old_identifier_naming_convention:
     pattern: '^(.*)$'
     replacement: 'raw_\1' # prefix raw_
+  audit_helper__audit_query_pre_hooks:
+    - SELECT '1' AS test_hook

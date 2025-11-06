@@ -34,3 +34,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro postgres__safe_cast_sql() %}
+
+  {% set sql -%}
+    cast
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

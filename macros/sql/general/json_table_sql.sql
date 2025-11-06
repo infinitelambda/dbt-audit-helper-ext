@@ -34,3 +34,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro postgres__json_table_sql(json_column) %}
+
+  {% set sql -%}
+    jsonb_array_elements({{ json_column }}::jsonb)
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

@@ -1,0 +1,11 @@
+audit_helper_ext:
+  outputs:
+    bq:
+      dataset: audit_helper_ext
+      location: EU
+      method: oauth
+      priority: interactive
+      project: bichapter
+      threads: 10
+      type: bigquery
+  target: bq

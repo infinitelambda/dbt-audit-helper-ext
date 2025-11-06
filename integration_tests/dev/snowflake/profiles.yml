@@ -1,0 +1,13 @@
+audit_helper_ext:
+  outputs:
+    sf:
+      account: infinitelambda.eu-west-1
+      authenticator: externalbrowser
+      database: audit_helper_ext
+      role: role_audit_helper_ext
+      schema: audit_helper_ext
+      threads: 10
+      type: snowflake
+      user: dat@infinitelambda.com # YOUR VALUE
+      warehouse: wh_audit_helper_ext
+  target: sf

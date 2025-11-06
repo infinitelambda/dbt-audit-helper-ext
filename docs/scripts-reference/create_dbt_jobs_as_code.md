@@ -97,13 +97,16 @@ export DBT_CLOUD_ENVIRONMENT_ID=328988 # Your target environment ID
 
 ```bash
 # Generate jobs for all models in default directory
-python scripts/create_dbt_jobs_as_code.py
+python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py
 
 # Generate jobs for all models in specific directory
-python scripts/create_dbt_jobs_as_code.py models/03_mart
+python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart
 
 # Generate job for single model
-python scripts/create_dbt_jobs_as_code.py models/03_mart customer_fact
+python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart customer_fact
+
+# Or use from the package location in your dbt project:
+python dbt_packages/audit_helper_ext/scripts/create_dbt_jobs_as_code.py models/03_mart
 ```
 
 ## Environment Variables

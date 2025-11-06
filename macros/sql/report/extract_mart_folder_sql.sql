@@ -8,14 +8,27 @@
 
   {% set sql -%}
     cast(
-      reverse(
-        substring(
-          reverse({{ mart_path }}),
-          charindex('/', reverse({{ mart_path }}), charindex('/', reverse({{ mart_path }})) + 1) + 1,
-          charindex('/', reverse({{ mart_path }})) - charindex('/', reverse({{ mart_path }}), charindex('/', reverse({{ mart_path }})) + 1) - 1
-        )
-      ) as {{ dbt.type_string() }}
+      case
+        when len(mart_path) - len(replace(mart_path, '/', '')) >= 2
+        then reverse(parsename(replace(reverse(mart_path), '/', '.'), 2))
+        else null
+      end as {{ dbt.type_string() }}
     )
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
+{% macro postgres__extract_mart_folder_sql(mart_path) %}
+
+  {% set mart_paths -%}
+    string_to_array({{ mart_path }}, '/')
+  {%- endset %}
+
+  {% set sql -%}
+    cast(({{ mart_paths }})[array_length({{ mart_paths }}, 1) - 1] as {{ dbt.type_string() }})
   {%- endset %}
 
   {{ return(sql) }}

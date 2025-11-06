@@ -1,0 +1,15 @@
+audit_helper_ext:
+  target: pg
+  outputs:
+    pg:
+      type: postgres
+      host: localhost
+      port: 5434
+      user: dbt_user
+      password: dbt_password
+      database: audit_helper_ext
+      schema: audit_helper_ext
+      threads: 10
+      keepalives_idle: 0
+      connect_timeout: 10
+      search_path: audit_helper_ext

@@ -58,20 +58,26 @@ When migrating from legacy data pipelines to dbt, you need to ensure your new mo
 ### Basic Syntax
 
 ```bash
-python scripts/create_validation_macros.py [MART_DIRECTORY] [MODEL_NAME]
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py [MART_DIRECTORY] [MODEL_NAME]
+```
+
+Or from the package location in your dbt project:
+
+```bash
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py [MART_DIRECTORY] [MODEL_NAME]
 ```
 
 ### Quick Start
 
 ```bash
 # Generate validation macros for all models in default directory
-python scripts/create_validation_macros.py
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py
 
 # Generate for all models in a specific directory
-python scripts/create_validation_macros.py models/03_mart
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 
 # Generate for a single specific model
-python scripts/create_validation_macros.py models/03_mart sample_target_1
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart sample_target_1
 ```
 
 ## Command Line Arguments
@@ -191,7 +197,7 @@ Set environment variables before running the script:
 ```bash
 export SOURCE_DATABASE="PROD_DB"
 export SOURCE_SCHEMA="LEGACY_MART"
-python scripts/create_validation_macros.py
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py
 ```
 
 #### 3. dbt Variables (Lowest Priority/Fallback)
@@ -221,7 +227,7 @@ The generated macros use dbt variables as fallback:
 ### Example 1: Generate for All Models
 
 ```bash
-python scripts/create_validation_macros.py models/03_mart
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 ```
 
 **Output**:
@@ -239,7 +245,7 @@ python scripts/create_validation_macros.py models/03_mart
 ### Example 2: Generate for Single Model
 
 ```bash
-python scripts/create_validation_macros.py models/03_mart customer_fact
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart customer_fact
 ```
 
 **Output**:
@@ -255,7 +261,7 @@ python scripts/create_validation_macros.py models/03_mart customer_fact
 ```bash
 export SOURCE_DATABASE="PROD_LEGACY"
 export SOURCE_SCHEMA="MART_V1"
-python scripts/create_validation_macros.py
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py
 ```
 
 This applies `PROD_LEGACY.MART_V1` as the default source location for all models that don't have model-specific overrides.
@@ -334,7 +340,7 @@ Each validation file contains 8 macros in this order:
 ls -la models/03_mart
 
 # Use correct path
-python scripts/create_validation_macros.py models/02_intermediate
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/02_intermediate
 ```
 
 #### Issue: No validation files generated
