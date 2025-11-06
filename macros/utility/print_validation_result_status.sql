@@ -24,8 +24,9 @@
     {% if validation_type == 'count' %}
       {% set filter_result = filter_macro_call(result) %}
       {% if filter_result and (result.rows | length) == 2 %}
-        {% set count_a = result.rows[0][failed_calc_config.column] %}
-        {% set count_b = result.rows[1][failed_calc_config.column] %}
+        {% set actual_column_name = audit_helper_ext.get_actual_column_name(result, failed_calc_config.column) %}
+        {% set count_a = result.rows[0][actual_column_name] %}
+        {% set count_b = result.rows[1][actual_column_name] %}
         {% set failure_count = (count_a - count_b) | abs %}
       {% else %}
         {% set failure_count = 1 if filter_result else 0 %}
@@ -39,7 +40,8 @@
       {% if failed_calc_config.agg is none %}
         {% set failure_count = filtered_table.rows | length %}
       {% else %}
-        {% set column_values = filtered_table.columns[failed_calc_config.column | upper].values() %}
+        {% set actual_column_name = audit_helper_ext.get_actual_column_name(filtered_table, failed_calc_config.column) %}
+        {% set column_values = filtered_table.columns[actual_column_name].values() %}
         {% set aggregates = {
           'sum': column_values | sum,
           'max': column_values | max,
