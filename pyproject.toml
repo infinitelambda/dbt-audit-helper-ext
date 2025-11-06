@@ -107,8 +107,12 @@ init = [
 build = [
   {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
 ]
-init-sf = { cmd = "poe init" }
-init-bq = { cmd = "poe init" }
+init-sf = [
+  {env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe init"},
+]
+init-bq = [
+  {env = { DBT_PROFILES_DIR = "integration_tests/dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe init"},
+]
 init-ms = [
   {cmd = "poe ms-up"},
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe init"},
@@ -118,8 +122,8 @@ init-pg = [
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe init"},
 ]
 
-build-sf = { cmd = "poe build" }
-build-bq = { cmd = "poe build" }
+build-sf = { env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe build" }
+build-bq = { env = { DBT_PROFILES_DIR = "integration_tests/dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe build" }
 build-ms = { env = { DBT_PROFILES_DIR = "integration_tests/dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe build" }
 build-pg = { env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe build" }
 
@@ -169,8 +173,8 @@ validate = [
   {cmd = "poe validate-supplies"},
   {cmd = "poe validate--disable-print-table"},
 ]
-validate-sf = { cmd = "poe validate" }
-validate-bq = { cmd = "poe validate" }
+validate-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe validate" }
+validate-bq = { env = { DBT_PROFILES_DIR = "dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe validate" }
 validate-ms = { env = { DBT_PROFILES_DIR = "dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe validate" }
 validate-pg = [
   {env = { DBT_PROFILES_DIR = "dev/postgres", DBT_TARGET = "pg" }, cmd = "poe validate"},
