@@ -20,13 +20,14 @@
 
 Before diving in, make sure you have:
 
-- **[uv](https://docs.astral.sh/uv/getting-started/installation/)** installed for Python package management
-- **dbt Core >= 1.7.0** installed and configured (managed via uv)
+- **Python 3.9+** installed
+- **dbt Core >= 1.7.0** installed and configured
 - A working dbt project (because, well, you need something to validate!)
 - One of the supported data warehouses:
   - ❄️ Snowflake (default)
   - ☁️ BigQuery
   - ⛱️ SQL Server
+  - 🐘 PostgreSQL
 
 ## Installation
 
@@ -45,7 +46,7 @@ packages:
 ### 2. Install dependencies
 
 ```bash
-uv run dbt deps
+dbt deps
 ```
 
 ### 3. Initialize resources
@@ -53,10 +54,10 @@ uv run dbt deps
 This creates the validation log table and summary view (don't worry, it's quick):
 
 ```bash
-uv run dbt run -s audit_helper_ext
+dbt run -s audit_helper_ext
 ```
 
-**SQL Server users only**: Add this dispatch configuration to your `dbt_project.yml`:
+**SQL Server and PostgreSQL users only**: Add this dispatch configuration to your `dbt_project.yml`:
 
 ```yml
 dispatch:
@@ -110,6 +111,19 @@ select * from {{ source('my_source', 'my_table') }}
 select * from {{ source('my_source', 'my_table') }}
 ```
 
+### PostgreSQL Specific Configuration
+
+PostgreSQL users may need to disable parallel execution to improve validation match rates, especially when dealing with window functions or double precision data types:
+
+```yaml
+vars:
+  # PostgreSQL: Disable parallel execution to improve match rate
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
+```
+
+This configuration executes the specified SQL statements before each audit query, ensuring more consistent results.
+
 ## Your First Validation
 
 Time to validate something! Let's say you want to validate models in your `models/03_mart` directory:
@@ -117,7 +131,7 @@ Time to validate something! Let's say you want to validate models in your `model
 ### 1. Generate validation macros
 
 ```bash
-uv run python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
+python dbt_packages/audit_helper_ext/scripts/create_validation_macros.py models/03_mart
 ```
 
 This creates validation macros in `macros/validation/` in your dbt project.
@@ -129,8 +143,8 @@ Execute the generated validation macros:
 **Option A: Run individual macro**
 
 ```bash
-uv run dbt run-operation validations__<model>
-# uv run dbt run-operation validations__sample_1
+dbt run-operation validations__<model>
+# dbt run-operation validations__sample_1
 ```
 
 **Option B: Run via shell script**

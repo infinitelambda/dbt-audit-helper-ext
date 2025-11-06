@@ -22,6 +22,9 @@
     - [Date Management](#date-management)
       - [`audit_helper__date_of_process`](#audit_helper__date_of_process)
       - [`audit_helper__allowed_date_of_processes`](#audit_helper__allowed_date_of_processes)
+    - [Query Hooks Configuration](#query-hooks-configuration)
+      - [`audit_helper__audit_query_pre_hooks`](#audit_helper__audit_query_pre_hooks)
+      - [`audit_helper__audit_query_statement_separator`](#audit_helper__audit_query_statement_separator)
     - [Display and Formatting](#display-and-formatting)
       - [`audit_helper__print_table_enabled`](#audit_helper__print_table_enabled)
       - [`audit_helper_ext__result_format`](#audit_helper_ext__result_format)
@@ -51,6 +54,8 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__print_table_enabled` | Display | No | Auto | Enable/disable table printing in terminal |
 | `audit_helper_ext__result_format` | Display | No | `table` | Format for displaying audit results |
 | `audit_helper__validation_result_filters` | Display | No | Default filters defined in macro | Filters for in-terminal validation result insights |
+| `audit_helper__audit_query_pre_hooks` | Query Hooks | No | `[]` | List of SQL statements to execute before each audit query |
+| `audit_helper__audit_query_statement_separator` | Query Hooks | No | `;` | Statement separator for pre-hook queries |
 
 ## Variables by Category
 
@@ -433,6 +438,83 @@ dbt run-operation clone_relation \
 
 ---
 
+### Query Hooks Configuration
+
+Variables for configuring SQL statements that execute before audit queries.
+
+#### `audit_helper__audit_query_pre_hooks`
+
+**Type**: `list` of SQL statements
+**Default**: `[]` (empty list)
+**Used in**: `get_audit_query_pre_hooks.sql`, `run_audit_query.sql`
+
+A list of SQL statements to execute before each audit query runs. This is particularly useful for adapter-specific configurations that affect query behavior or performance.
+
+**Example (PostgreSQL)**:
+
+```yaml
+vars:
+  # Disable parallel execution to improve match rate
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
+```
+
+**Example (Multiple statements)**:
+
+```yaml
+vars:
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
+    - 'SET work_mem = "256MB"'
+```
+
+**When to use**:
+- **PostgreSQL**: Disable parallel execution for consistent results with window functions or double precision types
+- **SQL Server**: Set session-level options before queries
+- **Any adapter**: Configure session parameters that affect query behavior
+
+**Common use cases**:
+
+| Adapter | Common Pre-Hooks | Purpose |
+|---------|------------------|---------|
+| PostgreSQL | `SET max_parallel_workers_per_gather = 0` | Disable parallel execution for consistency |
+| PostgreSQL | `SET work_mem = '256MB'` | Increase memory for complex queries |
+| SQL Server | `SET NOCOUNT ON` | Suppress row count messages |
+| Snowflake | `ALTER SESSION SET QUERY_TAG = 'audit_validation'` | Tag queries for monitoring |
+
+---
+
+#### `audit_helper__audit_query_statement_separator`
+
+**Type**: `string`
+**Default**: `;`
+**Used in**: `get_audit_query_statement_separator.sql`, `run_audit_query.sql`
+
+The statement separator used to separate multiple pre-hook SQL statements when concatenating them.
+
+**Example (SQL Server)**:
+
+```yaml
+vars:
+  audit_helper__audit_query_pre_hooks:
+    - 'SET NOCOUNT ON'
+    - 'SET ANSI_WARNINGS OFF'
+```
+
+**When to use**:
+- **Most other adapters**: Use `;` (default)
+
+**Adapter-specific values**:
+
+| Adapter | Separator | Example |
+|---------|-----------|---------|
+| PostgreSQL | `;` | Default |
+| Snowflake | `;` | Default |
+| BigQuery | `;` | Default |
+| SQL Server | `` | Batch separator |
+
+---
+
 ### Display and Formatting
 
 Variables that control how validation results are displayed in the terminal and logs.
@@ -622,6 +704,10 @@ vars:
   audit_helper__old_identifier_naming_convention:
     pattern: '^(.*)$'
     replacement: 'tbl_\\1'
+
+  # PostgreSQL specific (optional)
+  audit_helper__audit_query_pre_hooks:
+    - 'SET max_parallel_workers_per_gather = 0'
 ```
 
 **Usage**:

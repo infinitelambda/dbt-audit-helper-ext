@@ -102,7 +102,7 @@ verify = [
 init = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt run -s audit_helper_ext --project-dir integration_tests"},
-  {cmd = "dbt seed --project-dir integration_tests"},
+  {cmd = "dbt seed --full-refresh --project-dir integration_tests"},
 ]
 build = [
   {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
@@ -181,16 +181,22 @@ validate-pg = [
   {env = { DBT_PROFILES_DIR = "dev/postgres", DBT_TARGET = "pg" }, cmd = "poe validate"},
   {cmd = "poe validate--pg-single-max-parallel"},
 ]
-
-all = [
-  {cmd = "poe init"},
-  {cmd = "poe validate"},
-]
 validate-all-warehouses = [
   {cmd = "poe validate-sf"},
   {cmd = "poe validate-bq"},
   {cmd = "poe validate-ms"},
   {cmd = "poe validate-pg"},
+]
+all = [
+  {cmd = "poe init"},
+  {cmd = "poe validate"},
+]
+all-warehouses = [
+  {cmd = "poe init-sf"},
+  {cmd = "poe init-bq"},
+  {cmd = "poe init-pg"},
+  {cmd = "poe init-ms"},
+  {cmd = "poe validate-all-warehouses"},
 ]
 
 # PostgreSQL Docker management

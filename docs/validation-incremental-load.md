@@ -81,9 +81,9 @@ With this config in place, once you run dbt:
 
 ```bash
 # Source data is pointing to the Day1 schema named: `whatever_stuff__20240909`
-uv run dbt run -s +<model> 
+dbt run -s +<model>
 # Source data is pointing to the Day2 schema named: `whatever_stuff__20240910`
-uv run dbt run -s +<model> --vars '{audit_helper__date_of_process: 2024-09-10}'
+dbt run -s +<model> --vars '{audit_helper__date_of_process: 2024-09-10}'
 ```
 
 ## Validation Strategy
@@ -105,7 +105,7 @@ vars:
 **Step 2: Run dbt to build mart tables**
 
 ```bash
-uv run dbt run -s +models/03_mart/ --full-refresh
+dbt run -s +models/03_mart/ --full-refresh
 ```
 
 This creates your `mart_dbt` tables from the Day1 source data.
@@ -147,7 +147,7 @@ Before running incrementally, we need to start with Target Day1 data already in 
 
 ```bash
 # Clone a specific model's Target Day1 data
-uv run dbt run-operation clone_relation \
+dbt run-operation clone_relation \
   --args "{'identifier': 'dim_customer', 'use_prev': true}" \
   --vars "{'audit_helper__date_of_process': '2024-09-10'}"
 ```
@@ -157,7 +157,7 @@ The magic here: `use_prev: true` automatically finds Target Day1 from your `allo
 **Step 3: Run incremental dbt build**
 
 ```bash
-uv run dbt run -s +models/03_mart/ --vars "{'audit_helper__date_of_process': '2024-09-10'}"
+dbt run -s +models/03_mart/ --vars "{'audit_helper__date_of_process': '2024-09-10'}"
 ```
 
 This runs your models incrementally on top of the cloned Target Day1 data.

@@ -40,10 +40,12 @@ seeds:
       sample_target_1:
         +alias: sample_1
         +column_types:
-          life_time_value: "{{ 'varchar(50)' if target.type == 'sqlserver' else 'string' }}"
+          life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
       sample_target_2:
         +schema: audit_helper_ext_seed__20240913 # Target Day 2
         +alias: sample_1
+        +column_types:
+          life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
 
 vars:
   audit_helper__allowed_date_of_processes: ['2024-09-12', '2024-09-13']
