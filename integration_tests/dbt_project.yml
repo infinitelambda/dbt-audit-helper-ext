@@ -9,6 +9,10 @@ dispatch:
     search_order:
       - audit_helper_ext
       - audit_helper
+  - macro_namespace: dbt
+    search_order:
+      - audit_helper_ext
+      - dbt
 
 clean-targets:
   - "target"

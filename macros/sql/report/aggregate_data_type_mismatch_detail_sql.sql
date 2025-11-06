@@ -32,7 +32,7 @@
               char(13) + char(10)
             )
         end, ''
-      ) within group (order by {{ json_field_sql(result_field, 'column_name') }})
+      )
   {%- endset %}
 
   {{ return(sql) }}

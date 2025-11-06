@@ -35,7 +35,7 @@
               char(13) + char(10)
             )
         end, ''
-      ) within group (order by {{ safe_cast_sql() }}({{ json_field_sql(result_field, row_count_field) }} as integer))
+      )
   {%- endset %}
 
   {{ return(sql) }}
