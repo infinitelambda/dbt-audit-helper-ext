@@ -32,7 +32,8 @@
   {# Build WHERE conditions #}
   {% set pk_conditions = ["1=1"] %}
   {% for pk_col in primary_keys %}
-    {% set pk_value = first_row[pk_col | upper] %}
+    {% set pk_col = audit_helper_ext.get_actual_column_name(first_row, pk_col) %}
+    {% set pk_value = first_row[pk_col] %}
     {% if pk_value is number %}
       {% do pk_conditions.append(pk_col ~ " = " ~ pk_value) %}
     {% elif pk_value is sameas true or pk_value is sameas false %}
