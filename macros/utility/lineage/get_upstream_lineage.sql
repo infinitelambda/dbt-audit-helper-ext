@@ -15,10 +15,9 @@
 
     {# Initialize data structures for traversal #}
     {% set lineage_paths = [] %}
-    {% set visited = namespace(nodes=[]) %}
 
     {# Start recursive traversal #}
-    {{ audit_helper_ext._traverse_upstream(dbt_node, [], lineage_paths, visited) }}
+    {{ audit_helper_ext._traverse_upstream(dbt_node, [], lineage_paths) }}
 
     {{ return(lineage_paths) }}
 
@@ -27,16 +26,15 @@
 {% endmacro %}
 
 
-{% macro _traverse_upstream(node, current_path, lineage_paths, visited) %}
+{% macro _traverse_upstream(node, current_path, lineage_paths) %}
 
   {% set node_id = node.unique_id %}
 
-  {# Prevent circular dependencies #}
-  {% if node_id in visited.nodes %}
+  {# Prevent circular dependencies - check if node is already in current path #}
+  {% set path_node_ids = current_path | map(attribute='unique_id') | list %}
+  {% if node_id in path_node_ids %}
     {{ return(none) }}
   {% endif %}
-
-  {% do visited.nodes.append(node_id) %}
 
   {# Add current node to path #}
   {% set node_info = {
@@ -58,9 +56,9 @@
   {% else %}
     {# Recursive case: traverse each upstream node #}
     {% for dep_id in depends_on_nodes %}
-      {% set upstream_node = graph.nodes.get(dep_id) %}
+      {% set upstream_node = graph.nodes.get(dep_id) or graph.sources.get(dep_id) %}
       {% if upstream_node %}
-        {{ audit_helper_ext._traverse_upstream(upstream_node, new_path, lineage_paths, visited) }}
+        {{ audit_helper_ext._traverse_upstream(upstream_node, new_path, lineage_paths) }}
       {% endif %}
     {% endfor %}
   {% endif %}
