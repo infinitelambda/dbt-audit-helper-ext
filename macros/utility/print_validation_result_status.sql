@@ -18,12 +18,12 @@
     {% set filter_description = filter_config.description %}
     {% set filter_macro = filter_config.macro %}
     {% set filter_macro_call = context.get(filter_macro, none) or audit_helper_ext.get(filter_macro) %}
-    {% set failed_calc_config = filter_config.failed_calc | default(namespace(agg=none)) %}
+    {% set failed_calc_config = filter_config.failed_calc | default(namespace(agg=none, column=none)) %}
 
     {# For count validation: table level #}
     {% if validation_type == 'count' %}
       {% set filter_result = filter_macro_call(result) %}
-      {% if filter_result and (result.rows | length) == 2 %}
+      {% if filter_result and (result.rows | length) == 2 and failed_calc_config.column %}
         {% set actual_column_name = audit_helper_ext.get_actual_column_name(result, failed_calc_config.column) %}
         {% set count_a = result.rows[0][actual_column_name] %}
         {% set count_b = result.rows[1][actual_column_name] %}
