@@ -17,13 +17,18 @@ classifiers = [
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.9"
+python = ">=3.10,<4.0.0"
 dbt-core = "^1.7.0"
 
 [tool.poetry.group.snowflake]
 optional = true
 [tool.poetry.group.snowflake.dependencies]
 dbt-snowflake = "^1.7.0"
+
+[tool.poetry.group.databricks]
+optional = true
+[tool.poetry.group.databricks.dependencies]
+dbt-databricks  = "^1.7.0"
 
 [tool.poetry.group.bigquery]
 optional = true
@@ -110,6 +115,9 @@ build = [
 init-sf = [
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe init"},
 ]
+init-adb = [
+  {env = { DBT_PROFILES_DIR = "integration_tests/dev/databricks", DBT_TARGET = "adb" }, cmd = "poe init"},
+]
 init-bq = [
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe init"},
 ]
@@ -123,6 +131,7 @@ init-pg = [
 ]
 
 build-sf = { env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe build" }
+build-adb = { env = { DBT_PROFILES_DIR = "integration_tests/dev/databricks", DBT_TARGET = "adb" }, cmd = "poe build" }
 build-bq = { env = { DBT_PROFILES_DIR = "integration_tests/dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe build" }
 build-ms = { env = { DBT_PROFILES_DIR = "integration_tests/dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe build" }
 build-pg = { env = { DBT_PROFILES_DIR = "integration_tests/dev/postgres", DBT_TARGET = "pg" }, cmd = "poe build" }
@@ -175,6 +184,7 @@ validate = [
   {cmd = "poe validate--disable-print-table"},
 ]
 validate-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe validate" }
+validate-adb = { env = { DBT_PROFILES_DIR = "dev/databricks", DBT_TARGET = "adb" }, cmd = "poe validate" }
 validate-bq = { env = { DBT_PROFILES_DIR = "dev/bigquery", DBT_TARGET = "bq" }, cmd = "poe validate" }
 validate-ms = { env = { DBT_PROFILES_DIR = "dev/sqlserver", DBT_TARGET = "mssql" }, cmd = "poe validate" }
 validate-pg = [
@@ -183,6 +193,7 @@ validate-pg = [
 ]
 validate-all-warehouses = [
   {cmd = "poe validate-sf"},
+  {cmd = "poe validate-adb"},
   {cmd = "poe validate-bq"},
   {cmd = "poe validate-ms"},
   {cmd = "poe validate-pg"},
@@ -193,6 +204,7 @@ all = [
 ]
 all-warehouses = [
   {cmd = "poe init-sf"},
+  {cmd = "poe init-adb"},
   {cmd = "poe init-bq"},
   {cmd = "poe init-pg"},
   {cmd = "poe init-ms"},

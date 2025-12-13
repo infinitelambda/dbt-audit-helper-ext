@@ -37,3 +37,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__json_field_sql(json_table_alias, json_field) %}
+
+  {% set sql -%}
+    get_json_object({{ json_table_alias }}, '$.{{ json_field }}')
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

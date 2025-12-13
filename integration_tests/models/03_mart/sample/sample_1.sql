@@ -33,9 +33,13 @@ with source_data as (
 select
     {{ dbt_utils.generate_surrogate_key(["name"]) }} as sample_1_sk,
     name,
-    age,
+    {% if target.type == "databricks" -%}
+      cast(age as bigint) as age,
+    {%- else %}
+      age,
+    {%- endif %}
     city,
-    {% if target.type in ["biquery", "snowflake"] -%}
+    {% if target.type in ["biquery", "snowflake", "databricks"] -%}
       cast(life_time_value as {{ dbt.type_string() }}) as life_time_value
     {%- else %}
       cast(life_time_value as {{ dbt.type_float() }}) as life_time_value
