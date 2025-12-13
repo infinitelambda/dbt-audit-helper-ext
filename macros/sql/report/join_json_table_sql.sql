@@ -35,3 +35,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__join_json_table_sql(json_column) %}
+
+  {% set sql -%}
+    lateral view outer {{ audit_helper_ext.json_table_sql(json_column) }}
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

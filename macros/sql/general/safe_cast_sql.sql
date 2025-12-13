@@ -45,3 +45,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__safe_cast_sql() %}
+
+  {% set sql -%}
+    try_cast
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

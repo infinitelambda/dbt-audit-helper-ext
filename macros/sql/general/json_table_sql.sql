@@ -45,3 +45,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__json_table_sql(json_column) %}
+
+  {% set sql -%}
+    explode(from_json({{ json_column }}, 'array<string>'))
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

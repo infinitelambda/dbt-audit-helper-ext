@@ -24,3 +24,14 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__array_length_sql() %}
+
+  {% set sql -%}
+    size
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

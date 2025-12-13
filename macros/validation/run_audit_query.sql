@@ -11,7 +11,7 @@
       {% if query_pre_hooks | length > 0 -%}
         {{ audit_helper_ext.log_debug("Pre-hooking with:\n- " ~ (query_pre_hooks | join("\n- "))) }}
         {% set query_hooks = query_pre_hooks | join(statement_separator ~ '\n') %}
-        {% if target.type not in ["sqlserver"] -%}
+        {% if target.type not in ["sqlserver", "databricks"] -%}
           /* pre-hooks statements */
           {{ query_hooks }}{{ statement_separator }}
         {%- else %}

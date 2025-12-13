@@ -130,3 +130,36 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__aggregate_data_type_mismatches_sql(
+  validation_type_field,
+  result_field
+) %}
+
+  {% set sql -%}
+    array_join(
+      collect_list(
+        case
+          when {{ validation_type_field }} = 'schema'
+            and (
+              --exclude columns that exist in dbt only
+              lower({{ json_field_sql(result_field, 'in_a_only') }}) in ('true', '1')
+              or lower({{ json_field_sql(result_field, 'in_both') }}) in ('true', '1')
+            )
+            and lower({{ json_field_sql(result_field, 'has_data_type_match') }}) in ('false', '0')
+            then concat(
+                {{ json_field_sql(result_field, 'column_name') }}, ': ',
+                {{ json_field_sql(result_field, 'a_data_type') }}, ' → ',
+                {{ json_field_sql(result_field, 'b_data_type') }},
+                '\n'
+              )
+        end
+      ),
+      ''
+    )
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
