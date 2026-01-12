@@ -1,0 +1,22 @@
+macros:
+  - name: get_model_config_from_graph
+    description: |
+      Extract the config for a model from the dbt graph.
+
+      This is a convenience wrapper around get_model_node that returns only
+      the config portion of the node.
+
+      Returns an empty dictionary if the model is not found in the graph.
+
+      Example:
+      ```sql
+      {% raw %}
+      {% set config = audit_helper_ext.get_model_config_from_graph('my_model') %}
+      {% set meta = config.get('meta', {}) %}
+      {% endraw %}
+      ```
+
+    arguments:
+      - name: model_name
+        type: string
+        description: The name of the model to find in the graph

@@ -1,0 +1,36 @@
+macros:
+  - name: get_column_specs
+    description: |
+      Get column specifications with custom expressions applied.
+
+      This is a convenience macro that combines getting column names from a relation
+      and applying custom expressions in a single call.
+
+      It internally calls:
+      1. dbt_utils.get_filtered_columns_in_relation() to get column names
+      2. audit_helper_ext.get_columns_with_expressions() to apply custom expressions
+
+      This macro is used by compare_relations and compare_all_columns to support
+      custom column expressions during validation.
+
+      Example:
+      ```sql
+      {% raw %}
+      {% set column_specs = audit_helper.get_column_specs(
+          a_relation,
+          b_relation,
+          exclude_columns=['created_at', 'updated_at']
+      ) %}
+      {% endraw %}
+      ```
+
+    arguments:
+      - name: a_relation
+        type: Relation
+        description: The source relation to get columns from
+      - name: b_relation
+        type: Relation
+        description: The target relation (used to extract model name)
+      - name: exclude_columns
+        type: list
+        description: List of column names to exclude (default=[])
