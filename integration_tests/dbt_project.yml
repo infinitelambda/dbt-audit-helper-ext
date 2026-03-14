@@ -56,3 +56,5 @@ vars:
     replacement: 'raw_\1' # prefix raw_
   audit_helper__audit_query_pre_hooks:
     - SELECT '1' AS test_hook
+  # audit_helper__store_comparison_data: true
+  # audit_helper__store_matched_rows: true
