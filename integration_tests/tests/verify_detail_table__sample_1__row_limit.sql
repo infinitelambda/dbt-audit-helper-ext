@@ -1,3 +1,4 @@
+{{ config(tags=['detail_persistence']) }}
 -- Verify that store_comparison_data_limit caps the number of persisted rows.
 -- sample_limit=2 limits to 2 sampled PKs; each modified PK produces 2 rows, so max is 4.
 -- This test should only be run after validate-detail-store-with-limit.

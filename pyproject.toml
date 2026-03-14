@@ -110,7 +110,7 @@ init = [
   {cmd = "dbt seed --full-refresh --project-dir integration_tests"},
 ]
 build = [
-  {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
+  {cmd = "dbt build --exclude audit_helper_ext tag:detail_persistence --project-dir integration_tests"},
 ]
 init-sf = [
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe init"},

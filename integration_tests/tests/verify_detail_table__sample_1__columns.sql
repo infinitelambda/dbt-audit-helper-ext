@@ -1,3 +1,4 @@
+{{ config(tags=['detail_persistence']) }}
 -- Verify the detail table has the correct columns:
 -- - Required metadata + audit columns are present
 -- - Expected data columns (derived dynamically) are present

@@ -1,3 +1,4 @@
+{{ config(tags=['detail_persistence']) }}
 -- Verify metadata columns are populated correctly.
 -- dbt_audit_ext_mart_table should be 'sample_1', date_of_process should not be null.
 -- Returns failing rows for any metadata violation.

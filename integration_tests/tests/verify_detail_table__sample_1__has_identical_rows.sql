@@ -1,3 +1,4 @@
+{{ config(tags=['detail_persistence']) }}
 -- Verify that when store_matched_rows=true, identical rows ARE persisted.
 -- Returns a failing row if no identical rows exist.
 -- This test should only be run after validate-detail-store-with-matched.

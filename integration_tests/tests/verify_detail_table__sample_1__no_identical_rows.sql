@@ -1,3 +1,4 @@
+{{ config(tags=['detail_persistence']) }}
 -- Verify that when store_matched_rows=false (default), no identical rows are persisted.
 -- Returns failing rows if any identical rows exist.
 
