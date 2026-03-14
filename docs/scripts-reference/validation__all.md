@@ -18,6 +18,8 @@
       - [`-d DIR` - Models Directory](#-d-dir---models-directory)
       - [`-m MODEL` - Single Model](#-m-model---single-model)
       - [`-p DATE` - Date of Process](#-p-date---date-of-process)
+      - [`-s SCHEMA` - Source Schema](#-s-schema---source-schema)
+      - [`-b DATABASE` - Source Database](#-b-database---source-database)
       - [`-c RUNNER` - Command Runner](#-c-runner---command-runner)
       - [`-r` - Skip Model Runs](#-r---skip-model-runs)
       - [`-v` - Skip Validation](#-v---skip-validation)
@@ -46,7 +48,8 @@
     - [Example 5: Date-Based Validation](#example-5-date-based-validation)
     - [Example 6: Build Models for Later](#example-6-build-models-for-later)
     - [Example 7: Intermediate Models Validation](#example-7-intermediate-models-validation)
-    - [Example 8: Complex Combination](#example-8-complex-combination)
+    - [Example 8: Source Location Override](#example-8-source-location-override)
+    - [Example 9: Complex Combination](#example-9-complex-combination)
   - [Logging](#logging)
     - [Log Location](#log-location)
     - [Log File Structure](#log-file-structure)
@@ -149,6 +152,8 @@ This script is the workhorse of your validation pipeline. It:
 | `-d DIR` | Models directory path | `models/03_mart` | `-d models/02_intermediate` |
 | `-m MODEL` | Single model name | _(all models)_ | `-m customer_fact` |
 | `-p DATE` | Audit helper date of process | _(empty)_ | `-p "2024-01-01"` |
+| `-s SCHEMA` | Source schema for legacy tables | _(empty)_ | `-s legacy_schema` |
+| `-b DATABASE` | Source database for legacy tables | _(empty)_ | `-b legacy_db` |
 | `-c RUNNER` | Command runner | `venv` | `-c poetry` or `-c uv` |
 | `-r` | Skip model runs, validate only | `false` | `-r` |
 | `-v` | Run models only, skip validation | `false` | `-v` |
@@ -210,6 +215,34 @@ Triggers clone operations from legacy data at a specific date:
 **Behavior**:
 - **With `-p`**: Clones legacy data → builds models → runs validations
 - **Without `-p`**: Full-refresh build → runs validations
+
+#### `-s SCHEMA` - Source Schema
+
+Override the schema containing legacy/source tables. Sets the `audit_helper__source_schema` dbt variable for the validation run:
+
+```bash
+# Set source schema
+./scripts/validation__all.sh -s legacy_schema
+
+# Combine with date for versioned schemas
+./scripts/validation__all.sh -s "snapshot__20240101" -p "2024-01-01"
+```
+
+**When to use**: Your legacy tables are in a different schema than your dbt target, or you want to override the value set in `dbt_project.yml` for a specific run.
+
+#### `-b DATABASE` - Source Database
+
+Override the database containing legacy/source tables. Sets the `audit_helper__source_database` dbt variable for the validation run:
+
+```bash
+# Set source database
+./scripts/validation__all.sh -b legacy_db
+
+# Combine with source schema
+./scripts/validation__all.sh -b legacy_db -s legacy_schema
+```
+
+**When to use**: Your legacy tables are in a different database than your dbt target, or you want to override the value set in `dbt_project.yml` for a specific run.
 
 #### `-c RUNNER` - Command Runner
 
@@ -545,13 +578,29 @@ Uses `poetry run` or `uv run` instead of direct commands.
 
 Validates intermediate models instead of mart models.
 
-### Example 8: Complex Combination
+### Example 8: Source Location Override
+
+```bash
+# Override source schema and database for this run
+./scripts/validation__all.sh -s legacy_prod -b legacy_dwh -t all_row
+
+# Combine with date-based versioning
+./scripts/validation__all.sh -s "snapshot__20240101" -b snapshots -p "2024-01-01"
+```
+
+**Effect**:
+- Sets `audit_helper__source_schema` and `audit_helper__source_database` for the run
+- Useful when legacy tables are in a different location than configured in `dbt_project.yml`
+
+### Example 9: Complex Combination
 
 ```bash
 ./scripts/validation__all.sh \
   -d models/03_mart \
   -t all_row \
   -p "2024-10-15" \
+  -s legacy_prod \
+  -b legacy_dwh \
   -c uv
 ```
 
@@ -559,6 +608,7 @@ Validates intermediate models instead of mart models.
 - Validates mart models
 - Row-by-row validation only
 - Uses date-based cloning
+- Overrides source location
 - Uses UV as command runner
 
 ## Logging

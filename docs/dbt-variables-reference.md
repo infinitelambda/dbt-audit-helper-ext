@@ -13,7 +13,11 @@
       - [`audit_helper__database`](#audit_helper__database)
       - [`audit_helper__schema`](#audit_helper__schema)
       - [`audit_helper__full_refresh`](#audit_helper__full_refresh)
-      - [`audit_helper__dbt_cloud_host_url`](#audit_helper__dbt_cloud_host_url)
+      - [`audit_helper__dbt_host_url`](#audit_helper__dbt_host_url)
+    - [Row-Level Detail Persistence](#row-level-detail-persistence)
+      - [`audit_helper__store_comparison_data`](#audit_helper__store_comparison_data)
+      - [`audit_helper__store_matched_rows`](#audit_helper__store_matched_rows)
+      - [`audit_helper__store_comparison_data_limit`](#audit_helper__store_comparison_data_limit)
     - [Source Configuration](#source-configuration)
       - [`audit_helper__source_database`](#audit_helper__source_database)
       - [`audit_helper__source_schema`](#audit_helper__source_schema)
@@ -45,7 +49,10 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__database` | Logging | No | `target.database` | Database for validation log tables |
 | `audit_helper__schema` | Logging | No | `target.schema` | Schema for validation log tables |
 | `audit_helper__full_refresh` | Logging | No | `0` | Force full refresh of validation_log model |
-| `audit_helper__dbt_cloud_host_url` | Logging | No | `emea.dbt.com` | dbt Cloud host URL for job links |
+| `audit_helper__dbt_host_url` | Logging | No | `emea.dbt.com` | dbt Cloud host URL for job links |
+| `audit_helper__store_comparison_data` | Detail Persistence | No | `false` | Enable row-level detail persistence |
+| `audit_helper__store_matched_rows` | Detail Persistence | No | `false` | Also persist identical rows in detail tables |
+| `audit_helper__store_comparison_data_limit` | Detail Persistence | No | `none` | Max sampled PKs per detail table |
 | `audit_helper__source_database` | Source | No | `target.database` | Database containing legacy/source tables |
 | `audit_helper__source_schema` | Source | No | `target.schema` | Schema containing legacy/source tables |
 | `audit_helper__old_identifier_naming_convention` | Mapping | No | None | Pattern for transforming model names to legacy table names |
@@ -149,19 +156,21 @@ dbt run -s validation_log --full-refresh --vars '{audit_helper__full_refresh: 1}
 
 ---
 
-#### `audit_helper__dbt_cloud_host_url`
+#### `audit_helper__dbt_host_url`
 
 **Type**: `string`
 **Default**: `emea.dbt.com`
-**Used in**: `log_validation_result.sql`
+**Used in**: `job_url.sql`, `job_run_url.sql`, `log_validation_result.sql`, `log_validation_detail_result.sql`
 
 The base URL for your dbt Cloud instance. Used to generate hyperlinks to job runs in the validation logs. This is only relevant when running in dbt Cloud environments.
+
+> **Breaking change**: Renamed from `audit_helper__dbt_cloud_host_url`. Update your `dbt_project.yml` accordingly.
 
 **Example**:
 
 ```yaml
 vars:
-  audit_helper__dbt_cloud_host_url: "cloud.getdbt.com"  # US region
+  audit_helper__dbt_host_url: "cloud.getdbt.com"  # US region
 ```
 
 **Common values**:
@@ -173,6 +182,78 @@ vars:
 - You're running validations in dbt Cloud
 - You want clickable links to job runs in your validation logs
 - You're in a non-EMEA region
+
+---
+
+### Row-Level Detail Persistence
+
+Variables that control row-level comparison detail tables — one per mart model — for investigating mismatches without re-running the comparison query.
+
+#### `audit_helper__store_comparison_data`
+
+**Type**: `boolean`
+**Default**: `false`
+**Used in**: `get_validation_full.sql`, `log_validation_detail_result.sql`
+
+When enabled, the `full` validation type will persist the row-level comparison output into a table named `validation_log_detail__<mart_table>` in the same database/schema as `validation_log`. Each run replaces the previous detail table for that mart model (CREATE OR REPLACE).
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+```
+
+**When to use**:
+- You want to investigate mismatches in detail after a validation run
+- You need to share row-level evidence of discrepancies with stakeholders
+- You're debugging a specific mart model that isn't reaching 100% match rate
+
+---
+
+#### `audit_helper__store_matched_rows`
+
+**Type**: `boolean`
+**Default**: `false`
+**Used in**: `log_validation_detail_result.sql`
+
+Controls whether identical (matched) rows are included in the detail table. By default, only non-identical rows (modified, added, removed, nonunique_pk) are persisted to keep detail tables focused and small.
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+  audit_helper__store_matched_rows: true  # also persist identical rows
+```
+
+**When to use**:
+- You need a complete side-by-side snapshot of both relations
+- You want to verify that matched rows are truly identical
+- Storage is not a concern and you prefer completeness over conciseness
+
+---
+
+#### `audit_helper__store_comparison_data_limit`
+
+**Type**: `integer` or `none`
+**Default**: `none` (no limit)
+**Used in**: `log_validation_detail_result.sql`
+
+Caps the number of sampled primary keys passed to `compare_and_classify_relation_rows`. This is useful for large tables where persisting the full comparison would be prohibitively expensive. The limit applies to the number of sampled PKs, not the final row count (e.g., a modified PK produces 2 rows — one from each relation).
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+  audit_helper__store_comparison_data_limit: 1000  # only sample up to 1000 PKs
+```
+
+**When to use**:
+- Detail tables are becoming too large for practical querying
+- You only need a representative sample of mismatches
+- You want to limit warehouse compute during validation
 
 ---
 
@@ -658,7 +739,12 @@ vars:
   # Logging
   audit_helper__database: "analytics_prod"
   audit_helper__schema: "validation_logs"
-  audit_helper__dbt_cloud_host_url: "cloud.getdbt.com"
+  audit_helper__dbt_host_url: "cloud.getdbt.com"
+
+  # Row-level detail persistence
+  audit_helper__store_comparison_data: true
+  audit_helper__store_matched_rows: false
+  # audit_helper__store_comparison_data_limit: 1000
 
   # Source location
   audit_helper__source_database: "legacy_dwh"

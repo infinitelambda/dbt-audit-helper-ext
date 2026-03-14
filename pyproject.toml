@@ -223,6 +223,7 @@ validate-all-warehouses = [
 all = [
   {cmd = "poe init"},
   {cmd = "poe validate"},
+  {cmd = "poe test-detail"},
 ]
 all-warehouses = [
   {cmd = "poe init-sf"},

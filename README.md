@@ -18,6 +18,7 @@
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
 
 - _Historical Logging_: Automatically saving detailed validation results into a designated DWH table for comprehensive audit tracking
+- _Row-Level Detail Persistence_: Optionally persisting per-mart row-level comparison data for deep-dive investigation of mismatches
 - _Latest Summary Reporting_: Maintaining a concise, up-to-date summary table for quick insights into the current state of validations
 - _Codegen and Scripts_: Simplifying workflows, particularly valuable for migration projects by automating repetitive tasks
 
@@ -28,6 +29,8 @@ This repository provides a collection of powerful macros designed to enhance dat
 - 🧱 Databricks
 - ⛱️ SQL Server
 - 🐘 PostgreSQL
+
+> **Upgrading to v0.9?** Check the [breaking changes](./docs/breaking-changes-v0.9.md) before you upgrade.
 
 ## Installation
 
@@ -67,7 +70,8 @@ This repository provides a collection of powerful macros designed to enhance dat
   dbt run -s audit_helper_ext
   ```
 
-  This step will create log table (`validation_log`) and the summary view on top (`validation_log_report`)
+  This step will create the log table (`validation_log`) and the summary view on top (`validation_log_report`).
+  When row-level detail persistence is enabled, per-mart detail tables (`validation_log_detail__<mart_table>`) are created automatically during validation runs.
 
 - **Generate the validation macros**:
 
@@ -151,6 +155,26 @@ There are 3 main types of validation:
 - Row by Row (`full`, [source](./macros/validation/get_validation_full.sql))
 
 Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_.
+
+### Row-Level Detail Persistence
+
+When the `full` validation type runs, you can optionally persist the row-level comparison data into a dedicated detail table per mart model. This is incredibly useful for investigating mismatches without having to re-run the comparison query manually.
+
+Enable it by setting these variables in your `dbt_project.yml`:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true         # enable row-level detail persistence
+  # audit_helper__store_matched_rows: false          # also persist identical rows (default: false)
+  # audit_helper__store_comparison_data_limit: none   # cap the number of sampled PKs (default: none = no limit)
+```
+
+Each detail table is created as `validation_log_detail__<mart_table>` in the same database/schema as `validation_log`, and includes:
+- All intersecting data columns from both relations (excluded columns are omitted)
+- Audit columns from `compare_and_classify_relation_rows` (e.g. `dbt_audit_row_status`, `dbt_audit_in_a`, `dbt_audit_in_b`)
+- Metadata columns: `dbt_audit_ext_mart_table`, `dbt_audit_ext_job_run_url`, `dbt_audit_ext_date_of_process`
+
+See the [dbt Variables Reference](./docs/dbt-variables-reference.md) for full details on these variables.
 
 For DX, we also have serveral other types:
 - Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
