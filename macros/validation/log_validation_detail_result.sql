@@ -50,11 +50,10 @@
   {# Wrap with metadata columns and row filtering #}
   {% set detail_query %}
     select
-      '{{ dbt_identifier }}' as mart_table,
-      'https://{{ env_var("DBT_CLOUD_HOST_URL", var("audit_helper__dbt_cloud_host_url", "emea.dbt.com")) }}/deploy/{{ env_var("DBT_CLOUD_ACCOUNT_ID", "core") }}/projects/{{ env_var("DBT_CLOUD_PROJECT_ID", "core") }}/runs/{{ env_var("DBT_CLOUD_RUN_ID", "core") }}' as dbt_cloud_job_run_url,
-      '{{ audit_helper_ext.date_of_process() }}' as date_of_process,
-      cast('{{ run_started_at }}' as {{ dbt.type_timestamp() }}) as dbt_cloud_job_start_at,
-      __comparison.*
+      __comparison.*,
+      '{{ dbt_identifier }}' as dbt_audit_ext_mart_table,
+      '{{ audit_helper_ext.job_run_url() }}' as dbt_audit_ext_job_run_url,
+      '{{ audit_helper_ext.date_of_process() }}' as dbt_audit_ext_date_of_process
     from (
       {{ comparison_query }}
     ) __comparison

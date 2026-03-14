@@ -7,7 +7,8 @@
 {% set log_relation = ref('validation_log') %}
 
 {% set metadata_columns = [
-    'MART_TABLE', 'DATE_OF_PROCESS', 'DBT_CLOUD_JOB_RUN_URL', 'DBT_CLOUD_JOB_START_AT'
+    'DBT_AUDIT_EXT_MART_TABLE', 'DBT_AUDIT_EXT_DATE_OF_PROCESS',
+    'DBT_AUDIT_EXT_JOB_RUN_URL'
 ] %}
 
 {% set audit_columns = [
