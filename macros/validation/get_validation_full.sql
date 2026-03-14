@@ -74,6 +74,18 @@
             {{ log('💡 Upstream Lineage:', true) }}
           {{ audit_helper_ext.log_debug(lineage_output) }}
         {% endif %}
+
+        {# Persist row-level detail (only when feature is enabled) #}
+        {% if var('audit_helper__store_comparison_data', false) %}
+          {{ audit_helper_ext.log_validation_detail_result(
+              dbt_identifier=dbt_identifier,
+              old_relation=old_relation,
+              dbt_relation=dbt_relation,
+              primary_keys=primary_keys,
+              exclude_columns=exclude_columns,
+              store_matched_rows=var('audit_helper__store_matched_rows', false)
+          ) }}
+        {% endif %}
       {% endif %}
     {% endif %}
 

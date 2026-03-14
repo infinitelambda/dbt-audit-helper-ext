@@ -33,6 +33,10 @@ OPTIONS:
     -p DATE     Audit helper date of process (e.g., "2024-01-01")
                 When specified, triggers clone operations from legacy data
                 When empty/omitted, skips cloning and runs with full-refresh
+    -s SCHEMA   Source schema containing legacy/source tables
+                Sets audit_helper__source_schema dbt variable
+    -b DATABASE Source database containing legacy/source tables
+                Sets audit_helper__source_database dbt variable
     -c RUNNER   Command runner to use (default: venv)
                   venv     - Use activated virtual environment (no wrapper)
                   poetry   - Use 'poetry run' for commands
@@ -69,6 +73,10 @@ EXAMPLES:
     # Use with audit date (triggers clone operations)
     $0 -p "2024-01-01"                        # Clone from specific date
     $0 -p "2024-01-01" -t count               # Clone + count validation
+
+    # Override source location for legacy tables
+    $0 -s legacy_schema -b legacy_db          # Set source schema and database
+    $0 -s "snapshot__20240101" -t all_row     # Source schema with row validation
 
     # Skip operations for faster execution
     $0 -t count -r                            # Count validation only, skip model runs
@@ -235,17 +243,17 @@ run_operation_for_all_models() {
         # Run the operation and capture output to model-specific log (append mode)
         {
             if [[ -n "$cmd_args" && "$cmd_args" != "" ]]; then
-                if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' ($DATE_OF_PROCESS) $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
+                if [[ -n "$DBT_VARS_YAML" ]]; then
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' --vars '$DBT_VARS_YAML' $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "$DBT_VARS_YAML" $DBT_ARGS
                 else
                     log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' $DBT_ARGS"
                     $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" $DBT_ARGS
                 fi
             else
-                if [[ -n "$DATE_OF_PROCESS" && "$DATE_OF_PROCESS" != "" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call ($DATE_OF_PROCESS) $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
+                if [[ -n "$DBT_VARS_YAML" ]]; then
+                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --vars '$DBT_VARS_YAML' $DBT_ARGS"
+                    $RUN_CMD dbt run-operation "$macro_call" --vars "$DBT_VARS_YAML" $DBT_ARGS
                 else
                     log_operation "Executing: $RUN_CMD dbt run-operation $macro_call $DBT_ARGS"
                     $RUN_CMD dbt run-operation "$macro_call" $DBT_ARGS
@@ -272,7 +280,7 @@ run_clone_for_all_models() {
         log_operation "🐑  Cloning: $SINGLE_MODEL"
 
         set -x #echo on
-        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
+        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
         set +x #echo off
     else
         log_info "🐑  Clone all relations from PREVIOUS data version of $DATE_OF_PROCESS"
@@ -280,20 +288,22 @@ run_clone_for_all_models() {
             log_operation "🐑  Cloning: $model"
 
             set -x #echo on
-            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS || { log_error "Clone failed for $model"; exit 1; }
+            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $model"; exit 1; }
             set +x #echo off
         done
     fi
 }
 
 # Parse command-line options
-while getopts ht:d:m:p:c:vr flag; do
+while getopts ht:d:m:p:s:b:c:vr flag; do
     case "${flag}" in
         h) show_help; exit 0;;
         t) VALIDATION_TYPE=${OPTARG};;
         d) MART_DIR=${OPTARG};;
         m) SINGLE_MODEL=${OPTARG};;
         p) DATE_OF_PROCESS=${OPTARG};;
+        s) SOURCE_SCHEMA=${OPTARG};;
+        b) SOURCE_DATABASE=${OPTARG};;
         c) COMMAND_RUNNER=${OPTARG};;
         r) SKIP_RUN=true;;
         v) SKIP_VALIDATION=true;;
@@ -306,6 +316,8 @@ VALIDATION_TYPE="${VALIDATION_TYPE:-all}"
 MART_DIR="${MART_DIR:-models/03_mart}"
 SINGLE_MODEL="${SINGLE_MODEL:-}"
 DATE_OF_PROCESS="${DATE_OF_PROCESS:-}"
+SOURCE_SCHEMA="${SOURCE_SCHEMA:-}"
+SOURCE_DATABASE="${SOURCE_DATABASE:-}"
 COMMAND_RUNNER="${COMMAND_RUNNER:-venv}"
 SKIP_RUN="${SKIP_RUN:-false}"
 SKIP_VALIDATION="${SKIP_VALIDATION:-false}"
@@ -332,6 +344,26 @@ if [[ -n "${DBT_TARGET:-}" ]]; then
     DBT_ARGS="$DBT_ARGS --target $DBT_TARGET"
 fi
 
+# Build dbt vars YAML dict content (without --vars flag)
+build_dbt_vars_yaml() {
+    local vars_parts=()
+    if [[ -n "$DATE_OF_PROCESS" ]]; then
+        vars_parts+=("'audit_helper__date_of_process': '$DATE_OF_PROCESS'")
+    fi
+    if [[ -n "$SOURCE_SCHEMA" ]]; then
+        vars_parts+=("'audit_helper__source_schema': '$SOURCE_SCHEMA'")
+    fi
+    if [[ -n "$SOURCE_DATABASE" ]]; then
+        vars_parts+=("'audit_helper__source_database': '$SOURCE_DATABASE'")
+    fi
+    if [[ ${#vars_parts[@]} -gt 0 ]]; then
+        local joined
+        joined=$(IFS=', '; echo "${vars_parts[*]}")
+        echo "{$joined}"
+    fi
+}
+DBT_VARS_YAML=$(build_dbt_vars_yaml)
+
 # Validate dependencies after setting COMMAND_RUNNER
 validate_dependencies
 
@@ -340,6 +372,14 @@ if [[ "$COMMAND_RUNNER" == "venv" ]]; then
     log_info "🐍  Using activated virtual environment (no wrapper)"
 else
     log_info "🐍  Using command runner: $COMMAND_RUNNER"
+fi
+
+# Log source overrides if provided
+if [[ -n "$SOURCE_SCHEMA" ]]; then
+    log_info "📦  Source schema: $SOURCE_SCHEMA"
+fi
+if [[ -n "$SOURCE_DATABASE" ]]; then
+    log_info "📦  Source database: $SOURCE_DATABASE"
 fi
 
 # Validate configuration
@@ -419,13 +459,21 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (with full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh $DBT_ARGS
+            if [[ -n "$DBT_VARS_YAML" ]]; then
+                $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
+            else
+                $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh $DBT_ARGS
+            fi
             set +x #echo off
         else
             log_header "▶️  Run all models (with full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh $DBT_ARGS
+            if [[ -n "$DBT_VARS_YAML" ]]; then
+                $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
+            else
+                $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh $DBT_ARGS
+            fi
             set +x #echo off
         fi
     else
@@ -438,13 +486,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
+            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "$DBT_VARS_YAML" $DBT_ARGS
             set +x #echo off
         else
             log_header "▶️  Run all models (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "{'audit_helper__date_of_process': '$DATE_OF_PROCESS'}" $DBT_ARGS
+            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "$DBT_VARS_YAML" $DBT_ARGS
             set +x #echo off
         fi
     fi

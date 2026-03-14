@@ -1,0 +1,5 @@
+macros:
+  - name: log_validation_detail_result
+    description: |
+      Persist row-level comparison detail into a per-mart detail table (validation_log_detail__<mart_table>).
+      Uses compare_and_classify_relation_rows for rich row classification (identical, modified, added, removed, nonunique_pk).

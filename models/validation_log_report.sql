@@ -10,8 +10,8 @@ with latest_log as (
 
   {{ audit_helper_ext.deduplicate_with_row_number_sql(
       source_relation=ref('validation_log'),
-      partition_by_fields=['mart_table', 'dbt_cloud_job_url', 'date_of_process', 'validation_type'],
-      order_by_fields=['dbt_cloud_job_start_at desc']
+      partition_by_fields=['mart_table', 'job_url', 'date_of_process', 'validation_type'],
+      order_by_fields=['job_started_at desc']
   ) }}
 
 ),
@@ -21,12 +21,12 @@ extract_data as (
   select
     mart_table,
     {{ audit_helper_ext.extract_mart_folder_sql("mart_path") }} as mart_folder,
-    dbt_cloud_job_url,
-    dbt_cloud_job_run_url,
+    job_url,
+    job_run_url,
     date_of_process,
     dbt_relation,
     max(old_relation) as old_relation,
-    min(dbt_cloud_job_start_at) as dbt_cloud_job_start_at,
+    min(job_started_at) as job_started_at,
     max(
       case
         when validation_type = 'count'
@@ -76,8 +76,8 @@ extract_data as (
   group by
     mart_table,
     mart_path,
-    dbt_cloud_job_url,
-    dbt_cloud_job_run_url,
+    job_url,
+    job_run_url,
     date_of_process,
     dbt_relation
 
@@ -112,10 +112,10 @@ calculate_exp as (
 select
   mart_table,
   mart_folder,
-  dbt_cloud_job_url,
-  dbt_cloud_job_run_url,
+  job_url,
+  job_run_url,
   date_of_process,
-  dbt_cloud_job_start_at,
+  job_started_at,
   old_relation,
   dbt_relation,
   old_relation_row_count,

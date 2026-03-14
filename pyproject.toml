@@ -110,7 +110,7 @@ init = [
   {cmd = "dbt seed --full-refresh --project-dir integration_tests"},
 ]
 build = [
-  {cmd = "dbt build --exclude audit_helper_ext --project-dir integration_tests"},
+  {cmd = "dbt build --exclude audit_helper_ext tag:detail_persistence --project-dir integration_tests"},
 ]
 init-sf = [
   {env = { DBT_PROFILES_DIR = "integration_tests/dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe init"},
@@ -172,6 +172,28 @@ validate--pg-single-max-parallel = [
   {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__audit_query_pre_hooks: [\"SET max_parallel_workers_per_gather = 1\"]}' --profiles-dir dev/postgres --target pg"}
 ]
 
+validate-detail-store = [
+  {shell = "cd integration_tests && dbt run-operation validation_full__sample_1 --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true}\""},
+]
+validate-detail-store-with-matched = [
+  {shell = "cd integration_tests && dbt run-operation validation_full__sample_1 --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_matched_rows': true}\""},
+]
+validate-detail-store-with-limit = [
+  {shell = "cd integration_tests && dbt run-operation validation_full__sample_1 --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_comparison_data_limit': 2}\""},
+]
+test-detail = [
+  # Test 1: Mismatched rows only (default) — then verify columns, metadata, and no identical rows
+  {cmd = "poe validate-detail-store"},
+  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__columns verify_detail_table__sample_1__metadata verify_detail_table__sample_1__no_identical_rows"},
+  # Test 2: With row limit — then verify row count is capped
+  {cmd = "poe validate-detail-store-with-limit"},
+  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__row_limit"},
+  # Test 3: With matched rows — then verify identical rows are present
+  {cmd = "poe validate-detail-store-with-matched"},
+  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__has_identical_rows"},
+]
+test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
+
 validate = [
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
@@ -201,6 +223,7 @@ validate-all-warehouses = [
 all = [
   {cmd = "poe init"},
   {cmd = "poe validate"},
+  {cmd = "poe test-detail"},
 ]
 all-warehouses = [
   {cmd = "poe init-sf"},
