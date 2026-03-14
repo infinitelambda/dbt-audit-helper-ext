@@ -77,7 +77,6 @@
 
         {# Persist row-level detail (only when feature is enabled) #}
         {% if var('audit_helper__store_comparison_data', false) %}
-          {{ log('ℹ️  Persisting row-level detail to: validation_log_detail__' ~ dbt_identifier, true) }}
           {{ audit_helper_ext.log_validation_detail_result(
               dbt_identifier=dbt_identifier,
               old_relation=old_relation,

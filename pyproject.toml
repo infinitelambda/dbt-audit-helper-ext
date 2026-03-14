@@ -185,12 +185,12 @@ test-detail = [
   # Test 1: Mismatched rows only (default) — then verify columns, metadata, and no identical rows
   {cmd = "poe validate-detail-store"},
   {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__columns verify_detail_table__sample_1__metadata verify_detail_table__sample_1__no_identical_rows"},
-  # Test 2: With matched rows — then verify identical rows are present
-  {cmd = "poe validate-detail-store-with-matched"},
-  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__has_identical_rows"},
-  # Test 3: With row limit — then verify row count is capped
+  # Test 2: With row limit — then verify row count is capped
   {cmd = "poe validate-detail-store-with-limit"},
   {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__row_limit"},
+  # Test 3: With matched rows — then verify identical rows are present
+  {cmd = "poe validate-detail-store-with-matched"},
+  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__has_identical_rows"},
 ]
 test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
 

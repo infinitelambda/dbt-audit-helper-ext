@@ -70,7 +70,7 @@
         sql=detail_query,
         config={}
     ) %}
-    {{ log("ℹ️  Validation detail of " ~ dbt_identifier ~ " was persisted at " ~ detail_relation, info=True) }}
+    {{ log("ℹ️  Validation detail of " ~ dbt_identifier ~ " was persisted at " ~ audit_helper_ext.get_log_value(detail_relation), info=True) }}
   {% endif %}
 
 {% endmacro %}
