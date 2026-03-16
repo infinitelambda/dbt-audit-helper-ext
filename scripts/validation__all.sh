@@ -4,6 +4,9 @@ set -e
 set -u  # Exit on undefined variables
 set -o pipefail  # Exit on pipe failures
 
+# Ensure Python outputs UTF-8 (avoids cp1252 encoding errors on Windows)
+export PYTHONIOENCODING=utf-8
+
 # Help function
 show_help() {
     cat << EOF
