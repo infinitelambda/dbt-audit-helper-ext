@@ -15,7 +15,7 @@
         {% set schema_name = schema_name | trim %}
         {% if schema_name %}
 
-            {% set source_schema = audit_helper_ext.get_versioned_name(name=schema_name) %}
+            {% set source_schema = audit_helper_ext.get_versioned_name(name=schema_name, use_prev=true) %}
 
             {{ log("ℹ️ 🔄 Cloning `" ~ source_schema ~ "` → `" ~ schema_name ~ "`", info=True) }}
 
