@@ -4,6 +4,9 @@ set -e
 set -u  # Exit on undefined variables
 set -o pipefail  # Exit on pipe failures
 
+# Ensure Python outputs UTF-8 (avoids cp1252 encoding errors on Windows)
+export PYTHONIOENCODING=utf-8
+
 # Help function
 show_help() {
     cat << EOF
@@ -216,12 +219,12 @@ run_operation_for_all_models() {
     echo ""
     
     for model in "${MODELS[@]}"; do
-        ((current++))
+        current=$((current + 1))
         log_operation "🔍  [$current/$total] $operation_type: $model"
-        
+
         # Use single log file per model (append all operations to same file)
         local model_log="$LOG_LOCATION/validation__${model}.log"
-        
+
         local macro_call
         local cmd_args
         if [[ -n "$model_suffix" && "$model_suffix" == "true" ]]; then
@@ -239,34 +242,28 @@ run_operation_for_all_models() {
                 cmd_args="{'dbt_identifier': '$model'}"
             fi
         fi
-        
-        # Run the operation and capture output to model-specific log (append mode)
-        {
-            if [[ -n "$cmd_args" && "$cmd_args" != "" ]]; then
-                if [[ -n "$DBT_VARS_YAML" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' --vars '$DBT_VARS_YAML' $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" --vars "$DBT_VARS_YAML" $DBT_ARGS
-                else
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --args '$cmd_args' $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" --args "$cmd_args" $DBT_ARGS
-                fi
-            else
-                if [[ -n "$DBT_VARS_YAML" ]]; then
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call --vars '$DBT_VARS_YAML' $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" --vars "$DBT_VARS_YAML" $DBT_ARGS
-                else
-                    log_operation "Executing: $RUN_CMD dbt run-operation $macro_call $DBT_ARGS"
-                    $RUN_CMD dbt run-operation "$macro_call" $DBT_ARGS
-                fi
-            fi
 
-            local exit_code=$?
-            echo ""
+        # Build the dbt command, then run it with tee for logging.
+        # Avoid brace-group pipes which are fragile on Git Bash (MINGW).
+        local dbt_cmd="dbt run-operation $macro_call"
+        if [[ -n "$cmd_args" ]]; then
+            dbt_cmd="$dbt_cmd --args '$cmd_args'"
+        fi
+        if [[ -n "$DBT_VARS_YAML" ]]; then
+            dbt_cmd="$dbt_cmd --vars '$DBT_VARS_YAML'"
+        fi
+        if [[ -n "$DBT_ARGS" ]]; then
+            dbt_cmd="$dbt_cmd $DBT_ARGS"
+        fi
 
-        } 2>&1 | tee -a "$model_log" || {
+        log_operation "Executing: $RUN_CMD $dbt_cmd"
+
+        # Use eval to handle the quoted --args/--vars values, pipe to tee for logging
+        eval "$RUN_CMD $dbt_cmd" 2>&1 | tee -a "$model_log" || {
             log_error "$operation_type failed for $model, continuing..."
             echo "ERROR: $operation_type failed for $model at $(date)" >> "$model_log"
         }
+        echo ""
     done
     
     # Show model log locations once per validation type
