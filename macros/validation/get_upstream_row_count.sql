@@ -8,6 +8,11 @@
       {% set dbt_node = graph.nodes.values() | selectattr("name", "equalto", dbt_identifier) | first %}
       {% set dbt_depends_on_nodes = dbt_node.get('depends_on', {}).get('nodes', []) %}
 
+      {% if dbt_depends_on_nodes | length == 0 %}
+        {{ log("ℹ️  No upstream ref or direct source ref detected for '" ~ dbt_identifier ~ "'. Skipping upstream row count.", info=true) }}
+        {{ return('') }}
+      {% endif %}
+
       {% set count_query %}
         {% for depends_on_node in dbt_depends_on_nodes %}
           {% set name = (
