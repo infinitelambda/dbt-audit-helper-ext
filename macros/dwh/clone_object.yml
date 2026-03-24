@@ -1,11 +1,13 @@
 macros:
   - name: clone_object
     description: |
-      Clone object. Object can be a DATABASE or SCHEMA or TABLE
+      Clone object. Object can be a DATABASE or SCHEMA or TABLE.
+      For Snowflake iceberg tables, set `is_iceberg: true` to generate `CREATE OR REPLACE ICEBERG TABLE ... CLONE` instead of the regular `CREATE OR REPLACE TABLE ... CLONE` — because Snowflake won't let you clone an iceberg table into a regular one.
 
       Usage:
 
       ```
       dbt run-operation clone_object --args '{object_name: sc__20240909, source_object_name: sc, object_type: schema, replace: true, dry_run: true}'
       dbt run-operation clone_object --args '{object_name: sc__20240909, source_object_name: sc, object_type: schema, replace: true, dry_run: false}'
+      dbt run-operation clone_object --args '{object_name: my_iceberg_table_copy, source_object_name: my_iceberg_table, is_iceberg: true}'
       ```
