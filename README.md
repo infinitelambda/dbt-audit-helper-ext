@@ -48,7 +48,7 @@ This repository provides a collection of powerful macros designed to enhance dat
   ```yml
   packages:
     - git: "https://github.com/infinitelambda/dbt-audit-helper-ext.git"
-      version: <release version or tag> # 0.1.0
+      revision: <release version or tag> # 0.1.0
   ```
 
   And run `dbt deps` to install the package!
