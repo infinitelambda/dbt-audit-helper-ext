@@ -52,7 +52,8 @@
         {% set sql = 'select * from ' ~ source_relation %}
         {% do audit_helper_ext.create_or_replace_table_as(relation=dbt_relation, sql=sql, config=dbt_config) %}
     {% elif copy_mode == 'clone' %}
-        {% do audit_helper_ext.clone_object(object_name=dbt_relation, source_object_name=source_relation, replace=true) %}
+        {% set is_iceberg = audit_helper_ext.is_iceberg_table(source_relation) %}
+        {% do audit_helper_ext.clone_object(object_name=dbt_relation, source_object_name=source_relation, replace=true, is_iceberg=is_iceberg) %}
     {% endif %}
 
 {% endmacro %}
