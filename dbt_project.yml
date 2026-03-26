@@ -1,5 +1,5 @@
 name: audit_helper_ext
-require-dbt-version: [">=1.7.0", "<2.0.0"]
+require-dbt-version: [">=1.7.0", "<3.0.0"]
 
 model-paths: ["models"]
 macro-paths: ["macros"]
