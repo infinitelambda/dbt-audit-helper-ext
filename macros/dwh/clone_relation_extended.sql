@@ -59,7 +59,10 @@
         {% for source_node in sources_to_clone %}
             {{ log("[" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning - " ~ source_node.source_name ~ ":" ~ source_node.name, info=true) }}
 
-            {% set versioned_schema = audit_helper_ext.get_versioned_name(name=source_node.schema, use_prev=false) %}
+            {% set versioned_schema = audit_helper_ext.get_versioned_name(
+                name=source_node.config.get('meta', {}).get('audit_helper_ext__schema'),
+                use_prev=false)
+            %}
             {% do audit_helper_ext.clone_relation(
                 identifier=source_node.name,
                 source_database=source_node.database,
