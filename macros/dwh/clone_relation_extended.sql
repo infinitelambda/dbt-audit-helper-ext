@@ -34,8 +34,12 @@
         {# -- Exclude the target model itself from dependent relations -- #}
         {% set filtered = [] %}
         {% for source_node in sources_to_clone %}
-            {% if source_node.name == identifier %}
-                {{ log("⚠️  Excluding target model '" ~ identifier ~ "' from dependent relations (might be already cloned above).", info=true) }}
+            {% if (source_node.name | upper == identifier | upper) 
+                and (source_node.config.get(meta, {}).get("audit_helper_ext__ignore_cyclic_deps", 0) == 0) %}
+                {{ log(
+                    "⚠️  Excluding dependent relation '" ~ source_node.source_name ~ ":" ~ source_node.name ~ "' (potential cyclic dependencies)."
+                    " Add <source>.config.meta.audit_helper_ext__ignore_cyclic_deps = 1 to bypass this exclusion.", info=true)
+                }}
             {% else %}
                 {% do filtered.append(source_node) %}
             {% endif %}
@@ -47,13 +51,13 @@
             {{ return(none) }}
         {% endif %}
 
-        {{ log("ℹ️ 🔍 Found " ~ sources_to_clone | length ~ " dependent relation(s) to clone for model '" ~ identifier ~ "':", info=true) }}
+        {{ log("Found " ~ sources_to_clone | length ~ " dependent relation(s) to clone for model '" ~ identifier ~ "':", info=true) }}
         {% for source_node in sources_to_clone %}
-            {{ log("ℹ️     " ~ loop.index ~ ". " ~ source_node.source_name ~ ":" ~ source_node.name, info=true) }}
+            {{ log("  " ~ loop.index ~ ". " ~ source_node.source_name ~ ":" ~ source_node.name, info=true) }}
         {% endfor %}
 
         {% for source_node in sources_to_clone %}
-            {{ log("ℹ️ 🔄 [" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning - " ~ source_node.source_name ~ ":" ~ source_node.name, info=true) }}
+            {{ log("[" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning - " ~ source_node.source_name ~ ":" ~ source_node.name, info=true) }}
 
             {% set versioned_schema = audit_helper_ext.get_versioned_name(name=source_node.schema, use_prev=false) %}
             {% do audit_helper_ext.clone_relation(

@@ -18,10 +18,7 @@
     {% for source_node in source_nodes %}
         {% set db_match = exclude_database is not none and (exclude_database | upper) in (source_node.database | upper) %}
         {% set schema_match = exclude_schema is not none and (exclude_schema | upper) in (source_node.schema | upper) %}
-        {% if db_match or schema_match %}
-            {{ log("⏭️  Excluding relation " ~ source_node.source_name ~ "." ~ source_node.name 
-                ~ " (matched source_exclusions: database='" ~ source_node.database ~ "', schema='" ~ source_node.schema ~ "').", info=true) }}
-        {% else %}
+        {% if not (db_match or schema_match) %}
             {% do filtered_sources.append(source_node) %}
         {% endif %}
     {% endfor %}
