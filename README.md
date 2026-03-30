@@ -198,7 +198,7 @@ Depending on projects, it might be vary in the strategy of validation. Therefore
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD1` 👍
 - _Scenario 2: Validate the incremental run against D2 based on D1_
   - Configure source yml to use `source__YYYYMMD2`
-  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already (e.g. [clone_relation](./macros/dwh/clone_relation.sql))
+  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already (e.g. [clone_relation](./macros/dwh/clone_relation.sql) for a single table, or [clone_relation_extended](./macros/dwh/clone_relation_extended.sql) to also clone dependent JOIN/LOOKUP tables not maintained by the pipeline)
   - Run incrementally dbt to build mart tables
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD2` 👍👍
 

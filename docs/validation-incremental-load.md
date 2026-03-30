@@ -154,6 +154,36 @@ dbt run-operation clone_relation \
 
 The magic here: `use_prev: true` automatically finds Target Day1 from your `allowed_date_of_processes` list and clones `mart__20240909.dim_customer` to your target location.
 
+**Bonus: Clone target + dependent relations in one go**
+
+Instead of cloning the target model and its dependencies separately, `clone_relation_extended` does both in one call — it clones the target model itself, then walks the DAG to find and clone dependent JOIN/LOOKUP tables (source-referenced relations not maintained by the pipeline):
+
+```bash
+# Clone all sources upstream of dim_customer
+dbt run-operation clone_relation_extended \
+  --args "{'identifier': 'dim_customer'}" \
+  --vars "{'audit_helper__date_of_process': '2024-09-10'}"
+
+# Filter dependent sources by specific lookup tables
+dbt run-operation clone_relation_extended \
+  --args "{'identifier': 'dim_customer', 'source_table_names': 'dim_country,dim_currency'}"
+
+# Filter upstream models by tag
+dbt run-operation clone_relation_extended \
+  --args "{'identifier': 'dim_customer', 'tag': 'wf_daily'}"
+```
+
+To automatically exclude certain sources (e.g. RAW layer schemas you don't want to clone), define an `audit_helper_ext__source_exclusions` macro in your project:
+
+```sql
+-- macros/audit_helper_ext__source_exclusions.sql
+{% macro audit_helper_ext__source_exclusions() %}
+    {{ return({'exclude_database': 'RAW', 'exclude_schema': none}) }}
+{% endmacro %}
+```
+
+Any source whose database or schema contains the returned substring (case-insensitive) will be skipped.
+
 **Step 3: Run incremental dbt build**
 
 ```bash

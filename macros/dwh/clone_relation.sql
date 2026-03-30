@@ -1,14 +1,15 @@
-{% macro clone_relation(identifier, source_database=none, source_schema=none, use_prev=false) %}
+{% macro clone_relation(identifier, source_database=none, source_schema=none, source_name=none, use_prev=false) %}
     {{ return(adapter.dispatch('clone_relation', 'audit_helper_ext')(
         identifier=identifier,
         source_database=source_database,
         source_schema=source_schema,
+        source_name=source_name,
         use_prev=use_prev
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation(identifier, source_database, source_schema, use_prev) %}
+{% macro default__clone_relation(identifier, source_database, source_schema, source_name, use_prev) %}
     {% set copy_mode = 'clone' %}
 
     {# Resolve source_identifier using naming convention #}
@@ -37,7 +38,10 @@
     {% endif %}
 
     {# checking target table #}
-    {% set dbt_relation_exists, dbt_relation, dbt_config = audit_helper_ext.get_relation(identifier=identifier) %}
+    {% set dbt_relation_exists, dbt_relation, dbt_config = audit_helper_ext.get_relation(
+        identifier=identifier,
+        source_name=source_name
+    ) %}
     {% if dbt_relation_exists == true and dbt_relation.type == 'view' %}
         {{ log("ℹ️ 🗑️  " ~ dbt_relation.identifier ~ " exists as a view, it needs to be dropped first.", true) }}
         {% do audit_helper_ext.drop_object(object_name=dbt_relation, object_type="view") %}
