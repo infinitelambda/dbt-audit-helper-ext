@@ -32,14 +32,14 @@
         {% set sources_to_clone = audit_helper_ext.filter_source_exclusions(sources_to_clone) %}
 
         {% if sources_to_clone | length == 0 %}
-            {{ log("ℹ️  No dependent sources found for model '" ~ identifier ~ "'.", info=true) }}
+            {{ log("ℹ️  No dependent relations found for model '" ~ identifier ~ "'.", info=true) }}
             {{ return(none) }}
         {% endif %}
 
-        {{ log("ℹ️ 🔍 Found " ~ sources_to_clone | length ~ " dependent source(s) to clone for model '" ~ identifier ~ "'.", info=true) }}
+        {{ log("ℹ️ 🔍 Found " ~ sources_to_clone | length ~ " dependent relation(s) to clone for model '" ~ identifier ~ "'.", info=true) }}
 
         {% for source_node in sources_to_clone %}
-            {{ log("ℹ️ 🔄 [" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning source: " ~ source_node.source_name ~ "." ~ source_node.name, info=true) }}
+            {{ log("ℹ️ 🔄 [" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning: " ~ source_node.source_name ~ "." ~ source_node.name, info=true) }}
 
             {% set versioned_schema = audit_helper_ext.get_versioned_name(
                 name=source_node.schema,
