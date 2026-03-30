@@ -38,13 +38,14 @@
 
         {{ log("ℹ️ 🔍 Found " ~ sources_to_clone | length ~ " dependent relation(s) to clone for model '" ~ identifier ~ "'.", info=true) }}
 
+        {# -- Use the same versioned schema as the target model -- #}
+        {% set versioned_schema = audit_helper_ext.get_versioned_name(
+            name=var('audit_helper__source_schema', target.schema),
+            use_prev=use_prev
+        ) %}
+
         {% for source_node in sources_to_clone %}
             {{ log("ℹ️ 🔄 [" ~ loop.index ~ "/" ~ sources_to_clone | length ~ "] Cloning: " ~ source_node.source_name ~ "." ~ source_node.name, info=true) }}
-
-            {% set versioned_schema = audit_helper_ext.get_versioned_name(
-                name=source_node.schema,
-                use_prev=use_prev
-            ) %}
 
             {% do audit_helper_ext.clone_relation(
                 identifier=source_node.name,

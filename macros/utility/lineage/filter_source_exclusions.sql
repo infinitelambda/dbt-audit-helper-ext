@@ -11,8 +11,9 @@
     {% if call__source_exclusions is none %}
         {{ return(source_nodes) }}
     {% endif %}
-
-    {% set exclude_database, exclude_schema = call__source_exclusions() %}
+    {% set exclude_config = call__source_exclusions() %}
+    {% set exclude_database = exclude_config.get('exclude_database', none) %}
+    {% set exclude_schema = exclude_config.get('exclude_schema', none) %}
     {% set filtered_sources = [] %}
     {% for source_node in source_nodes %}
         {% set db_match = exclude_database is not none and (exclude_database | upper) in (source_node.database | upper) %}
