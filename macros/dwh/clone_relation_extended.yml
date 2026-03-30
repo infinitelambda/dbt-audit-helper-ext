@@ -1,0 +1,25 @@
+macros:
+  - name: clone_relation_extended
+    description: |
+      Clone a target model and its dependent relations (JOIN/LOOKUP tables) in one operation.
+
+      First clones the target model itself via `clone_relation`, then walks the DAG to find
+      dependent source tables not maintained by the pipeline and clones those too.
+      Uses `filter_source_exclusions` to skip sources you don't want cloned.
+
+      Supports all `clone_relation` parameters (`source_database`, `source_schema`, `use_prev`)
+      for the target model clone, plus `source_table_names` and `tag` for filtering dependent sources.
+
+      ```shell
+      # Clone dim_customer and all its dependent sources
+      dbt run-operation clone_relation_extended --args '{identifier: dim_customer}'
+
+      # Specify source location for the target model
+      dbt run-operation clone_relation_extended --args '{identifier: dim_customer, source_database: RAW_DB, source_schema: RAW_SCHEMA}'
+
+      # Filter dependent sources by table names (e.g. specific lookup tables)
+      dbt run-operation clone_relation_extended --args '{identifier: dim_customer, source_table_names: "dim_country,dim_currency"}'
+
+      # Filter upstream models by tag
+      dbt run-operation clone_relation_extended --args '{identifier: dim_customer, tag: wf_daily}'
+      ```
