@@ -49,8 +49,9 @@
 
             {% do audit_helper_ext.clone_relation(
                 identifier=source_node.name,
-                source_database=source_node.database,
+                source_database=source_database,
                 source_schema=versioned_schema,
+                source_name=source_node.source_name,
                 use_prev=use_prev
             ) %}
         {% endfor %}
