@@ -1,43 +1,41 @@
-{% macro get_dependent_source_nodes(identifier, source_table_names=none, tag=none) %}
+{% macro get_dependent_source_nodes(identifiers, dependant_table_names=none, tag=none) %}
     {{ return(adapter.dispatch('get_dependent_source_nodes', 'audit_helper_ext')(
-        identifier=identifier,
-        source_table_names=source_table_names,
+        identifiers=identifiers,
+        dependant_table_names=dependant_table_names,
         tag=tag
     )) }}
 {% endmacro %}
 
 
-{% macro default__get_dependent_source_nodes(identifier, source_table_names, tag) %}
+{% macro default__get_dependent_source_nodes(identifiers, dependant_table_names, tag) %}
 
-    {# -- Parse source_table_names into a list -- #}
-    {% set source_table_name_list = [] %}
-    {% if source_table_names is not none %}
-        {% for s in source_table_names.split(',') %}
-            {% set trimmed = s | trim %}
-            {% if trimmed %}
-                {% do source_table_name_list.append(trimmed) %}
-            {% endif %}
-        {% endfor %}
-    {% endif %}
-
-    {# -- Get target model node -- #}
-    {% set target_node = audit_helper_ext.get_model_node(identifier) %}
-    {% if target_node.name == 'undefined' %}
-        {% do exceptions.raise_compiler_error(
-            "❌ Model '" ~ identifier ~ "' not found in the dbt graph."
-        ) %}
-    {% endif %}
-
-    {# -- Collect upstream models (including target) from lineage paths -- #}
-    {% set lineage_paths = audit_helper_ext.get_upstream_lineage(identifier) %}
+    {# -- Parse comma-separated inputs into lists -- #}
+    {% set identifier_list = identifiers.split(',') | map('trim') | select | list %}
+    {% set source_table_name_list = dependant_table_names.split(',') | map('trim') | select | list
+        if dependant_table_names is not none else [] %}
 
     {% set upstream_model_ids = [] %}
-    {% for path in lineage_paths %}
-        {% for node_info in path %}
-            {% if node_info.type == 'model' and node_info.unique_id not in upstream_model_ids %}
-                {% do upstream_model_ids.append(node_info.unique_id) %}
-            {% endif %}
+    {% for identifier in identifier_list %}
+
+        {# -- Get target model node -- #}
+        {% set target_node = audit_helper_ext.get_model_node(identifier) %}
+        {% if target_node.name == 'undefined' %}
+            {% do exceptions.raise_compiler_error(
+                "❌ Model '" ~ identifier ~ "' not found in the dbt graph."
+            ) %}
+        {% endif %}
+
+        {# -- Collect upstream models (including target) from lineage paths -- #}
+        {% set lineage_paths = audit_helper_ext.get_upstream_lineage(identifier) %}
+
+        {% for path in lineage_paths %}
+            {% for node_info in path %}
+                {% if node_info.type == 'model' and node_info.unique_id not in upstream_model_ids %}
+                    {% do upstream_model_ids.append(node_info.unique_id) %}
+                {% endif %}
+            {% endfor %}
         {% endfor %}
+
     {% endfor %}
 
     {# -- Filter models by tag (if provided) -- #}
@@ -67,7 +65,7 @@
         {% endif %}
     {% endfor %}
 
-    {# -- Resolve source nodes and filter by source_table_names -- #}
+    {# -- Resolve source nodes and filter by dependant_table_names -- #}
     {% set source_nodes = [] %}
     {% for source_id in source_unique_ids %}
         {% set source_node = graph.sources.get(source_id) %}
