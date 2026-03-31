@@ -161,16 +161,20 @@ Instead of cloning the target model and its dependencies separately, `clone_rela
 ```bash
 # Clone all sources upstream of dim_customer
 dbt run-operation clone_relation_extended \
-  --args "{'identifier': 'dim_customer'}" \
+  --args "{'identifiers': 'dim_customer'}" \
   --vars "{'audit_helper__date_of_process': '2024-09-10'}"
+
+# Clone multiple models and their dependent sources in one call
+dbt run-operation clone_relation_extended \
+  --args "{'identifiers': 'dim_customer,dim_product'}"
 
 # Filter dependent sources by specific lookup tables
 dbt run-operation clone_relation_extended \
-  --args "{'identifier': 'dim_customer', 'source_table_names': 'dim_country,dim_currency'}"
+  --args "{'identifiers': 'dim_customer', 'dependant_table_names': 'dim_country,dim_currency'}"
 
 # Filter upstream models by tag
 dbt run-operation clone_relation_extended \
-  --args "{'identifier': 'dim_customer', 'tag': 'wf_daily'}"
+  --args "{'identifiers': 'dim_customer', 'tag': 'wf_daily'}"
 ```
 
 To automatically exclude certain sources (e.g. RAW layer schemas you don't want to clone), define an `audit_helper_ext__source_exclusions` macro in your project:
