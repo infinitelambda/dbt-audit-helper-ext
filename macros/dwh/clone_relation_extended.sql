@@ -18,7 +18,7 @@
 
         {# -- Clone each target model -- #}
         {% for id in identifier_list %}
-            {{ log("ℹ️ 📌 Cloning target model: " ~ id, info=true) }}
+            {{ log("📌 Cloning target model: " ~ id, info=true) }}
             {% do audit_helper_ext.clone_relation(
                 identifier=id,
                 source_database=source_database,
