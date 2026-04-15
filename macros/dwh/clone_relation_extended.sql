@@ -1,16 +1,17 @@
-{% macro clone_relation_extended(identifiers, source_database=none, source_schema=none, dependant_table_names=none, tag=none, use_prev=true) %}
+{% macro clone_relation_extended(identifiers, source_database=none, source_schema=none, dependant_table_names=none, tag=none, use_prev=true, exclude_identifiers=none) %}
     {{ return(adapter.dispatch('clone_relation_extended', 'audit_helper_ext')(
         identifiers=identifiers,
         source_database=source_database,
         source_schema=source_schema,
         dependant_table_names=dependant_table_names,
         tag=tag,
-        use_prev=use_prev
+        use_prev=use_prev,
+        exclude_identifiers=exclude_identifiers
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation_extended(identifiers, source_database, source_schema, dependant_table_names, tag, use_prev) %}
+{% macro default__clone_relation_extended(identifiers, source_database, source_schema, dependant_table_names, tag, use_prev, exclude_identifiers) %}
 
     {% if execute %}
         {# -- Parse comma-separated identifiers into a list -- #}
@@ -34,7 +35,7 @@
             tag=tag
         ) %}
 
-        {% set sources_to_clone = audit_helper_ext.filter_source_exclusions(all_sources, identifiers=identifiers) %}
+        {% set sources_to_clone = audit_helper_ext.filter_source_exclusions(all_sources, identifiers=identifiers, exclude_identifiers=exclude_identifiers) %}
         {% if sources_to_clone | length == 0 %}
             {{ log("ℹ️  No dependent relations found for model(s) '" ~ identifier_list | join("', '") ~ "'.", info=true) }}
             {{ return(none) }}

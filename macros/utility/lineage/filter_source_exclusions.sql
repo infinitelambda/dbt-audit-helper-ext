@@ -1,12 +1,13 @@
-{% macro filter_source_exclusions(source_nodes, identifiers=none) %}
+{% macro filter_source_exclusions(source_nodes, identifiers=none, exclude_identifiers=none) %}
     {{ return(adapter.dispatch('filter_source_exclusions', 'audit_helper_ext')(
         source_nodes=source_nodes,
-        identifiers=identifiers
+        identifiers=identifiers,
+        exclude_identifiers=exclude_identifiers
     )) }}
 {% endmacro %}
 
 
-{% macro default__filter_source_exclusions(source_nodes, identifiers) %}
+{% macro default__filter_source_exclusions(source_nodes, identifiers, exclude_identifiers) %}
 
     {% set filtered_sources = [] %}
 
@@ -26,6 +27,22 @@
         {% endfor %}
     {% else %}
         {% set filtered_sources = source_nodes | list %}
+    {% endif %}
+
+    {# -- Exclude sources by user-supplied identifier list -- #}
+    {% if exclude_identifiers is not none %}
+        {% set exclude_upper_list = exclude_identifiers.split(',') | map('trim') | select | map('upper') | list %}
+        {% set user_filtered_sources = [] %}
+        {% for source_node in filtered_sources %}
+            {% if source_node.name | upper in exclude_upper_list %}
+                {{ log(
+                    "⚠️  Excluding dependent relation '" ~ source_node.source_name ~ ":" ~ source_node.name ~ "' (matched exclude_identifiers).", info=true)
+                }}
+            {% else %}
+                {% do user_filtered_sources.append(source_node) %}
+            {% endif %}
+        {% endfor %}
+        {% set filtered_sources = user_filtered_sources %}
     {% endif %}
 
     {# -- Exclude sources by database/schema patterns (user-defined hook) -- #}
