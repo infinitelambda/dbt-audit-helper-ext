@@ -9,7 +9,8 @@ macros:
       Uses `filter_source_exclusions` to skip sources you don't want cloned.
 
       Supports all `clone_relation` parameters (`source_database`, `source_schema`, `use_prev`)
-      for the target model clone, plus `dependant_table_names` and `tag` for filtering dependent sources.
+      for the target model clone, plus `dependant_table_names` and `tag` for filtering dependent sources,
+      and `exclude_identifiers` to skip specific dependent sources by name.
 
       ```shell
       # Clone dim_customer and all its dependent sources
@@ -26,4 +27,7 @@ macros:
 
       # Filter upstream models by tag
       dbt run-operation clone_relation_extended --args '{identifiers: dim_customer, tag: wf_daily}'
+
+      # Skip specific dependent sources by identifier (comma-separated)
+      dbt run-operation clone_relation_extended --args '{identifiers: dim_customer, exclude_identifiers: "dim_country,dim_currency"}'
       ```
