@@ -6,10 +6,15 @@
 
   {% if execute %}
       {% set dbt_node = graph.nodes.values() | selectattr("name", "equalto", dbt_identifier) | first %}
-      {% set dbt_depends_on_nodes = dbt_node.get('depends_on', {}).get('nodes', []) %}
+      {% set dbt_depends_on_nodes = [] %}
+      {% for depends_on_node in dbt_node.get('depends_on', {}).get('nodes', []) %}
+        {% if depends_on_node.startswith("model.") %}
+          {% do dbt_depends_on_nodes.append(depends_on_node) %}
+        {% endif %}
+      {% endfor %}
 
       {% if dbt_depends_on_nodes | length == 0 %}
-        {{ log("ℹ️  No upstream ref or direct source ref detected for '" ~ dbt_identifier ~ "'. Skipping upstream row count.", info=true) }}
+        {{ log("ℹ️  No upstream model detected for '" ~ dbt_identifier ~ "'. Skipping upstream row count.", info=true) }}
         {{ return('') }}
       {% endif %}
 
