@@ -16,16 +16,21 @@
     {% if execute %}
         {# -- Parse comma-separated identifiers into a list -- #}
         {% set identifier_list = identifiers.split(',') | map('trim') | select | list %}
+        {% set excluded_list = (exclude_identifiers or '').split(',') | map('trim') | select | list %}
 
-        {# -- Clone each target model -- #}
+        {# -- Clone each target model, skipping any listed in exclude_identifiers -- #}
         {% for id in identifier_list %}
-            {{ log("📌 Cloning target model: " ~ id, info=true) }}
-            {% do audit_helper_ext.clone_relation(
-                identifier=id,
-                source_database=source_database,
-                source_schema=source_schema,
-                use_prev=use_prev
-            ) %}
+            {% if id in excluded_list %}
+                {{ log("⏭️  Skipping excluded target model: " ~ id, info=true) }}
+            {% else %}
+                {{ log("📌 Cloning target model: " ~ id, info=true) }}
+                {% do audit_helper_ext.clone_relation(
+                    identifier=id,
+                    source_database=source_database,
+                    source_schema=source_schema,
+                    use_prev=use_prev
+                ) %}
+            {% endif %}
         {% endfor %}
 
         {# -- Collect dependent relations (JOIN/LOOKUP tables) across all identifiers -- #}
