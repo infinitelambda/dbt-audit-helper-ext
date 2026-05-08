@@ -34,7 +34,7 @@
     ) %}
 
     {% if execute %}
-      {% set audit_results = audit_helper_ext.run_audit_query(query=audit_query, filter=audit_helper_ext["filter_schema_validation_errors"]) %}
+      {% set audit_results = audit_helper_ext.run_audit_query(query=audit_query, filter=audit_helper_ext["filter_schema_validation_enabled_errors"]) %}
       {{ audit_helper_ext.log_validation_result('schema', audit_results, dbt_identifier, dbt_relation, old_relation) }}
     {% endif %}
 

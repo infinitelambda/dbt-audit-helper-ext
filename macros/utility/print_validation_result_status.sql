@@ -9,6 +9,18 @@
 {% macro default__print_validation_result_status(result, validation_type) %}
 
   {% set filters = audit_helper_ext.get_validation_result_filters(validation_type) %}
+
+  {# Drop schema filters whose suffix isn't in audit_helper__schema_validation_checks, #}
+  {# so the printed PASS/FAIL list matches the configured checks (and the rows persisted #}
+  {# upstream by filter_schema_validation_enabled_errors). #}
+  {% if validation_type == 'schema' %}
+    {% set enabled_names = [] %}
+    {% for suffix in var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) %}
+      {% do enabled_names.append('schema__' ~ suffix) %}
+    {% endfor %}
+    {% set filters = filters | selectattr('name', 'in', enabled_names) | list %}
+  {% endif %}
+
   {% if not execute or (filters | length == 0) %}
       {{ return('') }}
   {% endif %}
