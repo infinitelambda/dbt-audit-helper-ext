@@ -1,0 +1,50 @@
+macros:
+  - name: get_columns_with_expressions
+    description: |
+      Build column specs with custom SQL expressions applied.
+
+      This macro reads the audit_helper__custom_column_expressions config from a model
+      and applies the specified transformations to columns during validation.
+
+      For columns with custom expressions, it resolves the macro and builds the
+      transformed SQL. For columns without custom expressions, it returns them as-is.
+
+      Returns a list of namespace objects with attributes:
+      - name: Column name
+      - expression: The SQL expression (transformed or quoted column)
+      - select: The full SELECT expression with alias
+      - macro_ref: Reference to the transformation macro (or none)
+
+      Example:
+      ```sql
+      {% raw %}
+      {% set column_specs = audit_helper_ext.get_columns_with_expressions(
+          relation=a_relation,
+          model_name='my_model',
+          column_names=['price', 'quantity', 'name']
+      ) %}
+      {% endraw %}
+
+      -- For a model with config:
+      -- meta:
+      --   audit_helper__custom_column_expressions:
+      --     price: audit_helper__round_2dp
+      --
+      -- Returns specs like:
+      -- [
+      --   namespace(name='price', expression='round(price, 2)', select='round(price, 2) as "price"', macro_ref='audit_helper__round_2dp'),
+      --   namespace(name='quantity', expression='"quantity"', select='"quantity"', macro_ref=none),
+      --   namespace(name='name', expression='"name"', select='"name"', macro_ref=none)
+      -- ]
+      ```
+
+    arguments:
+      - name: relation
+        type: Relation
+        description: The relation object to get columns from
+      - name: model_name
+        type: string
+        description: The name of the model to get config from
+      - name: column_names
+        type: list
+        description: List of column names to build specs for

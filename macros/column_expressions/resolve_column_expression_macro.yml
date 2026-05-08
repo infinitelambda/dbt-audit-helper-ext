@@ -1,0 +1,29 @@
+macros:
+  - name: resolve_column_expression_macro
+    description: |
+      Dynamically resolve and execute a column expression macro.
+
+      This macro looks up a transformation macro by name and applies it to a column,
+      returning the transformed SQL expression.
+
+      The macro searches in the global context and audit_helper_ext namespace.
+      If the macro is not found, it logs a warning and returns the column as-is.
+
+      Example:
+      ```sql
+      {% raw %}
+      {% set expression = audit_helper_ext.resolve_column_expression_macro(
+          column_name='price',
+          macro_name='audit_helper__round_2dp'
+      ) %}
+      {% endraw %}
+      -- Returns: round(price, 2)
+      ```
+
+    arguments:
+      - name: column_name
+        type: string
+        description: The name of the column to apply the expression to
+      - name: macro_name
+        type: string
+        description: The name of the macro to execute (e.g., 'audit_helper__round_2dp')
