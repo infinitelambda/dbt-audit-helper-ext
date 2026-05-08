@@ -30,7 +30,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 - ⛱️ SQL Server
 - 🐘 PostgreSQL
 
-> **Upgrading to v0.9?** Check the [breaking changes](./docs/breaking-changes-v0.9.md) before you upgrade.
+> **Upgrading?** Check the breaking changes for [v0.11](./docs/breaking-changes-v0.11.md) and [v0.9](./docs/breaking-changes-v0.9.md) before you upgrade.
 
 ## Installation
 
@@ -143,6 +143,24 @@ vars:
 **Use cases:**
 - **PostgreSQL**: Disable parallel execution to avoid discrepancies with window functions or double precision types
 - **Other adapters**: Set session-level configurations for performance tuning or behavior consistency
+
+### Schema Validation Checks
+
+By default, `schema` validation flags column data-type drift and columns missing on the dbt side (`in_a_only`). You can broaden this to include column order, text length, numeric precision/scale, and nullability via the `audit_helper__schema_validation_checks` var:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position           # Snowflake + SQL Server
+    - mismatch_character_maximum_length   # Snowflake only
+    - mismatch_numeric_precision          # Snowflake only
+    - mismatch_numeric_scale              # Snowflake only
+    - mismatch_is_nullable                # Snowflake only
+    - in_a_only
+```
+
+Checks not yet supported by an adapter's `compare_relation_columns` are silently skipped on that adapter — they don't error. See the [`audit_helper__schema_validation_checks` reference](./docs/dbt-variables-reference.md#audit_helper__schema_validation_checks) for the full coverage matrix and output format.
 
 ## Validation Strategy
 

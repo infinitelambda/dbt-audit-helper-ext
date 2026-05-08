@@ -33,6 +33,8 @@
       - [`audit_helper__print_table_enabled`](#audit_helper__print_table_enabled)
       - [`audit_helper_ext__result_format`](#audit_helper_ext__result_format)
       - [`audit_helper__validation_result_filters`](#audit_helper__validation_result_filters)
+    - [Schema Validation](#schema-validation)
+      - [`audit_helper__schema_validation_checks`](#audit_helper__schema_validation_checks)
   - [Configuration Examples](#configuration-examples)
     - [Minimal Configuration](#minimal-configuration)
     - [Full Configuration](#full-configuration)
@@ -63,6 +65,7 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__validation_result_filters` | Display | No | Default filters defined in macro | Filters for in-terminal validation result insights |
 | `audit_helper__audit_query_pre_hooks` | Query Hooks | No | `[]` | List of SQL statements to execute before each audit query |
 | `audit_helper__audit_query_statement_separator` | Query Hooks | No | `;` | Statement separator for pre-hook queries |
+| `audit_helper__schema_validation_checks` | Schema Validation | No | `[mismatch_data_type, in_a_only]` | Drift attributes surfaced by `schema` validation |
 
 ## Variables by Category
 
@@ -709,6 +712,89 @@ vars:
 
 ---
 
+### Schema Validation
+
+Variables that control which drift attributes the `schema` validation surfaces.
+
+#### `audit_helper__schema_validation_checks`
+
+**Type**: `list` of strings
+**Default**: `['mismatch_data_type', 'in_a_only']`
+**Used in**: `filter_schema_validation_enabled_errors` (gates which schema rows get persisted), `validation_log_report.schema_mismatches` (rolls up the surviving rows)
+
+Selects which schema drift attributes to flag when comparing column metadata between `a` (legacy) and `b` (dbt). Each list entry corresponds to a `has_*_match` column emitted by the adapter's `compare_relation_columns` macro. Rows where the chosen attribute mismatches are persisted to `validation_log` and rendered in `validation_log_report.schema_mismatches`.
+
+**Available checks**:
+
+| Suffix | What it catches |
+|--------|-----------------|
+| `mismatch_data_type` | Column data types differ (`varchar` vs `text`, `int` vs `bigint`, …) |
+| `mismatch_ordinal_position` | Column order has shifted between `a` and `b` |
+| `mismatch_character_maximum_length` | `VARCHAR(50)` vs `VARCHAR(100)` and similar text-length drift |
+| `mismatch_numeric_precision` | `NUMERIC(38, 4)` vs `NUMERIC(28, 4)` and similar precision drift |
+| `mismatch_numeric_scale` | `NUMERIC(38, 4)` vs `NUMERIC(38, 24)` and similar scale drift |
+| `mismatch_is_nullable` | Nullability (`NOT NULL` constraint) differs |
+| `in_a_only` | Column exists in legacy but is missing from dbt |
+
+> Columns present only in dbt (`in_b_only`) are intentionally excluded — they are not actionable as drift since legacy systems can't be re-shaped from the dbt side.
+
+**Example — minimal (default behaviour)**:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - in_a_only
+```
+
+**Example — strict (catch every drift attribute)**:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
+    - in_a_only
+```
+
+**When to use**:
+- You want stricter schema parity than the default (e.g. catching tighter precision in numeric columns)
+- You're tracking nullability or column order as part of a migration's done-criteria
+- You want to relax checks during early development (e.g. drop `in_a_only` while back-porting columns into dbt)
+
+**Adapter coverage**:
+
+The extended attribute checks (length, precision, scale, nullable, ordinal position) require columns from `compare_relation_columns` that only the Snowflake override emits today. On other adapters, only `mismatch_data_type` and `in_a_only` are evaluated; SQL Server additionally supports `mismatch_ordinal_position`. Other enabled suffixes silently skip on adapters that don't yet emit the corresponding `has_*_match` field — the validation won't error, but those drifts won't surface.
+
+| Adapter | `mismatch_data_type` | `mismatch_ordinal_position` | length / precision / scale / nullable | `in_a_only` |
+|---------|----------------------|------------------------------|----------------------------------------|-------------|
+| Snowflake | ✅ | ✅ | ✅ | ✅ |
+| SQL Server | ✅ | ✅ | ❌ | ✅ |
+| BigQuery | ✅ | ❌ | ❌ | ✅ |
+| Postgres | ✅ | ❌ | ❌ | ✅ |
+| Databricks | ✅ | ❌ | ❌ | ✅ |
+
+**Output format** (`schema_mismatches` column in `validation_log_report`):
+
+On Snowflake the payload is one line per drifted column, with reasons joined by `, `:
+
+```text
+• name: length 50 → 100, nullable NO → YES
+• optional_metric: precision 38 → 28, scale 4 → 24
+• city: position 3 → 5
+• not_exist_in_dbt: type VARCHAR → null
+```
+
+On other adapters, the payload is data-type-only (`column: a → b`) — same format the macro produced before this var existed.
+
+**Fallback**: If the var is unset or set to an empty list, the package falls back to the default `['mismatch_data_type', 'in_a_only']` so behaviour matches the pre-configurable shipping defaults — no silent no-ops.
+
+---
+
 ## Configuration Examples
 
 ### Minimal Configuration
@@ -765,6 +851,16 @@ vars:
   # Display
   audit_helper__print_table_enabled: "yes"
   audit_helper_ext__result_format: "table"
+
+  # Schema validation — strict mode (Snowflake only surfaces all of these)
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
+    - in_a_only
 ```
 
 ---

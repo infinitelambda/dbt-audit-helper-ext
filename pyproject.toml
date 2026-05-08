@@ -197,13 +197,13 @@ test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf"
 validate = [
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
-  # {cmd = "poe validate-customers"},
-  # {cmd = "poe validate-items"},
-  # {cmd = "poe validate-orders"},
-  # {cmd = "poe validate-products"},
-  # {cmd = "poe validate-stores"},
-  # {cmd = "poe validate-supplies"},
-  # {cmd = "poe validate--disable-print-table"},
+  {cmd = "poe validate-customers"},
+  {cmd = "poe validate-items"},
+  {cmd = "poe validate-orders"},
+  {cmd = "poe validate-products"},
+  {cmd = "poe validate-stores"},
+  {cmd = "poe validate-supplies"},
+  {cmd = "poe validate--disable-print-table"},
 ]
 validate-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe validate" }
 validate-adb = { env = { DBT_PROFILES_DIR = "dev/databricks", DBT_TARGET = "adb" }, cmd = "poe validate" }

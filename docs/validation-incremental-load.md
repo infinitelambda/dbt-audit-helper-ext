@@ -222,7 +222,8 @@ The validation report shows several key metrics:
 
 - **upstream_row_count**: Rows processed from upstream (helps identify if incremental actually ran)
 - **is_count_match**: Percentage of row count matching between dbt and legacy
-- **is_schema_match**: Whether column definitions match
+- **is_schema_match**: Whether column definitions match across the attributes you've enabled via [`audit_helper__schema_validation_checks`](./dbt-variables-reference.md#audit_helper__schema_validation_checks) (data type, column order, length, precision/scale, nullability, presence)
+- **schema_mismatches**: Per-column drift reasons. On Snowflake, each line is `column: <reason>[, <reason>]…` (e.g. `name: length 50 → 100, nullable NO → YES`); other adapters use the legacy data-type-only format
 - **match_rate_percentage**: Percentage of rows with identical data
 
 **Pro tip**: Check `upstream_row_count` to confirm your incremental run actually processed new data. If it's 0 and you have 100% match rate, you might just be comparing identical static datasets!
