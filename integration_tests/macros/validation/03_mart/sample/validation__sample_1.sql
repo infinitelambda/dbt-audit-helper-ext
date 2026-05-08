@@ -8,7 +8,7 @@
     {% set old_identifier = 'sample_1' %}
 
     {%- set primary_keys = ["name"] -%}
-    {%- set exclude_columns = ["sample_1_sk", "not_exist_in_dbt"] -%}
+    {%- set exclude_columns = ["sample_1_sk", "not_exist_in_dbt", "optional_metric"] -%}
 
     {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
         ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))

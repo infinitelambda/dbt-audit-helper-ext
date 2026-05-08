@@ -222,7 +222,7 @@ The validation report shows several key metrics:
 
 - **upstream_row_count**: Rows processed from upstream (helps identify if incremental actually ran)
 - **is_count_match**: Percentage of row count matching between dbt and legacy
-- **is_data_type_match**: Whether column definitions match
+- **is_schema_match**: Whether column definitions match
 - **match_rate_percentage**: Percentage of rows with identical data
 
 **Pro tip**: Check `upstream_row_count` to confirm your incremental run actually processed new data. If it's 0 and you have 100% match rate, you might just be comparing identical static datasets!
