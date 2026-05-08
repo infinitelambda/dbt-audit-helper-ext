@@ -720,7 +720,7 @@ Variables that control which drift attributes the `schema` validation surfaces.
 
 **Type**: `list` of strings
 **Default**: `['mismatch_data_type', 'in_a_only']`
-**Used in**: `filter_schema_validation_enabled_errors` (gates which schema rows get persisted), `validation_log_report.schema_mismatches` (rolls up the surviving rows)
+**Used in**: `filter_schema_validation_enabled_errors` (gates which schema rows get persisted), `print_validation_result_status` (gates which PASS/FAIL lines are printed for `schema` validation), `validation_log_report.schema_mismatches` (rolls up the surviving rows)
 
 Selects which schema drift attributes to flag when comparing column metadata between `a` (legacy) and `b` (dbt). Each list entry corresponds to a `has_*_match` column emitted by the adapter's `compare_relation_columns` macro. Rows where the chosen attribute mismatches are persisted to `validation_log` and rendered in `validation_log_report.schema_mismatches`.
 
