@@ -39,39 +39,12 @@
   {{ return(row[in_a_only_col]) }}
 {% endmacro %}
 
-{% macro filter_schema_validation_errors(row) %}
-  {% set in_a_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}
-  {% set in_b_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_B_ONLY') %}
-  {% set in_both_col = audit_helper_ext.get_actual_column_name(row, 'IN_BOTH') %}
-  {% set has_data_type_match_col = audit_helper_ext.get_actual_column_name(row, 'HAS_DATA_TYPE_MATCH') %}
-
-  {% set extended_match_columns = [
-    'HAS_ORDINAL_POSITION_MATCH',
-    'HAS_CHARACTER_MAXIMUM_LENGTH_MATCH',
-    'HAS_NUMERIC_PRECISION_MATCH',
-    'HAS_NUMERIC_SCALE_MATCH',
-    'HAS_IS_NULLABLE_MATCH'
-  ] %}
-
-  {% set in_both = row[in_both_col] %}
-  {% set has_attribute_mismatch = namespace(value=(in_both and not row[has_data_type_match_col])) %}
-
-  {% if in_both and not has_attribute_mismatch.value %}
-    {% for col_name in extended_match_columns %}
-      {% set actual_col = audit_helper_ext.try_get_actual_column_name(row, col_name) %}
-      {% if actual_col is not none and not row[actual_col] %}
-        {% set has_attribute_mismatch.value = true %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-
-  {{ return(row[in_a_only_col] or row[in_b_only_col] or has_attribute_mismatch.value) }}
-{% endmacro %}
-
 {# Gate persisted schema rows on audit_helper__schema_validation_checks. #}
 {# Drops in_b_only (column in dbt only — not actionable as drift). #}
+{# Falls back to mismatch_data_type + in_a_only if the var is unset or empty, #}
+{# matching the pre-configurable behavior so silent-no-op never happens. #}
 {% macro filter_schema_validation_enabled_errors(row) %}
-  {% set enabled_suffixes = var('audit_helper__schema_validation_checks') %}
+  {% set enabled_suffixes = var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) or ['mismatch_data_type', 'in_a_only'] %}
 
   {% set in_a_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}
   {% set in_both_col = audit_helper_ext.get_actual_column_name(row, 'IN_BOTH') %}
