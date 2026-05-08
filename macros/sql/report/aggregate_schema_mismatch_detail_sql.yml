@@ -11,17 +11,20 @@ macros:
       `nullable a → b`, `position a → b`. Columns present only in dbt
       (`in_b_only`) are excluded — same exclusion as the original macro.
 
-      Coverage is data-type-only on adapters where
-      `audit_helper.compare_relation_columns` does not emit the extra
-      `has_*_match` fields (currently everything except Snowflake); the
-      additional reason fragments resolve to NULL via COALESCE in those
-      cases and drop out of the line.
+      Coverage depends on which `has_*_match` fields the adapter's
+      `compare_relation_columns` emits. Where those fields are missing,
+      the corresponding reason fragments resolve to NULL via COALESCE
+      and drop out of the line, so it's safe to widen coverage by
+      extending the comparator without touching this macro.
 
       Cross-platform implementation:
-      - Snowflake (default branch): full attribute coverage via LISTAGG
-      - BigQuery: data-type only via STRING_AGG with inline ORDER BY
-      - SQL Server: data-type only via STRING_AGG with WITHIN GROUP ORDER BY
-      - Postgres / Databricks: data-type only
+      - Snowflake: full attribute coverage (type, position, length,
+        precision, scale, nullable) via LISTAGG.
+      - SQL Server: type + position via STRING_AGG.
+      - BigQuery: data-type only via STRING_AGG with inline ORDER BY.
+      - Postgres: data-type only via STRING_AGG with ORDER BY.
+      - Databricks: data-type only via array_join + collect_list.
+      - default (other adapters): data-type only via STRING_AGG.
     arguments:
       - name: validation_type_field
         type: string

@@ -35,15 +35,15 @@ vars:
   # audit_helper__store_matched_rows: false            # also persist matched rows in detail tables (default: false)
   # audit_helper__store_comparison_data_limit: none    # max rows to persist per detail table (default: none = no limit)
   # Schema checks emitted by print_validation_result_status (and consumed by validation_log_report).
-  # Default enables all checks; override by listing a subset of suffixes (the part after "schema__").
+  # Default enables 2 checks; override by listing a subset of suffixes (the part after "schema__").
   audit_helper__schema_validation_checks:
     - mismatch_data_type
+    - in_a_only
     # - mismatch_ordinal_position
     # - mismatch_character_maximum_length
     # - mismatch_numeric_precision
     # - mismatch_numeric_scale
     # - mismatch_is_nullable
-    - in_a_only
   # audit_helper__validation_result_filters: # used for reporting in-terminal
   #   - name: count__mismatch
   #     description: Row counts do not match between A and B

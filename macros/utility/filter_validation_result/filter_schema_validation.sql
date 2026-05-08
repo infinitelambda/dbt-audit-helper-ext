@@ -44,7 +44,7 @@
 {# Falls back to mismatch_data_type + in_a_only if the var is unset or empty, #}
 {# matching the pre-configurable behavior so silent-no-op never happens. #}
 {% macro filter_schema_validation_enabled_errors(row) %}
-  {% set enabled_suffixes = var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) or ['mismatch_data_type', 'in_a_only'] %}
+  {% set enabled_suffixes = var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) %}
 
   {% set in_a_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}
   {% set in_both_col = audit_helper_ext.get_actual_column_name(row, 'IN_BOTH') %}

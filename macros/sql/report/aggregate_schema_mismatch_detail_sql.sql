@@ -17,22 +17,52 @@
 {% endmacro %}
 
 
+{# SQL Server: surfaces type + position drift. #}
+{# sqlserver__compare_relation_columns emits has_data_type_match and has_ordinal_position_match #}
+{# (see macros/_audit_helper/sqlserver/compare_relation_columns.sql), so the report mirrors what #}
+{# the comparator can detect. Length / precision / scale / nullable are not emitted by the SQL #}
+{# Server comparator and so are not surfaced here — extending the comparator would let those #}
+{# attributes flow through the same case branches below. #}
 {% macro sqlserver__aggregate_schema_mismatches_sql(
   validation_type_field,
   result_field
 ) %}
+
+  {%- set has_data_type_match = json_field_sql(result_field, 'has_data_type_match') -%}
+  {%- set has_ordinal_position_match = json_field_sql(result_field, 'has_ordinal_position_match') -%}
+
+  {%- set row_predicate_parts = [
+    "lower(" ~ has_data_type_match ~ ") in ('false', '0')",
+    "lower(coalesce(cast(" ~ has_ordinal_position_match ~ " as varchar(10)), 'true')) in ('false', '0')"
+  ] -%}
+  {%- set row_predicate = row_predicate_parts | join(' or ') -%}
 
   {% set sql -%}
     string_agg(
       case
         when {{ validation_type_field }} = 'schema'
           and {{ audit_helper_ext._schema_mismatches_presence_predicate(result_field) }}
-          and lower({{ json_field_sql(result_field, 'has_data_type_match') }}) in ('false', '0')
+          and ({{ row_predicate }})
           then concat(
               {{ audit_helper_ext.unicode_prefix() }}'• ',
               {{ json_field_sql(result_field, 'column_name') }}, ': ',
-              {{ json_field_sql(result_field, 'a_data_type') }}, {{ audit_helper_ext.unicode_prefix() }}' → ',
-              {{ json_field_sql(result_field, 'b_data_type') }},
+              concat_ws(
+                {{ audit_helper_ext.unicode_prefix() }}', ',
+                case when lower({{ has_data_type_match }}) in ('false', '0')
+                  then concat(
+                    {{ audit_helper_ext.unicode_prefix() }}'type ',
+                    coalesce({{ json_field_sql(result_field, 'a_data_type') }}, {{ audit_helper_ext.unicode_prefix() }}'null'),
+                    {{ audit_helper_ext.unicode_prefix() }}' → ',
+                    coalesce({{ json_field_sql(result_field, 'b_data_type') }}, {{ audit_helper_ext.unicode_prefix() }}'null')
+                  ) end,
+                case when lower(coalesce(cast({{ has_ordinal_position_match }} as varchar(10)), 'true')) in ('false', '0')
+                  then concat(
+                    {{ audit_helper_ext.unicode_prefix() }}'position ',
+                    coalesce({{ json_field_sql(result_field, 'a_ordinal_position') }}, {{ audit_helper_ext.unicode_prefix() }}'null'),
+                    {{ audit_helper_ext.unicode_prefix() }}' → ',
+                    coalesce({{ json_field_sql(result_field, 'b_ordinal_position') }}, {{ audit_helper_ext.unicode_prefix() }}'null')
+                  ) end
+              ),
               char(13) + char(10)
             )
         end, ''
@@ -44,6 +74,11 @@
 {% endmacro %}
 
 
+{# BigQuery: currently data-type-only. #}
+{# The upstream BigQuery comparator does not yet emit has_*_match for length/precision/ #}
+{# scale/nullable, so any rows persisted for those drifts will not appear in the report's #}
+{# schema_mismatches text on BigQuery. To surface more, add the missing has_*_match fields #}
+{# in the BigQuery branch of compare_relation_columns and broaden the predicate here. #}
 {% macro bigquery__aggregate_schema_mismatches_sql(
   validation_type_field,
   result_field
@@ -72,6 +107,9 @@
 {% endmacro %}
 
 
+{# Postgres: currently data-type-only. The Postgres branch of compare_relation_columns #}
+{# does not yet emit the extended has_*_match fields; see bigquery branch for the path #}
+{# to broaden coverage. #}
 {% macro postgres__aggregate_schema_mismatches_sql(
   validation_type_field,
   result_field
@@ -99,7 +137,15 @@
 {% endmacro %}
 
 
-{% macro default__aggregate_schema_mismatches_sql(
+{# Snowflake: full attribute coverage. #}
+{# audit_helper_ext.snowflake__compare_relation_columns (macros/_audit_helper/compare_relation_columns.sql) #}
+{# emits has_*_match for type, ordinal position, character_maximum_length, numeric precision/scale, #}
+{# and is_nullable, so we surface every drift attribute that was persisted. #}
+{# Implementation note: Snowflake's concat_ws poisons the result to NULL when any argument is NULL, #}
+{# so we use array_to_string(array_compact(array_construct(...))) which skips NULLs. The body relies #}
+{# on Snowflake-specific functions (array_compact, array_construct) and is therefore the snowflake__ #}
+{# branch — not default__ — to avoid silently breaking on new adapters that lack those builtins. #}
+{% macro snowflake__aggregate_schema_mismatches_sql(
   validation_type_field,
   result_field
 ) %}
@@ -126,8 +172,6 @@
 
   {%- set presence_predicate = "lower(" ~ in_a_only ~ ") in ('true', '1') or lower(" ~ in_both ~ ") in ('true', '1')" -%}
 
-  {# Snowflake's concat_ws poisons the result to NULL when any argument is NULL, #}
-  {# so we use array_to_string(array_compact(array_construct(...))) which skips NULLs. #}
   {% set sql -%}
     {{ string_agg_sql() }}(
       case
@@ -170,6 +214,39 @@
 {% endmacro %}
 
 
+{# Default: portable, data-type-only fallback for adapters without an explicit branch above. #}
+{# Uses string_agg_sql() so the abstraction handles the per-adapter aggregate name; downstream #}
+{# adapters that need richer drift coverage should add their own dispatched branch. #}
+{% macro default__aggregate_schema_mismatches_sql(
+  validation_type_field,
+  result_field
+) %}
+
+  {% set sql -%}
+    {{ string_agg_sql() }}(
+      case
+        when {{ validation_type_field }} = 'schema'
+          and {{ audit_helper_ext._schema_mismatches_presence_predicate(result_field) }}
+          and lower({{ json_field_sql(result_field, 'has_data_type_match') }}) in ('false', '0')
+          then concat(
+              '• ',
+              {{ json_field_sql(result_field, 'column_name') }}, ': ',
+              {{ json_field_sql(result_field, 'a_data_type') }}, ' → ',
+              {{ json_field_sql(result_field, 'b_data_type') }},
+              '\n'
+            )
+        end
+      )
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
+{# Databricks: currently data-type-only. The Databricks branch of compare_relation_columns #}
+{# does not yet emit the extended has_*_match fields; see bigquery branch for the path #}
+{# to broaden coverage. #}
 {% macro databricks__aggregate_schema_mismatches_sql(
   validation_type_field,
   result_field
