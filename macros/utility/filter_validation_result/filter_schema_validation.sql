@@ -1,4 +1,8 @@
 {% macro filter_schema_validation_mismatch_data_type(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_data_type', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_data_type(row) %}
   {% set has_data_type_match_col = audit_helper_ext.get_actual_column_name(row, 'HAS_DATA_TYPE_MATCH') %}
   {% set in_both_col = audit_helper_ext.get_actual_column_name(row, 'IN_BOTH') %}
   {% set in_a_only = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}
@@ -15,26 +19,50 @@
 {% endmacro %}
 
 {% macro filter_schema_validation_mismatch_ordinal_position(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_ordinal_position', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_ordinal_position(row) %}
   {{ return(audit_helper_ext._filter_schema_validation_mismatch_attribute(row, 'HAS_ORDINAL_POSITION_MATCH')) }}
 {% endmacro %}
 
 {% macro filter_schema_validation_mismatch_character_maximum_length(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_character_maximum_length', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_character_maximum_length(row) %}
   {{ return(audit_helper_ext._filter_schema_validation_mismatch_attribute(row, 'HAS_CHARACTER_MAXIMUM_LENGTH_MATCH')) }}
 {% endmacro %}
 
 {% macro filter_schema_validation_mismatch_numeric_precision(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_numeric_precision', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_numeric_precision(row) %}
   {{ return(audit_helper_ext._filter_schema_validation_mismatch_attribute(row, 'HAS_NUMERIC_PRECISION_MATCH')) }}
 {% endmacro %}
 
 {% macro filter_schema_validation_mismatch_numeric_scale(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_numeric_scale', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_numeric_scale(row) %}
   {{ return(audit_helper_ext._filter_schema_validation_mismatch_attribute(row, 'HAS_NUMERIC_SCALE_MATCH')) }}
 {% endmacro %}
 
 {% macro filter_schema_validation_mismatch_is_nullable(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_mismatch_is_nullable', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_mismatch_is_nullable(row) %}
   {{ return(audit_helper_ext._filter_schema_validation_mismatch_attribute(row, 'HAS_IS_NULLABLE_MATCH')) }}
 {% endmacro %}
 
 {% macro filter_schema_validation_in_a_only(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_in_a_only', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_in_a_only(row) %}
   {% set in_a_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}
   {{ return(row[in_a_only_col]) }}
 {% endmacro %}
@@ -44,6 +72,10 @@
 {# Falls back to mismatch_data_type + in_a_only if the var is unset or empty, #}
 {# matching the pre-configurable behavior so silent-no-op never happens. #}
 {% macro filter_schema_validation_enabled_errors(row) %}
+  {{ return(adapter.dispatch('filter_schema_validation_enabled_errors', 'audit_helper_ext')(row=row)) }}
+{% endmacro %}
+
+{% macro default__filter_schema_validation_enabled_errors(row) %}
   {% set enabled_suffixes = var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) %}
 
   {% set in_a_only_col = audit_helper_ext.get_actual_column_name(row, 'IN_A_ONLY') %}

@@ -29,7 +29,7 @@
   {% for filter_config in filters %}
     {% set filter_description = filter_config.description %}
     {% set filter_macro = filter_config.macro %}
-    {% set filter_macro_call = context.get(filter_macro, none) or audit_helper_ext.get(filter_macro) %}
+    {% set filter_macro_call = audit_helper_ext[filter_macro] %}
     {% set failed_calc_config = filter_config.failed_calc | default(namespace(agg=none, column=none)) %}
 
     {# For count validation: table level #}
