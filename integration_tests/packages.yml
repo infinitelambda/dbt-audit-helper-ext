@@ -1,2 +1,3 @@
 packages:
   - local: ../
+  - local: test_packages/pkg_a

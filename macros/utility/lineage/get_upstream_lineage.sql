@@ -1,17 +1,26 @@
-{% macro get_upstream_lineage(dbt_identifier) %}
-  {{ return(adapter.dispatch('get_upstream_lineage', 'audit_helper_ext')(dbt_identifier=dbt_identifier)) }}
+{% macro get_upstream_lineage(dbt_identifier, package_name=none) %}
+  {{ return(adapter.dispatch('get_upstream_lineage', 'audit_helper_ext')(dbt_identifier=dbt_identifier, package_name=package_name)) }}
 {% endmacro %}
 
 
-{% macro default__get_upstream_lineage(dbt_identifier) %}
+{% macro default__get_upstream_lineage(dbt_identifier, package_name) %}
   {% if execute %}
 
     {# Get the node for this model #}
-    {% set dbt_node = graph.nodes.values() | selectattr("name", "equalto", dbt_identifier) | first %}
+    {% set candidates = graph.nodes.values()
+        | selectattr("name", "equalto", dbt_identifier)
+        | list %}
+    {% set matched_nodes = audit_helper_ext.filter_nodes_by_package(
+        candidates,
+        package_name=package_name,
+        identifier=dbt_identifier
+    ) %}
 
-    {% if not dbt_node %}
+    {% if matched_nodes | length == 0 %}
       {{ return([]) }}
     {% endif %}
+
+    {% set dbt_node = matched_nodes[0] %}
 
     {# Initialize data structures for traversal #}
     {% set lineage_paths = [] %}

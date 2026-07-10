@@ -168,6 +168,9 @@ validate-supplies = [
 validate--disable-print-table = [
   {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__print_table_enabled: no}'"}
 ]
+validate-package-lookup = [
+  {shell = "cd integration_tests && dbt run-operation test__package_scoped_lookup"}
+]
 validate--pg-single-max-parallel = [
   {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__audit_query_pre_hooks: [\"SET max_parallel_workers_per_gather = 1\"]}' --profiles-dir dev/postgres --target pg"}
 ]
@@ -204,6 +207,7 @@ validate = [
   {cmd = "poe validate-stores"},
   {cmd = "poe validate-supplies"},
   {cmd = "poe validate--disable-print-table"},
+  {cmd = "poe validate-package-lookup"},
 ]
 validate-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe validate" }
 validate-adb = { env = { DBT_PROFILES_DIR = "dev/databricks", DBT_TARGET = "adb" }, cmd = "poe validate" }

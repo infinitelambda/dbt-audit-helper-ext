@@ -1,13 +1,14 @@
-{% macro get_dependent_source_nodes(identifiers, dependant_table_names=none, tag=none) %}
+{% macro get_dependent_source_nodes(identifiers, dependant_table_names=none, tag=none, package_name=none) %}
     {{ return(adapter.dispatch('get_dependent_source_nodes', 'audit_helper_ext')(
         identifiers=identifiers,
         dependant_table_names=dependant_table_names,
-        tag=tag
+        tag=tag,
+        package_name=package_name
     )) }}
 {% endmacro %}
 
 
-{% macro default__get_dependent_source_nodes(identifiers, dependant_table_names, tag) %}
+{% macro default__get_dependent_source_nodes(identifiers, dependant_table_names, tag, package_name) %}
 
     {# -- Parse comma-separated inputs into lists -- #}
     {% set identifier_list = identifiers.split(',') | map('trim') | select | list %}
@@ -18,7 +19,7 @@
     {% for identifier in identifier_list %}
 
         {# -- Get target model node -- #}
-        {% set target_node = audit_helper_ext.get_model_node(identifier) %}
+        {% set target_node = audit_helper_ext.get_model_node(identifier, package_name=package_name) %}
         {% if target_node.name == 'undefined' %}
             {% do exceptions.raise_compiler_error(
                 "❌ Model '" ~ identifier ~ "' not found in the dbt graph."
@@ -26,7 +27,7 @@
         {% endif %}
 
         {# -- Collect upstream models (including target) from lineage paths -- #}
-        {% set lineage_paths = audit_helper_ext.get_upstream_lineage(identifier) %}
+        {% set lineage_paths = audit_helper_ext.get_upstream_lineage(identifier, package_name=package_name) %}
 
         {% for path in lineage_paths %}
             {% for node_info in path %}
