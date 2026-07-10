@@ -66,7 +66,8 @@
                 source_database=source_node.database,
                 source_schema=versioned_schema,
                 source_name=source_node.source_name,
-                use_prev=false
+                use_prev=false,
+                package_name=source_node.package_name
             ) %}
         {% endfor %}
 
