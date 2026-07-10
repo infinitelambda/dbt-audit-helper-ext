@@ -1,0 +1,5 @@
+sources:
+  - name: pkg_shared_source
+    schema: audit_helper_ext_seed
+    tables:
+      - name: pkg_dup_table

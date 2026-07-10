@@ -1,4 +1,4 @@
-{% macro clone_relation_extended(identifiers, source_database=none, source_schema=none, dependant_table_names=none, tag=none, use_prev=true, exclude_identifiers=none) %}
+{% macro clone_relation_extended(identifiers, source_database=none, source_schema=none, dependant_table_names=none, tag=none, use_prev=true, exclude_identifiers=none, package_name=none) %}
     {{ return(adapter.dispatch('clone_relation_extended', 'audit_helper_ext')(
         identifiers=identifiers,
         source_database=source_database,
@@ -6,12 +6,13 @@
         dependant_table_names=dependant_table_names,
         tag=tag,
         use_prev=use_prev,
-        exclude_identifiers=exclude_identifiers
+        exclude_identifiers=exclude_identifiers,
+        package_name=package_name
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation_extended(identifiers, source_database, source_schema, dependant_table_names, tag, use_prev, exclude_identifiers) %}
+{% macro default__clone_relation_extended(identifiers, source_database, source_schema, dependant_table_names, tag, use_prev, exclude_identifiers, package_name) %}
 
     {% if execute %}
         {# -- Parse comma-separated identifiers into a list -- #}
@@ -28,7 +29,8 @@
                     identifier=id,
                     source_database=source_database,
                     source_schema=source_schema,
-                    use_prev=use_prev
+                    use_prev=use_prev,
+                    package_name=package_name
                 ) %}
             {% endif %}
         {% endfor %}
@@ -37,7 +39,8 @@
         {% set all_sources = audit_helper_ext.get_dependent_source_nodes(
             identifiers=identifiers,
             dependant_table_names=dependant_table_names,
-            tag=tag
+            tag=tag,
+            package_name=package_name
         ) %}
 
         {% set sources_to_clone = audit_helper_ext.filter_source_exclusions(all_sources, identifiers=identifiers, exclude_identifiers=exclude_identifiers) %}

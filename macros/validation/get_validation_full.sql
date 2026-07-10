@@ -5,7 +5,8 @@
     old_identifier,
     primary_keys,
     exclude_columns=[],
-    summarize=true
+    summarize=true,
+    package_name=none
 ) %}
   {{ return(adapter.dispatch('get_validation_full', 'audit_helper_ext')
       (
@@ -15,7 +16,8 @@
         old_identifier=old_identifier,
         primary_keys=primary_keys,
         exclude_columns=exclude_columns,
-        summarize=summarize
+        summarize=summarize,
+        package_name=package_name
       )
   ) }}
 {% endmacro %}
@@ -28,7 +30,8 @@
     old_identifier,
     primary_keys,
     exclude_columns=[],
-    summarize=true
+    summarize=true,
+    package_name=none
 ) %}
 
     {% set old_relation = adapter.get_relation(
@@ -69,7 +72,7 @@
           {% endif %}
 
           {# Print lineage information #}
-          {% set lineage_paths = audit_helper_ext.get_upstream_lineage(dbt_identifier) %}
+          {% set lineage_paths = audit_helper_ext.get_upstream_lineage(dbt_identifier, package_name=package_name) %}
           {% set lineage_output = audit_helper_ext.format_lineage(lineage_paths) %}
             {{ log('💡 Upstream Lineage:', true) }}
           {{ audit_helper_ext.log_debug(lineage_output) }}

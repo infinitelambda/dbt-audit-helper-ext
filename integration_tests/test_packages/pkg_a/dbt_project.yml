@@ -1,0 +1,9 @@
+name: pkg_a
+version: '0.0.0'
+config-version: 2
+
+model-paths: ["models"]
+
+models:
+  pkg_a:
+    +materialized: ephemeral

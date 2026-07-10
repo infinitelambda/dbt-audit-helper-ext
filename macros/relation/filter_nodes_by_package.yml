@@ -1,0 +1,11 @@
+macros:
+  - name: filter_nodes_by_package
+    description: |
+        Filter a list of graph nodes to those in a given package.
+
+        When `package_name` is none, all nodes pass through. When more than one
+        node survives the filter, an ambiguity warning is logged (naming the
+        matched packages and the one that will be selected first) so callers can
+        pick a single node deterministically while nudging the user to pass
+        `package_name`. The entity label in that warning ("Model", "Source", ...)
+        is derived from the node's `unique_id`, so callers do not pass it in.
