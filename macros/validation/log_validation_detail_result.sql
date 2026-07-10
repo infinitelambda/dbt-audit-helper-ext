@@ -4,7 +4,9 @@
     dbt_relation,
     primary_keys,
     exclude_columns,
-    store_matched_rows
+    store_matched_rows,
+    a_filter=none,
+    b_filter=none
 ) %}
   {{ return(adapter.dispatch('log_validation_detail_result', 'audit_helper_ext')(
     dbt_identifier=dbt_identifier,
@@ -12,7 +14,9 @@
     dbt_relation=dbt_relation,
     primary_keys=primary_keys,
     exclude_columns=exclude_columns,
-    store_matched_rows=store_matched_rows
+    store_matched_rows=store_matched_rows,
+    a_filter=a_filter,
+    b_filter=b_filter
   )) }}
 {% endmacro %}
 
@@ -23,7 +27,9 @@
     dbt_relation,
     primary_keys,
     exclude_columns,
-    store_matched_rows
+    store_matched_rows,
+    a_filter=none,
+    b_filter=none
 ) %}
 
   {# Build target relation in the same database/schema as validation_log #}
@@ -39,12 +45,14 @@
 
   {# Build the comparison query via upstream macro #}
   {% set sample_limit = var('audit_helper__store_comparison_data_limit', none) %}
-  {% set comparison_query = audit_helper.compare_and_classify_relation_rows(
+  {% set comparison_query = audit_helper_ext.compare_and_classify_relation_rows(
       a_relation=old_relation,
       b_relation=dbt_relation,
       primary_key_columns=primary_keys,
       columns=columns,
-      sample_limit=sample_limit
+      sample_limit=sample_limit,
+      a_filter=a_filter,
+      b_filter=b_filter
   ) %}
 
   {# Wrap with metadata columns and row filtering #}

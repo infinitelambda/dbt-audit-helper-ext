@@ -1,8 +1,27 @@
-{# Override at v0.12 #}
+{# Extended compare_all_columns adding source (A) / dbt (B) WHERE filters. `a_filter` bounds #}
+{# the source (A) side; `b_filter` bounds the dbt (B) side. Lives in the audit_helper_ext #}
+{# namespace and is called directly by the validation entry macros. #}
 
-{% macro sqlserver__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none ) -%}
+{% macro compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+  {{ return(adapter.dispatch('compare_all_columns', 'audit_helper_ext')(
+    a_relation=a_relation,
+    b_relation=b_relation,
+    primary_key=primary_key,
+    exclude_columns=exclude_columns,
+    summarize=summarize,
+    a_filter=a_filter,
+    b_filter=b_filter
+  )) }}
+{%- endmacro %}
+
+
+{% macro default__compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
 
   {% set column_names = dbt_utils.get_filtered_columns_in_relation(from=a_relation, except=exclude_columns) %}
+
+  {# We explictly select the primary_key and rename to support any sql as the primary_key -
+  a column or concatenated columns. this assumes that a_relation and b_relation do not already
+  have a field named dbt_audit_helper_pk #}
 
   {% set a_query %}
     select
@@ -59,14 +78,15 @@
         final as (
           select
             upper(column_name) as column_name,
-            sum(case when perfect_match = 1 then 1 else 0 end) as perfect_match,
-            sum(case when null_in_a = 1 then 1 else 0 end) as null_in_a,
-            sum(case when null_in_b = 1 then 1 else 0 end) as null_in_b,
-            sum(case when missing_from_a = 1 then 1 else 0 end) as missing_from_a,
-            sum(case when missing_from_b = 1 then 1 else 0 end) as missing_from_b,
-            sum(case when conflicting_values = 1 then 1 else 0 end) as conflicting_values
+            sum(case when perfect_match then 1 else 0 end) as perfect_match,
+            sum(case when null_in_a then 1 else 0 end) as null_in_a,
+            sum(case when null_in_b then 1 else 0 end) as null_in_b,
+            sum(case when missing_from_a then 1 else 0 end) as missing_from_a,
+            sum(case when missing_from_b then 1 else 0 end) as missing_from_b,
+            sum(case when conflicting_values then 1 else 0 end) as conflicting_values
           from main
-          group by column_name
+          group by 1
+          order by column_name
         )
 
       {%- else %}

@@ -1,7 +1,10 @@
 {{
   config(
     materialized = 'table',
-    unique_key = ['id']
+    unique_key = ['id'],
+    meta = {
+      'audit_helper__source_filter': 'orders_before_cutoff_expr'
+    }
   )
 }}
 

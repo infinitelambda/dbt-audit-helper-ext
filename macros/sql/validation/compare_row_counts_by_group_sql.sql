@@ -1,12 +1,14 @@
-{% macro compare_row_counts_by_group_sql(a_relation, b_relation, group_by) %}
+{% macro compare_row_counts_by_group_sql(a_relation, b_relation, group_by, a_filter=none, b_filter=none) %}
   {{ return(adapter.dispatch('compare_row_counts_by_group_sql', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
-    group_by=group_by
+    group_by=group_by,
+    a_filter=a_filter,
+    b_filter=b_filter
   )) }}
 {% endmacro %}
 
-{% macro default__compare_row_counts_by_group_sql(a_relation, b_relation, group_by) %}
+{% macro default__compare_row_counts_by_group_sql(a_relation, b_relation, group_by, a_filter=none, b_filter=none) %}
 
   {% set group_by_csv, group_bys = audit_helper_ext.convert_to_str_and_list(group_by) %}
 
@@ -15,6 +17,7 @@
       {{ group_by_csv }},
       count(*) as count_a
     from {{ a_relation }}
+    {% if a_filter %}where {{ a_filter }}{% endif %}
     group by {{ group_by_csv }}
   ),
 
@@ -23,6 +26,7 @@
       {{ group_by_csv }},
       count(*) as count_b
     from {{ b_relation }}
+    {% if b_filter %}where {{ b_filter }}{% endif %}
     group by {{ group_by_csv }}
   )
 

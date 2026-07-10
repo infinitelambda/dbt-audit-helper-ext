@@ -1,0 +1,32 @@
+macros:
+  - name: build_filtered_query
+    description: |
+      Build a `select <columns> from <relation> [where <filter>]` SQL string so callers can
+      feed a filtered SELECT to the upstream `audit_helper.compare_queries` engine — instead
+      of forking the whole `compare_relations` macro just to inject a `WHERE` clause.
+
+      Column introspection runs against the raw relation (a row filter does not change the
+      column set). To keep the INTERSECT/EXCEPT set logic aligned, pass the SAME `columns`
+      list for both the A and B sides — mirroring upstream `compare_relations`, which derives
+      the projection from `a_relation` only.
+
+      **Returns** (`string`): the assembled `select … from … [where …]` query string.
+
+    arguments:
+      - name: relation
+        type: relation
+        description: The relation to select from.
+      - name: columns
+        type: optional[list[string]]
+        description: |
+          Explicit column names to project. When omitted, columns are introspected from
+          `relation` minus `exclude_columns`.
+      - name: exclude_columns
+        type: list[string]
+        description: Columns to drop from the projection when introspecting (ignored if `columns` is given).
+      - name: filter
+        type: optional[string]
+        description: Optional SQL boolean expression appended as a `WHERE` clause.
+      - name: extra_select
+        type: optional[string]
+        description: Optional extra projection appended after the columns (e.g. a surrogate key expression).

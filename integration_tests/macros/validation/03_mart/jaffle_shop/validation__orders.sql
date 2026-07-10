@@ -9,11 +9,13 @@
 
     {%- set primary_keys = ['id'] -%}
     {%- set exclude_columns = [] -%}
+    {%- set old_filter = 'orders_before_cutoff_expr' -%}
+    {%- set dbt_filter = none -%}
 
-    {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
+    {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier)
         ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))
     , true) if execute }}
-    
+
     {{ return(namespace(
             dbt_identifier=dbt_identifier,
             old_database=old_database,
@@ -21,6 +23,8 @@
             old_identifier=old_identifier,
             primary_keys=primary_keys,
             exclude_columns=exclude_columns,
+            old_filter=old_filter,
+            dbt_filter=dbt_filter,
     )) }}
 
 {% endmacro %}
@@ -36,7 +40,9 @@
             dbt_identifier=validation_config.dbt_identifier,
             old_database=validation_config.old_database,
             old_schema=validation_config.old_schema,
-            old_identifier=validation_config.old_identifier
+            old_identifier=validation_config.old_identifier,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}
@@ -75,7 +81,9 @@
             old_identifier=validation_config.old_identifier,
             primary_keys=validation_config.primary_keys,
             exclude_columns=validation_config.exclude_columns,
-            summarize=summarize
+            summarize=summarize,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}
@@ -96,7 +104,9 @@
             old_identifier=validation_config.old_identifier,
             primary_keys=validation_config.primary_keys,
             exclude_columns=validation_config.exclude_columns,
-            summarize=summarize
+            summarize=summarize,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}
@@ -118,7 +128,9 @@
             dbt_identifier=validation_config.dbt_identifier,
             old_database=validation_config.old_database,
             old_schema=validation_config.old_schema,
-            old_identifier=validation_config.old_identifier
+            old_identifier=validation_config.old_identifier,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
         {{ audit_helper_ext.get_validation_schema(
@@ -135,7 +147,9 @@
             old_identifier=validation_config.old_identifier,
             primary_keys=validation_config.primary_keys,
             exclude_columns=validation_config.exclude_columns,
-            summarize=summarize
+            summarize=summarize,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}
@@ -154,7 +168,9 @@
             old_database=validation_config.old_database,
             old_schema=validation_config.old_schema,
             old_identifier=validation_config.old_identifier,
-            group_by=group_by
+            group_by=group_by,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}
@@ -176,7 +192,9 @@
             primary_keys=validation_config.primary_keys,
             columns_to_compare=columns_to_compare,
             summarize=summarize,
-            limit=limit
+            limit=limit,
+            old_filter=validation_config.old_filter,
+            dbt_filter=validation_config.dbt_filter
         ) }}
 
     {% endif %}

@@ -6,8 +6,8 @@ macros:
         type: string
         description: The source table or ref() to deduplicate
       - name: partition_by_fields
-        type: list
+        type: list[string]
         description: List of field names for PARTITION BY clause
       - name: order_by_fields
-        type: list
+        type: list[string]
         description: List of field(s) with sort order for ORDER BY clause (e.g., ['column_name desc'])

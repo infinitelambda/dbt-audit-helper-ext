@@ -21,6 +21,9 @@
     - [Source Configuration](#source-configuration)
       - [`audit_helper__source_database`](#audit_helper__source_database)
       - [`audit_helper__source_schema`](#audit_helper__source_schema)
+    - [Source Filtering](#source-filtering)
+      - [`audit_helper__source_filter`](#audit_helper__source_filter)
+      - [`audit_helper__dbt_filter`](#audit_helper__dbt_filter)
     - [Legacy Table Name Mapping](#legacy-table-name-mapping)
       - [`audit_helper__old_identifier_naming_convention`](#audit_helper__old_identifier_naming_convention)
     - [Date Management](#date-management)
@@ -57,6 +60,8 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__store_comparison_data_limit` | Detail Persistence | No | `none` | Max sampled PKs per detail table |
 | `audit_helper__source_database` | Source | No | `target.database` | Database containing legacy/source tables |
 | `audit_helper__source_schema` | Source | No | `target.schema` | Schema containing legacy/source tables |
+| `audit_helper__source_filter` | Source Filtering | No | `none` | Per-model macro name bounding the source (A) side |
+| `audit_helper__dbt_filter` | Source Filtering | No | `none` | Per-model macro name bounding the dbt (B) side |
 | `audit_helper__old_identifier_naming_convention` | Mapping | No | None | Pattern for transforming model names to legacy table names |
 | `audit_helper__date_of_process` | Named Date | No | UTC now | Current snapshot date being validated e.g. '2025-10-20' or 'day1' |
 | `audit_helper__allowed_date_of_processes` | Named Date | No | `[]` | List of valid snapshot dates e.g. ['2025-10-20', '2025-10-21'] or ['day1', 'day2'] |
@@ -359,6 +364,117 @@ Or using the legacy format (still supported):
   )
 }}
 ```
+
+---
+
+### Source Filtering
+
+Variables that apply a `WHERE` condition to either side of a comparison — the **source (A)** side via `audit_helper__source_filter`, and/or the **dbt (B)** side via `audit_helper__dbt_filter`. This is the fix for the classic incremental-validation headache: your dbt model only built rows up to a processing cutoff, but the legacy table kept accumulating rows past it — and those stragglers show up as "only in A", quietly dragging your match rate below 100% for no real reason.
+
+Both filters are injected as a `WHERE` clause inside each comparison subquery, so they compose cleanly with `exclude_columns` and the INTERSECT/EXCEPT set logic. They're honored by the `count`, `full`, `all_col`, `count_by_group`, and row-level detail validations, keeping every count internally consistent, and the resolved expressions are persisted to the `old_filter`/`dbt_filter` columns of `validation_log` and `validation_log_report`.
+
+Each config value is the **name of a macro** that returns a SQL boolean expression. Returning a macro (rather than raw SQL) lets the expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse column handling. Need multiple conditions? Combine them inside a single macro (e.g. `(updated_at <= '...') and (region = 'EU')`).
+
+```sql
+-- macros/source_upper_bound_expr.sql
+{% macro source_upper_bound_expr() %}
+  {{ adapter.quote('updated_at') }} <= '{{ var("cutoff_date") }}'
+{% endmacro %}
+```
+
+#### `audit_helper__source_filter`
+
+**Type**: `string` (a macro name)
+**Default**: `none` (no source (A) filter)
+**Used in**: Generated validation macros (via `get_validation_config__<model>`)
+
+A model-level config naming the macro to apply to that model's source (A) side.
+
+**Example**:
+
+```sql
+-- models/03_mart/customers.sql
+{{
+  config(
+    meta={
+      'audit_helper__source_filter': 'source_upper_bound_expr'
+    }
+  )
+}}
+```
+
+Or using the legacy format (still supported):
+
+```sql
+{{
+  config(
+    audit_helper__source_filter='source_upper_bound_expr'
+  )
+}}
+```
+
+**Compiled effect** (the source `a` CTE gains a `WHERE`; everything downstream is untouched):
+
+```sql
+with a as (
+    select "id", "name", "updated_at" from legacy.customers
+    where "updated_at" <= '2024-09-10'   -- ← injected bound
+),
+b as (
+    select "id", "name", "updated_at" from analytics.customers
+),
+-- a_intersect_b / a_except_b / b_except_a ... (unchanged)
+select * from final
+```
+
+**When to use**:
+- Most models match legacy exactly, and only a handful need a bound → set it per model
+- Different models bound on different columns (`created_at`, `id`, `version`, …)
+
+**Persisted for auditability**: The resolved expression is written to the `old_filter` column of `validation_log` (and surfaced in `validation_log_report`) for every `count`, `full`, `all_col`, and `count_by_group` run, so you can always see which bound produced a given result.
+
+---
+
+#### `audit_helper__dbt_filter`
+
+**Type**: `string` (a macro name)
+**Default**: `none` (no dbt (B) filter)
+**Used in**: Generated validation macros (via `get_validation_config__<model>`)
+
+The `b_relation` counterpart of `audit_helper__source_filter`: a model-level config naming the macro to apply to the **dbt (B) side** of the comparison. Filter macros are interchangeable between the two configs — a filter expression is just a SQL boolean and works on either side.
+
+**Example**:
+
+```sql
+-- models/03_mart/customers.sql
+{{
+  config(
+    meta={
+      'audit_helper__dbt_filter': 'dbt_active_only_expr'
+    }
+  )
+}}
+```
+
+**Compiled effect** (the dbt `b` CTE gains a `WHERE`; the source `a` side is unaffected unless it also has a `audit_helper__source_filter`):
+
+```sql
+with a as (
+    select "id", "name", "updated_at" from legacy.customers
+),
+b as (
+    select "id", "name", "updated_at" from analytics.customers
+    where "is_active" = true   -- ← injected dbt (B) bound
+),
+-- a_intersect_b / a_except_b / b_except_a ... (unchanged)
+select * from final
+```
+
+**When to use**:
+- The dbt model carries rows the legacy source never had (e.g. soft-deleted flags, backfilled partitions) and you want to exclude them from the match
+- You want to bound both sides symmetrically — set `audit_helper__source_filter` and `audit_helper__dbt_filter` together
+
+**Persisted for auditability**: The resolved expression is written to the `dbt_filter` column of `validation_log` and surfaced in `validation_log_report`, right beside `old_filter`.
 
 ---
 
