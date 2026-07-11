@@ -9,7 +9,7 @@
 
     {%- set primary_keys = ['id'] -%}
     {%- set exclude_columns = [] -%}
-    {%- set old_filter = none -%}
+    {%- set old_filter = 'customers_named_expr' -%}
     {%- set dbt_filter = none -%}
 
     {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier)

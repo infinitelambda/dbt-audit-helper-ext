@@ -378,8 +378,8 @@ Each config value is the **name of a macro** that returns a SQL boolean expressi
 > **A macro is only "interchangeable" between the two sides when its columns exist on that side.** The same filter expression is just a SQL boolean, so a filter macro can be pointed at either config — but only if the columns it references are actually present on the side it lands on. A `dbt_filter` referencing a source-only column (or vice versa) won't be caught at compile time: it sails through to the warehouse and fails there with a plain `column does not exist` error. The package validates that the referenced *macro* exists, not that its *expression* is valid for the target relation — so keep each side's filter honest about that side's columns.
 
 ```sql
--- macros/source_upper_bound_expr.sql
-{% macro source_upper_bound_expr() %}
+-- macros/orders_before_cutoff_expr.sql
+{% macro orders_before_cutoff_expr() %}
   {{ adapter.quote('event_date') }} <= '{{ var("cutoff_date") }}'
 {% endmacro %}
 ```
@@ -400,7 +400,7 @@ Names the macro to apply to a model's source (A) side. Set it once as a project 
 {{
   config(
     meta={
-      'audit_helper__source_filter': 'source_upper_bound_expr'
+      'audit_helper__source_filter': 'customers_named_expr'
     }
   )
 }}
@@ -411,7 +411,7 @@ Or using the legacy format (still supported):
 ```sql
 {{
   config(
-    audit_helper__source_filter='source_upper_bound_expr'
+    audit_helper__source_filter='customers_named_expr'
   )
 }}
 ```

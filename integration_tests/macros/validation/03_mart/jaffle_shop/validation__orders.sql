@@ -10,7 +10,7 @@
     {%- set primary_keys = ['id'] -%}
     {%- set exclude_columns = [] -%}
     {%- set old_filter = 'orders_before_cutoff_expr' -%}
-    {%- set dbt_filter = none -%}
+    {%- set dbt_filter = 'orders_positive_total_expr' -%}
 
     {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier)
         ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))
