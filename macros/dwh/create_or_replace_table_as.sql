@@ -33,3 +33,26 @@
   {{ return(create_statement) }}
 
 {% endmacro %}
+
+
+{% macro postgres__create_or_replace_table_as(relation, sql, config, dry_run) -%}
+
+  {% set create_statement -%}
+
+    {{ sql_header if sql_header is not none }}
+    drop table if exists {{ relation }};
+    create table {{ relation }}
+    as (
+      {{ sql }}
+    );
+
+  {%- endset %}
+
+  {{ log_debug("\n" ~ create_statement, info=True) if dry_run }}
+  {% if dry_run == false %}
+    {% do run_query(create_statement) %}
+  {% endif %}
+
+  {{ return(create_statement) }}
+
+{% endmacro %}
