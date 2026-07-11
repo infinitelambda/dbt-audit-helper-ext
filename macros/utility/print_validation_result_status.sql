@@ -46,13 +46,13 @@
 
     {% else %}
       {# For other validation: row level #}
-      {% set filtered_table = result.where(filter_macro_call) %}
+      {% set filtered_table = audit_helper_ext.filter_agate_rows(result, filter_macro_call) %}
 
       {# Calculate failure count based on aggregate method in config #}
       {% if failed_calc_config.agg is none %}
         {% set failure_count = filtered_table.rows | length %}
       {% else %}
-        {% set actual_column_name = audit_helper_ext.get_actual_column_name(filtered_table, failed_calc_config.column) %}
+        {% set actual_column_name = audit_helper_ext.get_actual_column_name(result, failed_calc_config.column) %}
         {% set column_values = filtered_table.columns[actual_column_name].values() %}
         {% set aggregates = {
           'sum': column_values | sum,
