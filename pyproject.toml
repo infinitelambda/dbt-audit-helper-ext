@@ -106,8 +106,8 @@ verify = [
 ]
 fusion-parse = [
   {shell = "curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh"},
-  {shell = "~/.local/bin/dbt deps --project-dir integration_tests"},
-  {shell = "~/.local/bin/dbt parse --warn-error --project-dir integration_tests"},
+  {shell = "cd integration_tests && ~/.local/bin/dbt deps"},
+  {shell = "cd integration_tests && ~/.local/bin/dbt parse --warn-error"},
 ]
 init = [
   {cmd = "dbt deps --project-dir integration_tests"},
