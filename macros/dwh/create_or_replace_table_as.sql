@@ -56,3 +56,31 @@
   {{ return(create_statement) }}
 
 {% endmacro %}
+
+
+{% macro duckdb__create_or_replace_table_as(relation, sql, config, dry_run) -%}
+
+  {# DuckDB supports `create or replace table`, but when this runs inside a run-operation #}
+  {# (e.g. detail persistence) the write can sit in an open transaction that DuckDB rolls #}
+  {# back on process exit. Follow the CTAS with an explicit commit + checkpoint so the #}
+  {# table is durably flushed to the database file rather than silently discarded. #}
+  {% set create_statement -%}
+
+    {{ sql_header if sql_header is not none }}
+    create or replace table {{ relation }}
+    as (
+      {{ sql }}
+    )
+
+  {%- endset %}
+
+  {{ log_debug("\n" ~ create_statement, info=True) if dry_run }}
+  {% if dry_run == false %}
+    {% do run_query(create_statement) %}
+    {% do adapter.commit() %}
+    {% do run_query('checkpoint') %}
+  {% endif %}
+
+  {{ return(create_statement) }}
+
+{% endmacro %}

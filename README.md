@@ -13,6 +13,7 @@
 [![support-databricks](https://img.shields.io/badge/support-Databricks-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com?ref=infinitelambda)
 [![support-sqlserver](https://img.shields.io/badge/support-SQL%20Server-CC2927?logo=microsoft%20sql%20server&logoColor=white)](https://docs.microsoft.com/en-us/sql/sql-server/?ref=infinitelambda)
 [![support-postgres](https://img.shields.io/badge/support-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/docs/?ref=infinitelambda)
+[![support-duckdb](https://img.shields.io/badge/support-DuckDB-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/docs/?ref=infinitelambda)
 [![support-dbt](https://img.shields.io/badge/support-dbt%20v1.7+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
 
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
@@ -29,6 +30,7 @@ This repository provides a collection of powerful macros designed to enhance dat
 - 🧱 Databricks
 - ⛱️ SQL Server
 - 🐘 PostgreSQL
+- 🦆 DuckDB
 
 > **Upgrading?** Check the breaking changes for [v0.11](./docs/breaking-changes-v0.11.md) and [v0.9](./docs/breaking-changes-v0.9.md) before you upgrade.
 

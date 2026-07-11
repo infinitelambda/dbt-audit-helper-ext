@@ -29,6 +29,11 @@
 {% endmacro %}
 
 
+{% macro duckdb__is_iceberg_table(relation) %}
+    {{ return(false) }}
+{% endmacro %}
+
+
 {% macro sqlserver__is_iceberg_table(relation) %}
     {{ return(false) }}
 {% endmacro %}

@@ -1,0 +1,8 @@
+audit_helper_ext:
+  target: duckdb
+  outputs:
+    duckdb:
+      type: duckdb
+      path: "{{ env_var('DBT_DUCKDB_PATH', 'audit_helper_ext.duckdb') }}"
+      schema: audit_helper_ext
+      threads: 10

@@ -15,9 +15,16 @@
 {% set audit_columns = [
     'DBT_AUDIT_IN_A', 'DBT_AUDIT_IN_B', 'DBT_AUDIT_ROW_STATUS',
     'DBT_AUDIT_SURROGATE_KEY', 'DBT_AUDIT_PK_ROW_NUM',
-    'DBT_AUDIT_ROW_HASH', 'DBT_AUDIT_NUM_ROWS_IN_STATUS',
+    'DBT_AUDIT_NUM_ROWS_IN_STATUS',
     'DBT_AUDIT_SAMPLE_NUMBER'
 ] %}
+
+{# dbt_audit_row_hash is only emitted by audit_helper's hash-based comparison branches #}
+{# (bigquery / databricks / snowflake). The set-based default__ branch used by postgres, #}
+{# duckdb and sqlserver compares rows via intersect/except and never produces the column. #}
+{% if target.type in ['bigquery', 'databricks', 'snowflake'] %}
+  {% do audit_columns.append('DBT_AUDIT_ROW_HASH') %}
+{% endif %}
 
 {% set validation_config = get_validation_config__sample_1() %}
 {% set dbt_relation = ref(validation_config.dbt_identifier) %}
@@ -39,10 +46,14 @@
 
 with actual_columns as (
     select upper(column_name) as column_name
-    from {{ log_relation.database }}.information_schema.columns
-    where table_catalog = upper('{{ log_relation.database }}')
-      and table_schema = upper('{{ log_relation.schema }}')
-      and table_name = 'VALIDATION_LOG_DETAIL__SAMPLE_1'
+    {# Unqualified information_schema is portable: Snowflake resolves it in the current #}
+    {# database and DuckDB rejects a catalog-qualified path. Both sides of the catalog / #}
+    {# schema / table filters are upper()-ed because DuckDB stores identifiers lowercase #}
+    {# while Snowflake stores them uppercase. #}
+    from information_schema.columns
+    where upper(table_catalog) = upper('{{ log_relation.database }}')
+      and upper(table_schema) = upper('{{ log_relation.schema }}')
+      and upper(table_name) = 'VALIDATION_LOG_DETAIL__SAMPLE_1'
 ),
 
 missing_required as (

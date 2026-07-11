@@ -214,6 +214,35 @@
 {% endmacro %}
 
 
+{# DuckDB: currently data-type-only, mirroring the Postgres branch. DuckDB's string_agg takes an #}
+{# inline `order by` (not `within group`), so it follows the Postgres shape rather than default__. #}
+{% macro duckdb__aggregate_schema_mismatches_sql(
+  validation_type_field,
+  result_field
+) %}
+
+  {% set sql -%}
+    string_agg(
+      case
+        when {{ validation_type_field }} = 'schema'
+          and {{ audit_helper_ext._schema_mismatches_presence_predicate(result_field) }}
+          and lower({{ json_field_sql(result_field, 'has_data_type_match') }}) in ('false', '0')
+          then concat(
+              '• ',
+              {{ json_field_sql(result_field, 'column_name') }}, ': ',
+              {{ json_field_sql(result_field, 'a_data_type') }}, ' → ',
+              {{ json_field_sql(result_field, 'b_data_type') }},
+              E'\n'
+            )
+        end, '' order by {{ json_field_sql(result_field, 'column_name') }}
+      )
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
 {# Default: portable, data-type-only fallback for adapters without an explicit branch above. #}
 {# Uses string_agg_sql() so the abstraction handles the per-adapter aggregate name; downstream #}
 {# adapters that need richer drift coverage should add their own dispatched branch. #}

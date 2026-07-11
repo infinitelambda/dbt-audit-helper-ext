@@ -39,6 +39,17 @@
 {% endmacro %}
 
 
+{% macro duckdb__json_field_sql(json_table_alias, json_field) %}
+
+  {% set sql -%}
+    ({{ json_table_alias }}->>'{{ json_field }}')
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}
+
+
 {% macro databricks__json_field_sql(json_table_alias, json_field) %}
 
   {% set sql -%}
