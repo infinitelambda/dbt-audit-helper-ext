@@ -21,3 +21,9 @@
 {% macro customers_named_expr() %}
   name is not null
 {% endmacro %}
+
+
+{# Dummy macro #}
+{% macro dummy_true() %}
+  1 = 1 /* dummy filter relation - testing purpose */
+{% endmacro %}

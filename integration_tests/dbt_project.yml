@@ -70,3 +70,5 @@ vars:
     # - mismatch_numeric_scale
     # - mismatch_is_nullable
     - in_a_only
+  audit_helper__source_filter: dummy_true
+  audit_helper__dbt_filter: dummy_true
