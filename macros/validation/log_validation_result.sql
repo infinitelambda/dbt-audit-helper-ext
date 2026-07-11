@@ -1,15 +1,17 @@
-{% macro log_validation_result(type, result, dbt_identifier, dbt_relation, old_relation) %}
+{% macro log_validation_result(type, result, dbt_identifier, dbt_relation, old_relation, old_filter=none, dbt_filter=none) %}
   {{ return(adapter.dispatch('log_validation_result', 'audit_helper_ext')(
     type=type,
     result=result,
     dbt_identifier=dbt_identifier,
     dbt_relation=dbt_relation,
-    old_relation=old_relation
+    old_relation=old_relation,
+    old_filter=old_filter,
+    dbt_filter=dbt_filter
   )) }}
 {% endmacro %}
 
 
-{% macro default__log_validation_result(type, result, dbt_identifier, dbt_relation, old_relation) %}
+{% macro default__log_validation_result(type, result, dbt_identifier, dbt_relation, old_relation, old_filter=none, dbt_filter=none) %}
 
   {% set mart_path =
       ( graph.nodes.values()
@@ -29,6 +31,8 @@
         old_relation,
         dbt_relation,
         mart_path,
+        old_filter,
+        dbt_filter,
         validation_type,
         validation_result_json
     )
@@ -41,6 +45,9 @@
         '{{ old_relation }}',
         '{{ dbt_relation }}',
         '{{ mart_path }}',
+        {# Escaped only because persisted as a string literal here — not on the comparison path. #}
+        {{ ("'" ~ (old_filter | replace("'", "''")) ~ "'") if old_filter else 'null' }},
+        {{ ("'" ~ (dbt_filter | replace("'", "''")) ~ "'") if dbt_filter else 'null' }},
         '{{ type }}',
         --escape double-quote in old_relation so that json is parsable
         replace(

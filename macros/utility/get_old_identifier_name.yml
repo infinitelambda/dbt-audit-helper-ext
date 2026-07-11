@@ -79,7 +79,7 @@ macros:
           The name of the dbt model for which to resolve the old identifier.
           This is typically the model's filename without the `.sql` extension.
       - name: convention
-        type: dict
+        type: optional[dict[string, string]]
         description: |
           Optional naming convention override. If provided, this takes precedence over
           the `audit_helper__old_identifier_naming_convention` variable.

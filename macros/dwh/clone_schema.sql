@@ -73,6 +73,13 @@
 {% endmacro %}
 
 
+{# DuckDB shares Postgres semantics here: `create schema if not exists`, information_schema #}
+{# lookups, and per-table copy via clone_object all behave identically. #}
+{% macro duckdb__clone_schema(source_schema, target_database, target_schema) %}
+  {{ return(audit_helper_ext.postgres__clone_schema(source_schema, target_database, target_schema)) }}
+{% endmacro %}
+
+
 {% macro bigquery__clone_schema(source_schema, target_database, target_schema) %}
 
     {# get target location #}

@@ -27,7 +27,7 @@ macros:
           in the data warehouse query history.
 
       - name: filter
-        type: macro call
+        type: any
         description: |
           Optional filter macro to apply to the audit results using Agate's where() method.
           Should be a macro call that returns a lambda function or filter expression to

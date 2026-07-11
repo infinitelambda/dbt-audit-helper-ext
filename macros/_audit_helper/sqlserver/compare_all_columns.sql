@@ -1,6 +1,6 @@
 {# Override at v0.12 #}
 
-{% macro sqlserver__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true ) -%}
+{% macro sqlserver__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none ) -%}
 
   {% set column_names = dbt_utils.get_filtered_columns_in_relation(from=a_relation, except=exclude_columns) %}
 
@@ -9,6 +9,7 @@
       *,
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ a_relation }}
+    {% if a_filter %}where {{ a_filter }}{% endif %}
   {% endset %}
 
   {% set b_query %}
@@ -16,6 +17,7 @@
       *,
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ b_relation }}
+    {% if b_filter %}where {{ b_filter }}{% endif %}
   {% endset %}
 
   {% for column_name in column_names %}

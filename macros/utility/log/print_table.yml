@@ -20,7 +20,7 @@ macros:
       ```
     arguments:
       - name: result
-        type: agate.Table
+        type: any
         description: The agate table result to print
       - name: max_rows
         type: integer

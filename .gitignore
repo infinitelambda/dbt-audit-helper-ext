@@ -167,3 +167,8 @@ cython_debug/
 .secrets
 CLAUDE.md
 .user.yml
+package-lock.yml
+
+# DuckDB local database files (used by the duckdb integration-test target)
+*.duckdb
+*.duckdb.wal

@@ -24,7 +24,7 @@
 
     {% set audit_results = run_query(audit_query) %}
     {% if filter %}
-      {% set audit_results = audit_results.where(filter) %}
+      {% set audit_results = audit_helper_ext.filter_agate_rows(audit_results, filter) %}
     {% endif %}
     {{ audit_helper_ext.print_audit_result(audit_results) }}
     {%- if not summarize -%}

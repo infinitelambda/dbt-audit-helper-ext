@@ -10,6 +10,7 @@
   - [Configuration](#configuration)
     - [Option 1: Using Environment Variables (Recommended for Single Location)](#option-1-using-environment-variables-recommended-for-single-location)
     - [Option 2: Model-Level Configuration](#option-2-model-level-configuration)
+    - [PostgreSQL Specific Configuration](#postgresql-specific-configuration)
   - [Your First Validation](#your-first-validation)
     - [1. Generate validation macros](#1-generate-validation-macros)
     - [2. Run validations](#2-run-validations)
@@ -26,8 +27,10 @@ Before diving in, make sure you have:
 - One of the supported data warehouses:
   - ❄️ Snowflake (default)
   - ☁️ BigQuery
+  - 🧱 Databricks
   - ⛱️ SQL Server
   - 🐘 PostgreSQL
+  - 🦆 DuckDB
 
 ## Installation
 
@@ -57,7 +60,7 @@ This creates the validation log table and summary view (don't worry, it's quick)
 dbt run -s audit_helper_ext
 ```
 
-**SQL Server and PostgreSQL users only**: Add this dispatch configuration to your `dbt_project.yml`:
+**SQL Server, PostgreSQL, and DuckDB users only**: Add this dispatch configuration to your `dbt_project.yml`:
 
 ```yml
 dispatch:

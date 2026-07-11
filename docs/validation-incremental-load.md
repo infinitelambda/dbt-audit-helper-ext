@@ -86,6 +86,26 @@ dbt run -s +<model>
 dbt run -s +<model> --vars '{audit_helper__date_of_process: 2024-09-10}'
 ```
 
+### Step 3 (optional): Bound the source (A) side to the build cutoff
+
+Incremental validation has a subtle trap. Your dbt model builds rows up to a processing cutoff, but the legacy source table often keeps accumulating rows *past* that cutoff. Those extra source rows have nowhere to match on the dbt (B) side, so they surface as "only in A" — and your match rate slips below 100% even though your transformation logic is flawless. Frustrating, right?
+
+The fix: apply an **upper-bound `WHERE` to the source (A) side** so both sides cover the same window. Write a filter macro and point the model at it by name:
+
+```sql
+-- macros/event_date_upper_bound_expr.sql
+{% macro event_date_upper_bound_expr() %}
+  {{ adapter.quote('event_date') }} <= '{{ var("cutoff_date") }}'
+{% endmacro %}
+```
+
+```sql
+-- models/03_mart/dim_customer.sql
+{{ config(meta={'audit_helper__source_filter': 'event_date_upper_bound_expr'}) }}
+```
+
+Now `count`, `full`, `all_col`, `count_by_group`, and detail validations all compare the legacy table bounded to `event_date <= cutoff_date` against the dbt model — apples to apples. See [`audit_helper__source_filter`](./dbt-variables-reference.md#audit_helper__source_filter) for the full reference.
+
 ## Validation Strategy
 
 We follow a two-scenario approach that mirrors how your pipeline will actually run in production:
@@ -225,6 +245,8 @@ The validation report shows several key metrics:
 - **is_schema_match**: Whether column definitions match across the attributes you've enabled via [`audit_helper__schema_validation_checks`](./dbt-variables-reference.md#audit_helper__schema_validation_checks) (data type, column order, length, precision/scale, nullability, presence)
 - **schema_mismatches**: Per-column drift reasons. On Snowflake, each line is `column: <reason>[, <reason>]…` (e.g. `name: length 50 → 100, nullable NO → YES`); other adapters use the legacy data-type-only format
 - **match_rate_percentage**: Percentage of rows with identical data
+- **old_filter**: The source (A) filter expression applied to this run (e.g. `(event_date <= '2024-09-10')`), or `null` when no bound was configured — so you can tell at a glance whether a result was bounded
+- **dbt_filter**: The dbt (B) filter expression applied to this run, or `null` when no bound was configured
 
 **Pro tip**: Check `upstream_row_count` to confirm your incremental run actually processed new data. If it's 0 and you have 100% match rate, you might just be comparing identical static datasets!
 

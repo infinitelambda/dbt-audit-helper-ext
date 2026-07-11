@@ -60,7 +60,7 @@ vars:
     replacement: 'raw_\1' # prefix raw_
   audit_helper__audit_query_pre_hooks:
     - SELECT '1' AS test_hook
-  # audit_helper__store_comparison_data: true
+  audit_helper__store_comparison_data: true
   # audit_helper__store_matched_rows: true
   audit_helper__schema_validation_checks:
     - mismatch_data_type
@@ -70,3 +70,5 @@ vars:
     # - mismatch_numeric_scale
     # - mismatch_is_nullable
     - in_a_only
+  audit_helper__source_filter: dummy_true
+  audit_helper__dbt_filter: dummy_true
