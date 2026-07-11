@@ -104,11 +104,6 @@ verify = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt debug --project-dir integration_tests"},
 ]
-fusion-parse = [
-  {shell = "curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh"},
-  {shell = "cd integration_tests && ~/.local/bin/dbt deps"},
-  {shell = "cd integration_tests && ~/.local/bin/dbt parse --warn-error"},
-]
 init = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt run -s audit_helper_ext --full-refresh --vars '{audit_helper__full_refresh: 1}' --project-dir integration_tests"},
@@ -154,6 +149,13 @@ validate-sample-1-incremental = [
 ]
 validate-customers = [
   {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m customers"}
+]
+validate-with-fusion = [
+  {shell = "curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh"},
+  {shell = "cd integration_tests && ~/.local/bin/dbt deps"},
+  {shell = "cd integration_tests && ~/.local/bin/dbt parse --warn-error"},
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m customers -c fusion"},
+  {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m orders -c fusion"},
 ]
 validate-items = [
   {shell = "cd integration_tests && dbt_packages/audit_helper_ext/scripts/validation__all.sh -m items"}
@@ -202,7 +204,7 @@ test-detail = [
 test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
 
 validate = [
-  {cmd = "poe fusion-parse"},
+  {cmd = "poe validate-with-fusion"},
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
   {cmd = "poe validate-customers"},
@@ -230,6 +232,7 @@ validate-all-warehouses = [
 ]
 all = [
   {cmd = "poe init"},
+  {cmd = "poe validate-with-fusion"},
   {cmd = "poe validate"},
   {cmd = "poe test-detail"},
 ]

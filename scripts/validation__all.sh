@@ -44,6 +44,8 @@ OPTIONS:
                   venv     - Use activated virtual environment (no wrapper)
                   poetry   - Use 'poetry run' for commands
                   uv       - Use 'uv run' for commands
+                  fusion   - Use the dbt Fusion binary directly (no wrapper)
+                             Binary path from DBT_FUSION_BIN (default: ~/.local/bin/dbt)
     -r          Skip model runs, validate only
                 Useful when models are already built and you only want validation
     -v          Run models only, skip validation
@@ -154,6 +156,14 @@ validate_dependencies() {
         command -v poetry >/dev/null 2>&1 || missing_deps+=("poetry")
     elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
         command -v uv >/dev/null 2>&1 || missing_deps+=("uv")
+    elif [[ "$COMMAND_RUNNER" == "fusion" ]]; then
+        # For fusion, check the Fusion binary exists at the resolved path
+        [[ -x "$DBT_BIN" ]] || {
+            log_error "dbt Fusion binary not found or not executable: $DBT_BIN"
+            log_error "Install it, or set DBT_FUSION_BIN to its path:"
+            log_error "  curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh"
+            exit 1
+        }
     elif [[ "$COMMAND_RUNNER" == "venv" ]]; then
         # For venv, check if dbt is available in the current environment
         command -v dbt >/dev/null 2>&1 || {
@@ -165,7 +175,7 @@ validate_dependencies() {
         }
     else
         log_error "Invalid command runner: $COMMAND_RUNNER"
-        log_error "Valid options: poetry, uv, venv"
+        log_error "Valid options: poetry, uv, venv, fusion"
         exit 1
     fi
 
@@ -245,7 +255,7 @@ run_operation_for_all_models() {
 
         # Build the dbt command, then run it with tee for logging.
         # Avoid brace-group pipes which are fragile on Git Bash (MINGW).
-        local dbt_cmd="dbt run-operation $macro_call"
+        local dbt_cmd="$DBT_BIN run-operation $macro_call"
         if [[ -n "$cmd_args" ]]; then
             dbt_cmd="$dbt_cmd --args '$cmd_args'"
         fi
@@ -277,7 +287,7 @@ run_clone_for_all_models() {
         log_operation "🐑  Cloning: $SINGLE_MODEL"
 
         set -x #echo on
-        $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
+        $RUN_CMD $DBT_BIN run-operation clone_relation --args "{'identifier': '$SINGLE_MODEL', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $SINGLE_MODEL"; exit 1; }
         set +x #echo off
     else
         log_info "🐑  Clone all relations from PREVIOUS data version of $DATE_OF_PROCESS"
@@ -285,7 +295,7 @@ run_clone_for_all_models() {
             log_operation "🐑  Cloning: $model"
 
             set -x #echo on
-            $RUN_CMD dbt run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $model"; exit 1; }
+            $RUN_CMD $DBT_BIN run-operation clone_relation --args "{'identifier': '$model', 'use_prev': true}" --vars "$DBT_VARS_YAML" $DBT_ARGS || { log_error "Clone failed for $model"; exit 1; }
             set +x #echo off
         done
     fi
@@ -319,11 +329,18 @@ COMMAND_RUNNER="${COMMAND_RUNNER:-venv}"
 SKIP_RUN="${SKIP_RUN:-false}"
 SKIP_VALIDATION="${SKIP_VALIDATION:-false}"
 
-# Set the run command based on the runner
+# Set the run command (wrapper prefix) and dbt binary based on the runner.
+# DBT_BIN is the executable invoked at every call site; RUN_CMD is an optional
+# prefix (e.g. 'poetry run') placed in front of it.
+DBT_BIN="dbt"
 if [[ "$COMMAND_RUNNER" == "poetry" ]]; then
     RUN_CMD="poetry run"
 elif [[ "$COMMAND_RUNNER" == "uv" ]]; then
     RUN_CMD="uv run"
+elif [[ "$COMMAND_RUNNER" == "fusion" ]]; then
+    # fusion - invoke the Fusion binary directly by its explicit path
+    RUN_CMD=""
+    DBT_BIN="${DBT_FUSION_BIN:-$HOME/.local/bin/dbt}"
 else
     # venv - no wrapper needed, commands run directly
     RUN_CMD=""
@@ -457,9 +474,9 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             echo ""
             set -x #echo on
             if [[ -n "$DBT_VARS_YAML" ]]; then
-                $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
+                $RUN_CMD $DBT_BIN run -s +"$SINGLE_MODEL" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
             else
-                $RUN_CMD dbt run -s +"$SINGLE_MODEL" --full-refresh $DBT_ARGS
+                $RUN_CMD $DBT_BIN run -s +"$SINGLE_MODEL" --full-refresh $DBT_ARGS
             fi
             set +x #echo off
         else
@@ -467,9 +484,9 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             echo ""
             set -x #echo on
             if [[ -n "$DBT_VARS_YAML" ]]; then
-                $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
+                $RUN_CMD $DBT_BIN run -s +"$MART_DIR/" --full-refresh --vars "$DBT_VARS_YAML" $DBT_ARGS
             else
-                $RUN_CMD dbt run -s +"$MART_DIR/" --full-refresh $DBT_ARGS
+                $RUN_CMD $DBT_BIN run -s +"$MART_DIR/" --full-refresh $DBT_ARGS
             fi
             set +x #echo off
         fi
@@ -483,13 +500,13 @@ if [[ "$SKIP_RUN" != "true" ]]; then
             log_header "▶️  Run single model: $SINGLE_MODEL (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$SINGLE_MODEL" --vars "$DBT_VARS_YAML" $DBT_ARGS
+            $RUN_CMD $DBT_BIN run -s +"$SINGLE_MODEL" --vars "$DBT_VARS_YAML" $DBT_ARGS
             set +x #echo off
         else
             log_header "▶️  Run all models (without full-refresh)"
             echo ""
             set -x #echo on
-            $RUN_CMD dbt run -s +"$MART_DIR/" --vars "$DBT_VARS_YAML" $DBT_ARGS
+            $RUN_CMD $DBT_BIN run -s +"$MART_DIR/" --vars "$DBT_VARS_YAML" $DBT_ARGS
             set +x #echo off
         fi
     fi
