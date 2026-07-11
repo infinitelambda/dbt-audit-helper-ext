@@ -896,6 +896,7 @@ The extended attribute checks (length, precision, scale, nullable, ordinal posit
 | SQL Server | ✅ | ✅ | ❌ | ✅ |
 | BigQuery | ✅ | ❌ | ❌ | ✅ |
 | Postgres | ✅ | ❌ | ❌ | ✅ |
+| DuckDB | ✅ | ❌ | ❌ | ✅ |
 | Databricks | ✅ | ❌ | ❌ | ✅ |
 
 **Output format** (`schema_mismatches` column in `validation_log_report`):
