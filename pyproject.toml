@@ -204,7 +204,6 @@ test-detail = [
 test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
 
 validate = [
-  {cmd = "poe validate-with-fusion"},
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
   {cmd = "poe validate-customers"},
@@ -262,16 +261,4 @@ ms-up = [
 ]
 ms-down = [
   {shell = "cd integration_tests/dataops && docker compose -f docker-compose.sqlserver.yml down -v"},
-]
-
-git-push-github = [
-  {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
-  {cmd = "git push"},
-  {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"}
-]
-git-pull-github = [
-  {cmd = "git remote set-url origin https://github.com/infinitelambda/dbt-audit-helper-ext.git"},
-  {cmd = "git pull"},
-  {cmd = "git remote set-url origin git@gitlab.infinitelambda.com:infinitelambda/bi-chapter/dbt-audit-helper-ext.git"},
-  {cmd = "git push"}
 ]
