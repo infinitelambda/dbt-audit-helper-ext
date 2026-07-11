@@ -27,12 +27,12 @@
 
     {{
         audit_helper.compare_and_classify_query_results(
-            a_query,
-            b_query,
-            primary_key_columns,
-            columns,
-            event_time,
-            sample_limit
+            a_query=a_query,
+            b_query=b_query,
+            primary_key_columns=primary_key_columns,
+            columns=columns,
+            event_time=event_time,
+            sample_limit=sample_limit
         )
     }}
 {% endmacro %}

@@ -5,6 +5,3 @@ macros:
       - name: json_column
         type: string
         description: The JSON column name to parse
-      - name: table_alias
-        type: string
-        description: The alias for the JSON table (default 'result')

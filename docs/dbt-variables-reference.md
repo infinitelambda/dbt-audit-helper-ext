@@ -373,14 +373,14 @@ Variables that apply a `WHERE` condition to either side of a comparison — the 
 
 Both filters are injected as a `WHERE` clause inside each comparison subquery, so they compose cleanly with `exclude_columns` and the INTERSECT/EXCEPT set logic. They're honored by the `count`, `full`, `all_col`, `count_by_group`, and row-level detail validations, keeping every count internally consistent, and the resolved expressions are persisted to the `old_filter`/`dbt_filter` columns of `validation_log` and `validation_log_report`.
 
-Each config value is the **name of a macro** that returns a SQL boolean expression. Returning a macro (rather than raw SQL) lets the expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse column handling. Need multiple conditions? Combine them inside a single macro (e.g. `(updated_at <= '...') and (region = 'EU')`).
+Each config value is the **name of a macro** that returns a SQL boolean expression. Returning a macro (rather than raw SQL) lets the expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse column handling. Need multiple conditions? Combine them inside a single macro (e.g. `(event_date <= '...') and (region = 'EU')`).
 
 > **A macro is only "interchangeable" between the two sides when its columns exist on that side.** The same filter expression is just a SQL boolean, so a filter macro can be pointed at either config — but only if the columns it references are actually present on the side it lands on. A `dbt_filter` referencing a source-only column (or vice versa) won't be caught at compile time: it sails through to the warehouse and fails there with a plain `column does not exist` error. The package validates that the referenced *macro* exists, not that its *expression* is valid for the target relation — so keep each side's filter honest about that side's columns.
 
 ```sql
 -- macros/source_upper_bound_expr.sql
 {% macro source_upper_bound_expr() %}
-  {{ adapter.quote('updated_at') }} <= '{{ var("cutoff_date") }}'
+  {{ adapter.quote('event_date') }} <= '{{ var("cutoff_date") }}'
 {% endmacro %}
 ```
 
@@ -420,11 +420,11 @@ Or using the legacy format (still supported):
 
 ```sql
 with a as (
-    select "id", "name", "updated_at" from legacy.customers
-    where "updated_at" <= '2024-09-10'   -- ← injected bound
+    select "id", "name", "event_date" from legacy.customers
+    where "event_date" <= '2024-09-10'   -- ← injected bound
 ),
 b as (
-    select "id", "name", "updated_at" from analytics.customers
+    select "id", "name", "event_date" from analytics.customers
 ),
 -- a_intersect_b / a_except_b / b_except_a ... (unchanged)
 select * from final
@@ -464,10 +464,10 @@ The `b_relation` counterpart of `audit_helper__source_filter`: names the macro t
 
 ```sql
 with a as (
-    select "id", "name", "updated_at" from legacy.customers
+    select "id", "name", "event_date" from legacy.customers
 ),
 b as (
-    select "id", "name", "updated_at" from analytics.customers
+    select "id", "name", "event_date" from analytics.customers
     where "is_active" = true   -- ← injected dbt (B) bound
 ),
 -- a_intersect_b / a_except_b / b_except_a ... (unchanged)

@@ -104,6 +104,11 @@ verify = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt debug --project-dir integration_tests"},
 ]
+fusion-parse = [
+  {shell = "curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh"},
+  {shell = "~/.local/bin/dbt deps --project-dir integration_tests"},
+  {shell = "~/.local/bin/dbt parse --warn-error --project-dir integration_tests"},
+]
 init = [
   {cmd = "dbt deps --project-dir integration_tests"},
   {cmd = "dbt run -s audit_helper_ext --project-dir integration_tests"},
@@ -202,6 +207,7 @@ test-detail = [
 test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
 
 validate = [
+  {cmd = "poe fusion-parse"},
   {cmd = "poe validate-sample-1"},
   {cmd = "poe validate-sample-1-incremental"},
   {cmd = "poe validate-customers"},
