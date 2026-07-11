@@ -21,7 +21,7 @@
     - [Source Configuration](#source-configuration)
       - [`audit_helper__source_database`](#audit_helper__source_database)
       - [`audit_helper__source_schema`](#audit_helper__source_schema)
-    - [Source Filtering](#source-filtering)
+    - [Relation Filtering](#relation-filtering)
       - [`audit_helper__source_filter`](#audit_helper__source_filter)
       - [`audit_helper__dbt_filter`](#audit_helper__dbt_filter)
     - [Legacy Table Name Mapping](#legacy-table-name-mapping)
@@ -60,8 +60,8 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__store_comparison_data_limit` | Detail Persistence | No | `none` | Max sampled PKs per detail table |
 | `audit_helper__source_database` | Source | No | `target.database` | Database containing legacy/source tables |
 | `audit_helper__source_schema` | Source | No | `target.schema` | Schema containing legacy/source tables |
-| `audit_helper__source_filter` | Source Filtering | No | `none` | Per-model macro name bounding the source (A) side |
-| `audit_helper__dbt_filter` | Source Filtering | No | `none` | Per-model macro name bounding the dbt (B) side |
+| `audit_helper__source_filter` | Relation Filtering | No | `none` | Per-model macro name bounding the source (A) side |
+| `audit_helper__dbt_filter` | Relation Filtering | No | `none` | Per-model macro name bounding the dbt (B) side |
 | `audit_helper__old_identifier_naming_convention` | Mapping | No | None | Pattern for transforming model names to legacy table names |
 | `audit_helper__date_of_process` | Named Date | No | UTC now | Current snapshot date being validated e.g. '2025-10-20' or 'day1' |
 | `audit_helper__allowed_date_of_processes` | Named Date | No | `[]` | List of valid snapshot dates e.g. ['2025-10-20', '2025-10-21'] or ['day1', 'day2'] |
@@ -367,13 +367,15 @@ Or using the legacy format (still supported):
 
 ---
 
-### Source Filtering
+### Relation Filtering
 
 Variables that apply a `WHERE` condition to either side of a comparison — the **source (A)** side via `audit_helper__source_filter`, and/or the **dbt (B)** side via `audit_helper__dbt_filter`. This is the fix for the classic incremental-validation headache: your dbt model only built rows up to a processing cutoff, but the legacy table kept accumulating rows past it — and those stragglers show up as "only in A", quietly dragging your match rate below 100% for no real reason.
 
 Both filters are injected as a `WHERE` clause inside each comparison subquery, so they compose cleanly with `exclude_columns` and the INTERSECT/EXCEPT set logic. They're honored by the `count`, `full`, `all_col`, `count_by_group`, and row-level detail validations, keeping every count internally consistent, and the resolved expressions are persisted to the `old_filter`/`dbt_filter` columns of `validation_log` and `validation_log_report`.
 
 Each config value is the **name of a macro** that returns a SQL boolean expression. Returning a macro (rather than raw SQL) lets the expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse column handling. Need multiple conditions? Combine them inside a single macro (e.g. `(updated_at <= '...') and (region = 'EU')`).
+
+> **A macro is only "interchangeable" between the two sides when its columns exist on that side.** The same filter expression is just a SQL boolean, so a filter macro can be pointed at either config — but only if the columns it references are actually present on the side it lands on. A `dbt_filter` referencing a source-only column (or vice versa) won't be caught at compile time: it sails through to the warehouse and fails there with a plain `column does not exist` error. The package validates that the referenced *macro* exists, not that its *expression* is valid for the target relation — so keep each side's filter honest about that side's columns.
 
 ```sql
 -- macros/source_upper_bound_expr.sql
@@ -386,9 +388,10 @@ Each config value is the **name of a macro** that returns a SQL boolean expressi
 
 **Type**: `string` (a macro name)
 **Default**: `none` (no source (A) filter)
+**Scope**: Project-level `var` **or** per-model `config(meta={...})` — the model config wins, the var is the project-wide fallback
 **Used in**: Generated validation macros (via `get_validation_config__<model>`)
 
-A model-level config naming the macro to apply to that model's source (A) side.
+Names the macro to apply to a model's source (A) side. Set it once as a project `var` to bound every model, or per model via `config(meta={...})` — and when both are present, the model's own config takes precedence.
 
 **Example**:
 
@@ -439,9 +442,10 @@ select * from final
 
 **Type**: `string` (a macro name)
 **Default**: `none` (no dbt (B) filter)
+**Scope**: Project-level `var` **or** per-model `config(meta={...})` — the model config wins, the var is the project-wide fallback
 **Used in**: Generated validation macros (via `get_validation_config__<model>`)
 
-The `b_relation` counterpart of `audit_helper__source_filter`: a model-level config naming the macro to apply to the **dbt (B) side** of the comparison. Filter macros are interchangeable between the two configs — a filter expression is just a SQL boolean and works on either side.
+The `b_relation` counterpart of `audit_helper__source_filter`: names the macro to apply to the **dbt (B) side** of the comparison, settable project-wide as a `var` or per model via `config(meta={...})`. Filter macros are interchangeable between the two configs — a filter expression is just a SQL boolean and works on either side (subject to the column caveat above).
 
 **Example**:
 

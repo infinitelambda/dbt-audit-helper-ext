@@ -45,6 +45,7 @@
         '{{ old_relation }}',
         '{{ dbt_relation }}',
         '{{ mart_path }}',
+        {# Escaped only because persisted as a string literal here — not on the comparison path. #}
         {{ ("'" ~ (old_filter | replace("'", "''")) ~ "'") if old_filter else 'null' }},
         {{ ("'" ~ (dbt_filter | replace("'", "''")) ~ "'") if dbt_filter else 'null' }},
         '{{ type }}',

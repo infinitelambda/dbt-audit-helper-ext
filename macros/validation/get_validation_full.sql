@@ -47,8 +47,8 @@
     ) %}
     {% set dbt_relation = ref(dbt_identifier) %}
 
-    {% set a_filter = audit_helper_ext.resolve_source_filter(old_filter) %}
-    {% set b_filter = audit_helper_ext.resolve_source_filter(dbt_filter) %}
+    {% set a_filter = audit_helper_ext.resolve_relation_filter(old_filter, side='a') %}
+    {% set b_filter = audit_helper_ext.resolve_relation_filter(dbt_filter, side='b') %}
 
     {# Project the same column list (from old_relation) on both sides, then compare_queries. #}
     {% set columns = dbt_utils.get_filtered_columns_in_relation(from=old_relation, except=exclude_columns) %}
@@ -65,8 +65,8 @@
 
     {% if execute %}
       {{ log('ℹ️  Those columns are excluded from the comparison: ' ~ exclude_columns, true) }}
-      {% if a_filter %}{{ log('ℹ️  Filter on source (A): ' ~ a_filter, true) }}{% endif %}
-      {% if b_filter %}{{ log('ℹ️  Filter on dbt (B): ' ~ b_filter, true) }}{% endif %}
+      {% if a_filter %}{{ log('ℹ️  Filter on source (A): ' ~ audit_helper_ext.get_log_value(a_filter), true) }}{% endif %}
+      {% if b_filter %}{{ log('ℹ️  Filter on dbt (B): ' ~ audit_helper_ext.get_log_value(b_filter), true) }}{% endif %}
 
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
       {% if summarize %}
@@ -79,7 +79,9 @@
               dbt_relation=dbt_relation,
               primary_keys=primary_keys,
               exclude_columns=exclude_columns,
-              audit_results=audit_results
+              audit_results=audit_results,
+              a_filter=a_filter,
+              b_filter=b_filter
           ) %}
           {% if sample_query %}
             {{ log('💡 Investigation query suggestion (first discrepancy row):', true) }}

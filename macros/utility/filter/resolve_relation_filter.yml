@@ -1,0 +1,37 @@
+macros:
+  - name: resolve_relation_filter
+    description: |
+      Resolve a filter macro name into a SQL boolean expression string (wrapped in parens)
+      that constrains one side of a validation comparison.
+
+      The reference **is** the macro name — the macro is looked up (first in your project, then
+      in `audit_helper_ext`), invoked, and expected to return a SQL boolean expression (e.g.
+      `"updated_at" <= '2024-09-10'`). Returning a macro (rather than raw SQL) lets the
+      expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse
+      column handling. A name that doesn't resolve to a macro raises a hard compiler error
+      rather than silently doing nothing. Compound conditions live inside a single macro
+      (e.g. `(updated_at <= '...') and (region = 'EU')`).
+
+      When `filter_ref` is falsy, the resolver falls back to the project-level var for the given
+      `side` (`'a'` -> `audit_helper__source_filter`, `'b'` -> `audit_helper__dbt_filter`) — so a model's
+      own config takes precedence over the project-wide default. Only when both are absent is
+      filtering disabled for that side.
+
+      **Returns** (`string | none`): the parenthesised SQL boolean expression, or `none`
+      when neither `filter_ref` nor the `side` var fallback resolves, or the referenced
+      macro returns an empty expression.
+
+    arguments:
+      - name: filter_ref
+        type: optional[string]
+        description: |
+          The filter macro name to resolve, as referenced by a model's
+          `audit_helper__source_filter` (A side) or `audit_helper__dbt_filter`
+          (B side) config. A falsy value (`none`/empty) defers to the `side` var fallback.
+      - name: side
+        type: optional[string]
+        description: |
+          Which comparison side this filter is for — `'a'` (source) or `'b'` (dbt). When set
+          and `filter_ref` is falsy, the resolver falls back to that side's project-level var
+          (`audit_helper__source_filter` / `audit_helper__dbt_filter`). Omit to disable the var
+          fallback (model config only).

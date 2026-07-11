@@ -329,18 +329,19 @@ def get_model_config(model_path, config_attr="unique_key", config_attr_type="lis
             result = match.group(1)
             return result
 
-    # Priority 3: Fallback to config.key (remove audit_helper__ prefix and search for base key)
-    # Extract base key name if it starts with audit_helper__
+    # Priority 3: Fallback to config.key (remove audit_helper__ prefix and search for base key).
+    # Only for list configs (e.g. unique_key): a bare unprefixed string would match anywhere in
+    # the file (comments, SQL identifiers), so string configs require the meta or prefixed form.
+    if config_attr_type != "list":
+        return result
+
     base_config_attr = (
         config_attr.replace("audit_helper__", "", 1)
         if config_attr.startswith("audit_helper__")
         else config_attr
     )
 
-    if config_attr_type == "list":
-        pattern = rf"\b{re.escape(base_config_attr)}\s*=\s*\[(.*?)\]"
-    else:
-        pattern = rf"\b{re.escape(base_config_attr)}\s*=\s*['\"]([^'\"]*)['\"]"
+    pattern = rf"\b{re.escape(base_config_attr)}\s*=\s*\[(.*?)\]"
 
     match = re.search(pattern, content, re.DOTALL)
     if match:

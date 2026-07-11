@@ -172,8 +172,8 @@ validate-package-lookup = [
   {shell = "cd integration_tests && dbt run-operation test__package_scoped_lookup"}
 ]
 validate-source-filter = [
-  {shell = "cd integration_tests && dbt run-operation test__resolve_source_filter"},
-  {shell = "cd integration_tests && dbt run-operation test__log_stores_old_filter"}
+  {shell = "cd integration_tests && dbt test -s verify_resolve_relation_filter --vars '{audit_helper__source_filter: source_upper_bound_expr}'"},
+  {shell = "cd integration_tests && dbt test -s verify_log_stores_filter__orders"}
 ]
 validate--pg-single-max-parallel = [
   {shell = "cd integration_tests && dbt run-operation validation_count__sample_1 --vars '{audit_helper__audit_query_pre_hooks: [\"SET max_parallel_workers_per_gather = 1\"]}' --profiles-dir dev/postgres --target pg"}

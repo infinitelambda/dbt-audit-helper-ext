@@ -8,7 +8,7 @@
     schema=audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)),
     identifier=audit_helper_ext.get_old_identifier_name('orders')
 ) %}
-{% set a_filter = audit_helper_ext.resolve_source_filter('orders_before_cutoff_expr') %}
+{% set a_filter = audit_helper_ext.resolve_relation_filter('orders_before_cutoff_expr') %}
 
 select count(*) as out_of_bound_rows
 from {{ source_relation }}
