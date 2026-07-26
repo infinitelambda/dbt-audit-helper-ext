@@ -224,6 +224,7 @@ validate = [
   {cmd = "poe validate-stores"},
   {cmd = "poe validate-supplies"},
   {cmd = "poe validate--disable-print-table"},
+  {shell = "cd integration_tests && dbt test -s verify_validation_log_report__counts"},
 ]
 validate-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe validate" }
 validate-adb = { env = { DBT_PROFILES_DIR = "dev/databricks", DBT_TARGET = "adb" }, cmd = "poe validate" }
