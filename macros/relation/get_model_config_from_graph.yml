@@ -20,3 +20,8 @@ macros:
       - name: model_name
         type: string
         description: The name of the model to find in the graph
+      - name: package_name
+        type: string
+        description: >
+          Optional package to scope the lookup to, for when several packages define a model
+          with the same name. Defaults to none (search every package).

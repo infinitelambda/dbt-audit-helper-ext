@@ -2,7 +2,7 @@
 
 {% macro sqlserver__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none ) -%}
 
-  {% set column_specs = audit_helper.get_column_specs(a_relation, b_relation, exclude_columns) %}
+  {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
 
   {% set a_query %}
     select

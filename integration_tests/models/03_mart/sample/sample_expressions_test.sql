@@ -9,7 +9,8 @@
       "audit_helper__custom_column_expressions": {
         "float_value": "audit_helper__round_2dp",
         "precision_value": "audit_helper__round_4dp",
-        "text_value": "audit_helper__trim_upper"
+        "text_value": "audit_helper__trim_upper",
+        "integer_value": "round_1dp_expr"
       }
     }
   )

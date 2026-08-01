@@ -16,7 +16,7 @@ macros:
       Example:
       ```sql
       {% raw %}
-      {% set column_specs = audit_helper.get_column_specs(
+      {% set column_specs = audit_helper_ext.get_column_specs(
           a_relation,
           b_relation,
           exclude_columns=['created_at', 'updated_at']
@@ -34,3 +34,8 @@ macros:
       - name: exclude_columns
         type: list
         description: List of column names to exclude (default=[])
+      - name: package_name
+        type: string
+        description: >
+          Optional package to scope the model lookup to, for when several packages define a
+          model with the same name. Defaults to none (search every package).

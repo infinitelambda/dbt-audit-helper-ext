@@ -1,6 +1,6 @@
 {% macro compare_relations(a_relation, b_relation, exclude_columns=[], primary_key=None, summarize=true, limit=None) %}
 
-  {% set column_specs = audit_helper.get_column_specs(a_relation, b_relation, exclude_columns) %}
+  {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
 
   {% set column_selection %}
     {% for spec in column_specs %}

@@ -1,12 +1,13 @@
-{% macro get_old_identifier_name(model_name, convention=none) %}
+{% macro get_old_identifier_name(model_name, convention=none, package_name=none) %}
   {{ return(adapter.dispatch('get_old_identifier_name', 'audit_helper_ext')(
       model_name=model_name,
-      convention=convention
+      convention=convention,
+      package_name=package_name
   )) }}
 {% endmacro %}
 
 
-{% macro default__get_old_identifier_name(model_name, convention) %}
+{% macro default__get_old_identifier_name(model_name, convention, package_name) %}
   {#
     Find order:
     1. config.meta.audit_helper__old_identifier (NEW preferred format)
@@ -15,7 +16,7 @@
     4. Fallback: Return model name as-is
   #}
   {% if execute %}
-    {% set model_config = audit_helper_ext.get_model_config_from_graph(model_name) %}
+    {% set model_config = audit_helper_ext.get_model_config_from_graph(model_name, package_name=package_name) %}
 
     {# Priority 1: Check meta.audit_helper__old_identifier #}
     {% set meta_config = model_config.get('meta', {}) %}

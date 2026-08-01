@@ -17,7 +17,7 @@
 
 {% macro default__compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
 
-  {% set column_specs = audit_helper.get_column_specs(a_relation, b_relation, exclude_columns) %}
+  {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
 
   {# We explictly select the primary_key and rename to support any sql as the primary_key -
   a column or concatenated columns. this assumes that a_relation and b_relation do not already

@@ -95,37 +95,32 @@ Need something more specific? Creating your own expression macros is straightfor
 
 ### Simple Custom Macro
 
-Create a macro following this pattern:
+Create a macro in your own project that takes a column name and returns a SQL expression:
 
 ```sql
-{% macro audit_helper__my_custom_transform(column_name) %}
-  {{ return(adapter.dispatch('audit_helper__my_custom_transform', 'audit_helper_ext')(column_name)) }}
-{% endmacro %}
-
-{% macro default__audit_helper__my_custom_transform(column_name) %}
-  my_custom_function({{ column_name }})
+{% macro my_custom_transform(column_name) %}
+  {{ return('my_custom_function(' ~ column_name ~ ')') }}
 {% endmacro %}
 ```
 
+The column name arrives already quoted for your adapter, so use it verbatim — no need to quote
+it again.
+
+Note the plain macro: expression macros are resolved by name and called directly, so do **not**
+wrap them in `adapter.dispatch`. A dispatched macro is looked up against your root project's
+namespace at call time and will fail to resolve.
+
 ### Database-Specific Implementation
 
-For database-specific transformations, use adapter-specific macros:
+Since dispatch is unavailable here, branch on `target.type` for database-specific SQL:
 
 ```sql
-{% macro audit_helper__normalize_phone(column_name) %}
-  {{ return(adapter.dispatch('audit_helper__normalize_phone', 'audit_helper_ext')(column_name)) }}
-{% endmacro %}
-
-{% macro default__audit_helper__normalize_phone(column_name) %}
-  regexp_replace({{ column_name }}, '[^0-9]', '')
-{% endmacro %}
-
-{% macro snowflake__audit_helper__normalize_phone(column_name) %}
-  regexp_replace({{ column_name }}, '[^0-9]', '')
-{% endmacro %}
-
-{% macro postgres__audit_helper__normalize_phone(column_name) %}
-  regexp_replace({{ column_name }}, '[^0-9]', '', 'g')
+{% macro normalize_phone(column_name) %}
+  {% if target.type == 'postgres' %}
+    {{ return("regexp_replace(" ~ column_name ~ ", '[^0-9]', '', 'g')") }}
+  {% else %}
+    {{ return("regexp_replace(" ~ column_name ~ ", '[^0-9]', '')") }}
+  {% endif %}
 {% endmacro %}
 ```
 
@@ -136,7 +131,7 @@ Then use it in your model config:
   config(
     meta = {
       "audit_helper__custom_column_expressions": {
-        "phone_number": "audit_helper__normalize_phone"
+        "phone_number": "normalize_phone"
       }
     }
   )
@@ -149,11 +144,11 @@ When you run validations with custom column expressions:
 
 1. **Configuration Detection**: The validation macro reads the `audit_helper__custom_column_expressions` config from your model's meta block
 2. **Expression Resolution**: For each configured column, the specified macro is dynamically resolved and executed
-3. **SQL Generation**: The transformed expression is applied in the comparison queries (e.g., `round(column, 2) as column`)
-4. **Logging**: Debug messages indicate when custom expressions are applied or if macros are not found
-5. **Graceful Fallback**: If a macro doesn't exist, the column is compared as-is with a warning logged
+3. **SQL Generation**: The transformed expression is applied to both sides of the comparison, aliased back to the original column name (e.g., `round("column", 2) as "column"`)
+4. **Logging**: Debug messages indicate when custom expressions are applied
+5. **Fail Fast**: A macro name that doesn't resolve raises a compile-time error rather than silently comparing the untransformed column — a quiet fallback would report a clean match on data you never actually normalized
 
-The magic happens in the `compare_all_columns` macro from the upstream audit_helper package, which checks for the presence of `get_columns_with_expressions` in the audit_helper_ext context and uses it when available.
+The work happens in `get_column_specs`, called by this package's `compare_all_columns` and `compare_relations` overrides. Columns without a configured expression are selected as plain quoted identifiers.
 
 ## Examples
 
@@ -237,17 +232,22 @@ from sales
 
 **Q: My custom expression isn't being applied. What's wrong?**
 
-Check the logs for debug messages. You should see:
-- `🎯 Applying custom expression 'macro_name' to column 'column_name'` - Success!
-- `⚠️  Expression macro 'macro_name' not found for column 'column_name'` - Macro doesn't exist
+Check the run output for
+`ℹ️  DEBUG: 🎯 Applying custom expression 'macro_name' to column 'column_name'`, which is logged for
+every column an expression is applied to. If that line is missing, the column name in your config
+likely doesn't match the column in the relation (matching is case-sensitive), or the column is
+listed in `audit_helper__exclude_columns`.
+
+If the macro name itself doesn't resolve, the run fails with dbt's
+`No macro named 'macro_name' found within namespace` — check for a typo, and make sure your macro
+is a plain macro rather than an `adapter.dispatch` wrapper.
 
 **Q: Can I use raw SQL expressions instead of macros?**
 
 No. The package intentionally uses macro references (not raw SQL) for:
-- Database portability via adapter dispatch
 - Reusability across models
 - Easier testing and maintenance
-- Better error handling and logging
+- Keeping model config free of embedded SQL
 
 **Q: Do I need to apply the same transformation in my model SQL?**
 
