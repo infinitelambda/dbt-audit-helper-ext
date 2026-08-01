@@ -37,7 +37,7 @@ macros:
       ```
     arguments:
       - name: result
-        type: agate.Table
+        type: any
         description: The agate table result to evaluate
       - name: validation_type
         type: string

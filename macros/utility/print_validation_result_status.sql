@@ -9,6 +9,18 @@
 {% macro default__print_validation_result_status(result, validation_type) %}
 
   {% set filters = audit_helper_ext.get_validation_result_filters(validation_type) %}
+
+  {# Drop schema filters whose suffix isn't in audit_helper__schema_validation_checks, #}
+  {# so the printed PASS/FAIL list matches the configured checks (and the rows persisted #}
+  {# upstream by filter_schema_validation_enabled_errors). #}
+  {% if validation_type == 'schema' %}
+    {% set enabled_names = [] %}
+    {% for suffix in var('audit_helper__schema_validation_checks', ['mismatch_data_type', 'in_a_only']) %}
+      {% do enabled_names.append('schema__' ~ suffix) %}
+    {% endfor %}
+    {% set filters = filters | selectattr('name', 'in', enabled_names) | list %}
+  {% endif %}
+
   {% if not execute or (filters | length == 0) %}
       {{ return('') }}
   {% endif %}
@@ -17,7 +29,7 @@
   {% for filter_config in filters %}
     {% set filter_description = filter_config.description %}
     {% set filter_macro = filter_config.macro %}
-    {% set filter_macro_call = context.get(filter_macro, none) or audit_helper_ext.get(filter_macro) %}
+    {% set filter_macro_call = audit_helper_ext[filter_macro] %}
     {% set failed_calc_config = filter_config.failed_calc | default(namespace(agg=none, column=none)) %}
 
     {# For count validation: table level #}
@@ -34,13 +46,13 @@
 
     {% else %}
       {# For other validation: row level #}
-      {% set filtered_table = result.where(filter_macro_call) %}
+      {% set filtered_table = audit_helper_ext.filter_agate_rows(result, filter_macro_call) %}
 
       {# Calculate failure count based on aggregate method in config #}
       {% if failed_calc_config.agg is none %}
         {% set failure_count = filtered_table.rows | length %}
       {% else %}
-        {% set actual_column_name = audit_helper_ext.get_actual_column_name(filtered_table, failed_calc_config.column) %}
+        {% set actual_column_name = audit_helper_ext.get_actual_column_name(result, failed_calc_config.column) %}
         {% set column_values = filtered_table.columns[actual_column_name].values() %}
         {% set aggregates = {
           'sum': column_values | sum,

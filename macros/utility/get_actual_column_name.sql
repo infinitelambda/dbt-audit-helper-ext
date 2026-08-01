@@ -5,6 +5,31 @@
   )) }}
 {% endmacro %}
 
+{% macro try_get_actual_column_name(agate_object, configured_column_name) %}
+  {% if not execute %}
+    {{ return(none) }}
+  {% endif %}
+
+  {% set configured_upper = configured_column_name | upper %}
+  {% if agate_object.column_names is defined %}
+    {% set available_columns = agate_object.column_names %}
+  {% else %}
+    {% set available_columns = agate_object.keys() %}
+  {% endif %}
+
+  {% if configured_column_name in available_columns %}
+    {{ return(configured_column_name) }}
+  {% endif %}
+
+  {% for actual_column in available_columns %}
+    {% if actual_column | upper == configured_upper %}
+      {{ return(actual_column) }}
+    {% endif %}
+  {% endfor %}
+
+  {{ return(none) }}
+{% endmacro %}
+
 {% macro default__get_actual_column_name(agate_object, configured_column_name) %}
 
   {% if not execute %}

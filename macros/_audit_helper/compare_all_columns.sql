@@ -1,8 +1,21 @@
-{% macro compare_all_columns( a_relation, b_relation, primary_key,  exclude_columns=[],summarize=true ) -%}
-  {{ return(adapter.dispatch('compare_all_columns', 'audit_helper')( a_relation, b_relation, primary_key, exclude_columns, summarize )) }}
+{# Extended compare_all_columns adding source (A) / dbt (B) WHERE filters. `a_filter` bounds #}
+{# the source (A) side; `b_filter` bounds the dbt (B) side. Lives in the audit_helper_ext #}
+{# namespace and is called directly by the validation entry macros. #}
+
+{% macro compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+  {{ return(adapter.dispatch('compare_all_columns', 'audit_helper_ext')(
+    a_relation=a_relation,
+    b_relation=b_relation,
+    primary_key=primary_key,
+    exclude_columns=exclude_columns,
+    summarize=summarize,
+    a_filter=a_filter,
+    b_filter=b_filter
+  )) }}
 {%- endmacro %}
 
-{% macro default__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true ) -%}
+
+{% macro default__compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
 
   {% set column_specs = audit_helper.get_column_specs(a_relation, b_relation, exclude_columns) %}
 
@@ -17,6 +30,7 @@
       {% endfor %}
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ a_relation }}
+    {% if a_filter %}where {{ a_filter }}{% endif %}
   {% endset %}
 
   {% set b_query %}
@@ -26,6 +40,7 @@
       {% endfor %}
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ b_relation }}
+    {% if b_filter %}where {{ b_filter }}{% endif %}
   {% endset %}
 
   {% for spec in column_specs %}

@@ -1,5 +1,5 @@
 name: audit_helper_ext
-require-dbt-version: [">=1.7.0", "<2.0.0"]
+require-dbt-version: [">=1.7.0", "<3.0.0"]
 
 model-paths: ["models"]
 macro-paths: ["macros"]
@@ -16,7 +16,7 @@ clean-targets:
   - "logs"
 
 vars:
-  # audit_helper__dbt_cloud_host_url: cloud.getdbt.com
+  # audit_helper__dbt_host_url: cloud.getdbt.com
   # audit_helper__database: audit_helper
   # audit_helper__schema: log
   # audit_helper__date_of_process: 2024-09-09 # default to UTC now if not specified
@@ -31,6 +31,22 @@ vars:
   # audit_helper__audit_query_pre_hooks: # PostgreSQL: disable parallel execution to improve match rate
   #   - 'SET max_parallel_workers_per_gather = 0'
   # audit_helper__audit_query_statement_separator: ';' # statement separator for pre-hooks (use 'GO' for SQL Server)
+  # audit_helper__store_comparison_data: false        # enable row-level detail persistence (default: false)
+  # audit_helper__store_matched_rows: false            # also persist matched rows in detail tables (default: false)
+  # audit_helper__store_comparison_data_limit: none    # max rows to persist per detail table (default: none = no limit)
+  # Project-wide default filter macro names, overridable per model via config(meta={...}):
+  # audit_helper__source_filter: <macro name e.g. orders_before_cutoff_expr> # macro name bounding the source (A) side (default: none)
+  # audit_helper__dbt_filter: <macro name e.g. dbt_active_only_expr>       # macro name bounding the dbt (B) side (default: none)
+  # Schema checks emitted by print_validation_result_status (and consumed by validation_log_report).
+  # Default enables 2 checks; override by listing a subset of suffixes (the part after "schema__").
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - in_a_only
+    # - mismatch_ordinal_position
+    # - mismatch_character_maximum_length
+    # - mismatch_numeric_precision
+    # - mismatch_numeric_scale
+    # - mismatch_is_nullable
   # audit_helper__validation_result_filters: # used for reporting in-terminal
   #   - name: count__mismatch
   #     description: Row counts do not match between A and B

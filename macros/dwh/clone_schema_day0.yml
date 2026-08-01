@@ -1,0 +1,14 @@
+macros:
+  - name: clone_schema_day0
+    description: |
+      Restore versioned (day-0) schemas back to their original names.
+
+      Takes a comma-separated list of schema names and clones each
+      versioned source (`SC__YYYYMMDD`) back to its base name (`SC`).
+
+      Handy when you need to rewind multiple schemas to their frozen state in one go.
+
+      ```shell
+      ✅ dbt run-operation clone_schema_day0 --args "{schemas: 'SC1,SC2,SC3'}"
+      # SC1__20240909 → SC1, SC2__20240909 → SC2, SC3__20240909 → SC3
+      ```

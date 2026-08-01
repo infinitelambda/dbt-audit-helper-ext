@@ -1,0 +1,6 @@
+macros:
+  - name: get_source_node
+    description: |
+        Get the full node for a source table in the dbt project, identified by source_name and table name.
+
+        Useful to get the database, schema, and config for a source.

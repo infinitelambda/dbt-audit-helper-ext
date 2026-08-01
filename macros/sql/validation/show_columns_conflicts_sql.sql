@@ -1,17 +1,19 @@
-{% macro show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize=true,limit=None) %}
+{% macro show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize=true, limit=None, a_filter=none, b_filter=none) %}
   {{ return(adapter.dispatch('show_columns_conflicts_sql', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
     primary_keys=primary_keys,
     columns_to_compare=columns_to_compare,
     summarize=summarize,
-    limit=limit
+    limit=limit,
+    a_filter=a_filter,
+    b_filter=b_filter
   )) }}
 {% endmacro %}
 
 
 
-{% macro default__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit) %}
+{% macro default__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 
@@ -26,6 +28,7 @@
     {{ include_columns_csv }}
 
     from {{ a_relation }}
+    {% if a_filter %}where {{ a_filter }}{% endif %}
   {% endset %}
 
   {% set b_query %}
@@ -34,6 +37,7 @@
     {{ include_columns_csv }}
 
     from {{ b_relation }}
+    {% if b_filter %}where {{ b_filter }}{% endif %}
   {% endset %}
 
   {% set audit_query = audit_helper.compare_queries(
@@ -128,7 +132,7 @@
 {% endmacro %}
 
 
-{% macro sqlserver__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit) %}
+{% macro sqlserver__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 
@@ -141,12 +145,14 @@
     select
       {{ include_columns_csv }}
     from {{ a_relation }}
+    {% if a_filter %}where {{ a_filter }}{% endif %}
   {% endset %}
 
   {% set b_query %}
     select
       {{ include_columns_csv }}
     from {{ b_relation }}
+    {% if b_filter %}where {{ b_filter }}{% endif %}
   {% endset %}
 
   {% set audit_query = audit_helper.compare_queries(

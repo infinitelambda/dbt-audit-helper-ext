@@ -1,0 +1,33 @@
+macros:
+  - name: clone_relation_extended
+    description: |
+      Clone one or more target models and their dependent relations (JOIN/LOOKUP tables) in one operation.
+
+      Accepts a comma-separated string of model identifiers. For each target model, clones it via
+      `clone_relation`, then walks the DAG to find dependent source tables not maintained by the
+      pipeline and clones those too — deduplicating sources across all targets.
+      Uses `filter_source_exclusions` to skip sources you don't want cloned.
+
+      Supports all `clone_relation` parameters (`source_database`, `source_schema`, `use_prev`)
+      for the target model clone, plus `dependant_table_names` and `tag` for filtering dependent sources,
+      and `exclude_identifiers` to skip specific dependent sources by name.
+
+      ```shell
+      # Clone dim_customer and all its dependent sources
+      dbt run-operation clone_relation_extended --args '{identifiers: dim_customer}'
+
+      # Clone multiple models and their dependent sources in one call
+      dbt run-operation clone_relation_extended --args '{identifiers: "dim_customer,dim_product"}'
+
+      # Specify source location for the target models
+      dbt run-operation clone_relation_extended --args '{identifiers: "dim_customer,dim_product", source_database: RAW_DB, source_schema: RAW_SCHEMA}'
+
+      # Filter dependent sources by table names (e.g. specific lookup tables)
+      dbt run-operation clone_relation_extended --args '{identifiers: dim_customer, dependant_table_names: "dim_country,dim_currency"}'
+
+      # Filter upstream models by tag
+      dbt run-operation clone_relation_extended --args '{identifiers: dim_customer, tag: wf_daily}'
+
+      # Skip specific dependent sources by identifier (comma-separated)
+      dbt run-operation clone_relation_extended --args '{identifiers: dim_customer, exclude_identifiers: "dim_country,dim_currency"}'
+      ```

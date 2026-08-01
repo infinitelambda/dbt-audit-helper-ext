@@ -1,7 +1,8 @@
 {% macro log_data(message) %}
 
-  {% set grey = "\x1b[90m" %}
-  {% set reset = "\x1b[0m" %}
+  {% set esc = audit_helper_ext.get_ansi_esc() %}
+  {% set grey = esc ~ "[90m" %}
+  {% set reset = esc ~ "[0m" %}
 
   {{ log(grey ~ message ~ reset, info=True) }}
 

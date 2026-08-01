@@ -13,10 +13,17 @@
       - [`audit_helper__database`](#audit_helper__database)
       - [`audit_helper__schema`](#audit_helper__schema)
       - [`audit_helper__full_refresh`](#audit_helper__full_refresh)
-      - [`audit_helper__dbt_cloud_host_url`](#audit_helper__dbt_cloud_host_url)
+      - [`audit_helper__dbt_host_url`](#audit_helper__dbt_host_url)
+    - [Row-Level Detail Persistence](#row-level-detail-persistence)
+      - [`audit_helper__store_comparison_data`](#audit_helper__store_comparison_data)
+      - [`audit_helper__store_matched_rows`](#audit_helper__store_matched_rows)
+      - [`audit_helper__store_comparison_data_limit`](#audit_helper__store_comparison_data_limit)
     - [Source Configuration](#source-configuration)
       - [`audit_helper__source_database`](#audit_helper__source_database)
       - [`audit_helper__source_schema`](#audit_helper__source_schema)
+    - [Relation Filtering](#relation-filtering)
+      - [`audit_helper__source_filter`](#audit_helper__source_filter)
+      - [`audit_helper__dbt_filter`](#audit_helper__dbt_filter)
     - [Legacy Table Name Mapping](#legacy-table-name-mapping)
       - [`audit_helper__old_identifier_naming_convention`](#audit_helper__old_identifier_naming_convention)
     - [Date Management](#date-management)
@@ -29,6 +36,8 @@
       - [`audit_helper__print_table_enabled`](#audit_helper__print_table_enabled)
       - [`audit_helper_ext__result_format`](#audit_helper_ext__result_format)
       - [`audit_helper__validation_result_filters`](#audit_helper__validation_result_filters)
+    - [Schema Validation](#schema-validation)
+      - [`audit_helper__schema_validation_checks`](#audit_helper__schema_validation_checks)
   - [Configuration Examples](#configuration-examples)
     - [Minimal Configuration](#minimal-configuration)
     - [Full Configuration](#full-configuration)
@@ -45,9 +54,14 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__database` | Logging | No | `target.database` | Database for validation log tables |
 | `audit_helper__schema` | Logging | No | `target.schema` | Schema for validation log tables |
 | `audit_helper__full_refresh` | Logging | No | `0` | Force full refresh of validation_log model |
-| `audit_helper__dbt_cloud_host_url` | Logging | No | `emea.dbt.com` | dbt Cloud host URL for job links |
+| `audit_helper__dbt_host_url` | Logging | No | `emea.dbt.com` | dbt Cloud host URL for job links |
+| `audit_helper__store_comparison_data` | Detail Persistence | No | `false` | Enable row-level detail persistence |
+| `audit_helper__store_matched_rows` | Detail Persistence | No | `false` | Also persist identical rows in detail tables |
+| `audit_helper__store_comparison_data_limit` | Detail Persistence | No | `none` | Max sampled PKs per detail table |
 | `audit_helper__source_database` | Source | No | `target.database` | Database containing legacy/source tables |
 | `audit_helper__source_schema` | Source | No | `target.schema` | Schema containing legacy/source tables |
+| `audit_helper__source_filter` | Relation Filtering | No | `none` | Per-model macro name bounding the source (A) side |
+| `audit_helper__dbt_filter` | Relation Filtering | No | `none` | Per-model macro name bounding the dbt (B) side |
 | `audit_helper__old_identifier_naming_convention` | Mapping | No | None | Pattern for transforming model names to legacy table names |
 | `audit_helper__date_of_process` | Named Date | No | UTC now | Current snapshot date being validated e.g. '2025-10-20' or 'day1' |
 | `audit_helper__allowed_date_of_processes` | Named Date | No | `[]` | List of valid snapshot dates e.g. ['2025-10-20', '2025-10-21'] or ['day1', 'day2'] |
@@ -56,6 +70,7 @@ This document provides a comprehensive reference for all dbt variables used in t
 | `audit_helper__validation_result_filters` | Display | No | Default filters defined in macro | Filters for in-terminal validation result insights |
 | `audit_helper__audit_query_pre_hooks` | Query Hooks | No | `[]` | List of SQL statements to execute before each audit query |
 | `audit_helper__audit_query_statement_separator` | Query Hooks | No | `;` | Statement separator for pre-hook queries |
+| `audit_helper__schema_validation_checks` | Schema Validation | No | `[mismatch_data_type, in_a_only]` | Drift attributes surfaced by `schema` validation |
 
 ## Variables by Category
 
@@ -149,19 +164,21 @@ dbt run -s validation_log --full-refresh --vars '{audit_helper__full_refresh: 1}
 
 ---
 
-#### `audit_helper__dbt_cloud_host_url`
+#### `audit_helper__dbt_host_url`
 
 **Type**: `string`
 **Default**: `emea.dbt.com`
-**Used in**: `log_validation_result.sql`
+**Used in**: `job_url.sql`, `job_run_url.sql`, `log_validation_result.sql`, `log_validation_detail_result.sql`
 
 The base URL for your dbt Cloud instance. Used to generate hyperlinks to job runs in the validation logs. This is only relevant when running in dbt Cloud environments.
+
+> **Breaking change**: Renamed from `audit_helper__dbt_cloud_host_url`. Update your `dbt_project.yml` accordingly.
 
 **Example**:
 
 ```yaml
 vars:
-  audit_helper__dbt_cloud_host_url: "cloud.getdbt.com"  # US region
+  audit_helper__dbt_host_url: "cloud.getdbt.com"  # US region
 ```
 
 **Common values**:
@@ -173,6 +190,78 @@ vars:
 - You're running validations in dbt Cloud
 - You want clickable links to job runs in your validation logs
 - You're in a non-EMEA region
+
+---
+
+### Row-Level Detail Persistence
+
+Variables that control row-level comparison detail tables — one per mart model — for investigating mismatches without re-running the comparison query.
+
+#### `audit_helper__store_comparison_data`
+
+**Type**: `boolean`
+**Default**: `false`
+**Used in**: `get_validation_full.sql`, `log_validation_detail_result.sql`
+
+When enabled, the `full` validation type will persist the row-level comparison output into a table named `validation_log_detail__<mart_table>` in the same database/schema as `validation_log`. Each run replaces the previous detail table for that mart model (CREATE OR REPLACE).
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+```
+
+**When to use**:
+- You want to investigate mismatches in detail after a validation run
+- You need to share row-level evidence of discrepancies with stakeholders
+- You're debugging a specific mart model that isn't reaching 100% match rate
+
+---
+
+#### `audit_helper__store_matched_rows`
+
+**Type**: `boolean`
+**Default**: `false`
+**Used in**: `log_validation_detail_result.sql`
+
+Controls whether identical (matched) rows are included in the detail table. By default, only non-identical rows (modified, added, removed, nonunique_pk) are persisted to keep detail tables focused and small.
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+  audit_helper__store_matched_rows: true  # also persist identical rows
+```
+
+**When to use**:
+- You need a complete side-by-side snapshot of both relations
+- You want to verify that matched rows are truly identical
+- Storage is not a concern and you prefer completeness over conciseness
+
+---
+
+#### `audit_helper__store_comparison_data_limit`
+
+**Type**: `integer` or `none`
+**Default**: `none` (no limit)
+**Used in**: `log_validation_detail_result.sql`
+
+Caps the number of sampled primary keys passed to `compare_and_classify_relation_rows`. This is useful for large tables where persisting the full comparison would be prohibitively expensive. The limit applies to the number of sampled PKs, not the final row count (e.g., a modified PK produces 2 rows — one from each relation).
+
+**Example**:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true
+  audit_helper__store_comparison_data_limit: 1000  # only sample up to 1000 PKs
+```
+
+**When to use**:
+- Detail tables are becoming too large for practical querying
+- You only need a representative sample of mismatches
+- You want to limit warehouse compute during validation
 
 ---
 
@@ -275,6 +364,121 @@ Or using the legacy format (still supported):
   )
 }}
 ```
+
+---
+
+### Relation Filtering
+
+Variables that apply a `WHERE` condition to either side of a comparison — the **source (A)** side via `audit_helper__source_filter`, and/or the **dbt (B)** side via `audit_helper__dbt_filter`. This is the fix for the classic incremental-validation headache: your dbt model only built rows up to a processing cutoff, but the legacy table kept accumulating rows past it — and those stragglers show up as "only in A", quietly dragging your match rate below 100% for no real reason.
+
+Both filters are injected as a `WHERE` clause inside each comparison subquery, so they compose cleanly with `exclude_columns` and the INTERSECT/EXCEPT set logic. They're honored by the `count`, `full`, `all_col`, `count_by_group`, and row-level detail validations, keeping every count internally consistent, and the resolved expressions are persisted to the `old_filter`/`dbt_filter` columns of `validation_log` and `validation_log_report`.
+
+Each config value is the **name of a macro** that returns a SQL boolean expression. Returning a macro (rather than raw SQL) lets the expression use `var(...)`, `adapter.quote`, and `adapter.dispatch` for cross-warehouse column handling. Need multiple conditions? Combine them inside a single macro (e.g. `(event_date <= '...') and (region = 'EU')`).
+
+> **A macro is only "interchangeable" between the two sides when its columns exist on that side.** The same filter expression is just a SQL boolean, so a filter macro can be pointed at either config — but only if the columns it references are actually present on the side it lands on. A `dbt_filter` referencing a source-only column (or vice versa) won't be caught at compile time: it sails through to the warehouse and fails there with a plain `column does not exist` error. The package validates that the referenced *macro* exists, not that its *expression* is valid for the target relation — so keep each side's filter honest about that side's columns.
+
+```sql
+-- macros/orders_before_cutoff_expr.sql
+{% macro orders_before_cutoff_expr() %}
+  {{ adapter.quote('event_date') }} <= '{{ var("cutoff_date") }}'
+{% endmacro %}
+```
+
+#### `audit_helper__source_filter`
+
+**Type**: `string` (a macro name)
+**Default**: `none` (no source (A) filter)
+**Scope**: Project-level `var` **or** per-model `config(meta={...})` — the model config wins, the var is the project-wide fallback
+**Used in**: Generated validation macros (via `get_validation_config__<model>`)
+
+Names the macro to apply to a model's source (A) side. Set it once as a project `var` to bound every model, or per model via `config(meta={...})` — and when both are present, the model's own config takes precedence.
+
+**Example**:
+
+```sql
+-- models/03_mart/customers.sql
+{{
+  config(
+    meta={
+      'audit_helper__source_filter': 'customers_named_expr'
+    }
+  )
+}}
+```
+
+Or using the legacy format (still supported):
+
+```sql
+{{
+  config(
+    audit_helper__source_filter='customers_named_expr'
+  )
+}}
+```
+
+**Compiled effect** (the source `a` CTE gains a `WHERE`; everything downstream is untouched):
+
+```sql
+with a as (
+    select "id", "name", "event_date" from legacy.customers
+    where "event_date" <= '2024-09-10'   -- ← injected bound
+),
+b as (
+    select "id", "name", "event_date" from analytics.customers
+),
+-- a_intersect_b / a_except_b / b_except_a ... (unchanged)
+select * from final
+```
+
+**When to use**:
+- Most models match legacy exactly, and only a handful need a bound → set it per model
+- Different models bound on different columns (`created_at`, `id`, `version`, …)
+
+**Persisted for auditability**: The resolved expression is written to the `old_filter` column of `validation_log` (and surfaced in `validation_log_report`) for every `count`, `full`, `all_col`, and `count_by_group` run, so you can always see which bound produced a given result.
+
+---
+
+#### `audit_helper__dbt_filter`
+
+**Type**: `string` (a macro name)
+**Default**: `none` (no dbt (B) filter)
+**Scope**: Project-level `var` **or** per-model `config(meta={...})` — the model config wins, the var is the project-wide fallback
+**Used in**: Generated validation macros (via `get_validation_config__<model>`)
+
+The `b_relation` counterpart of `audit_helper__source_filter`: names the macro to apply to the **dbt (B) side** of the comparison, settable project-wide as a `var` or per model via `config(meta={...})`. Filter macros are interchangeable between the two configs — a filter expression is just a SQL boolean and works on either side (subject to the column caveat above).
+
+**Example**:
+
+```sql
+-- models/03_mart/customers.sql
+{{
+  config(
+    meta={
+      'audit_helper__dbt_filter': 'dbt_active_only_expr'
+    }
+  )
+}}
+```
+
+**Compiled effect** (the dbt `b` CTE gains a `WHERE`; the source `a` side is unaffected unless it also has a `audit_helper__source_filter`):
+
+```sql
+with a as (
+    select "id", "name", "event_date" from legacy.customers
+),
+b as (
+    select "id", "name", "event_date" from analytics.customers
+    where "is_active" = true   -- ← injected dbt (B) bound
+),
+-- a_intersect_b / a_except_b / b_except_a ... (unchanged)
+select * from final
+```
+
+**When to use**:
+- The dbt model carries rows the legacy source never had (e.g. soft-deleted flags, backfilled partitions) and you want to exclude them from the match
+- You want to bound both sides symmetrically — set `audit_helper__source_filter` and `audit_helper__dbt_filter` together
+
+**Persisted for auditability**: The resolved expression is written to the `dbt_filter` column of `validation_log` and surfaced in `validation_log_report`, right beside `old_filter`.
 
 ---
 
@@ -628,6 +832,90 @@ vars:
 
 ---
 
+### Schema Validation
+
+Variables that control which drift attributes the `schema` validation surfaces.
+
+#### `audit_helper__schema_validation_checks`
+
+**Type**: `list` of strings
+**Default**: `['mismatch_data_type', 'in_a_only']`
+**Used in**: `filter_schema_validation_enabled_errors` (gates which schema rows get persisted), `print_validation_result_status` (gates which PASS/FAIL lines are printed for `schema` validation), `validation_log_report.schema_mismatches` (rolls up the surviving rows)
+
+Selects which schema drift attributes to flag when comparing column metadata between `a` (legacy) and `b` (dbt). Each list entry corresponds to a `has_*_match` column emitted by the adapter's `compare_relation_columns` macro. Rows where the chosen attribute mismatches are persisted to `validation_log` and rendered in `validation_log_report.schema_mismatches`.
+
+**Available checks**:
+
+| Suffix | What it catches |
+|--------|-----------------|
+| `mismatch_data_type` | Column data types differ (`varchar` vs `text`, `int` vs `bigint`, …) |
+| `mismatch_ordinal_position` | Column order has shifted between `a` and `b` |
+| `mismatch_character_maximum_length` | `VARCHAR(50)` vs `VARCHAR(100)` and similar text-length drift |
+| `mismatch_numeric_precision` | `NUMERIC(38, 4)` vs `NUMERIC(28, 4)` and similar precision drift |
+| `mismatch_numeric_scale` | `NUMERIC(38, 4)` vs `NUMERIC(38, 24)` and similar scale drift |
+| `mismatch_is_nullable` | Nullability (`NOT NULL` constraint) differs |
+| `in_a_only` | Column exists in legacy but is missing from dbt |
+
+> Columns present only in dbt (`in_b_only`) are intentionally excluded — they are not actionable as drift since legacy systems can't be re-shaped from the dbt side.
+
+**Example — minimal (default behaviour)**:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - in_a_only
+```
+
+**Example — strict (catch every drift attribute)**:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
+    - in_a_only
+```
+
+**When to use**:
+- You want stricter schema parity than the default (e.g. catching tighter precision in numeric columns)
+- You're tracking nullability or column order as part of a migration's done-criteria
+- You want to relax checks during early development (e.g. drop `in_a_only` while back-porting columns into dbt)
+
+**Adapter coverage**:
+
+The extended attribute checks (length, precision, scale, nullable, ordinal position) require columns from `compare_relation_columns` that only the Snowflake override emits today. On other adapters, only `mismatch_data_type` and `in_a_only` are evaluated; SQL Server additionally supports `mismatch_ordinal_position`. Other enabled suffixes silently skip on adapters that don't yet emit the corresponding `has_*_match` field — the validation won't error, but those drifts won't surface.
+
+| Adapter | `mismatch_data_type` | `mismatch_ordinal_position` | length / precision / scale / nullable | `in_a_only` |
+|---------|----------------------|------------------------------|----------------------------------------|-------------|
+| Snowflake | ✅ | ✅ | ✅ | ✅ |
+| SQL Server | ✅ | ✅ | ❌ | ✅ |
+| BigQuery | ✅ | ❌ | ❌ | ✅ |
+| Postgres | ✅ | ❌ | ❌ | ✅ |
+| DuckDB | ✅ | ❌ | ❌ | ✅ |
+| Databricks | ✅ | ❌ | ❌ | ✅ |
+
+**Output format** (`schema_mismatches` column in `validation_log_report`):
+
+On Snowflake the payload is one line per drifted column, with reasons joined by `, `:
+
+```text
+• name: length 50 → 100, nullable NO → YES
+• optional_metric: precision 38 → 28, scale 4 → 24
+• city: position 3 → 5
+• not_exist_in_dbt: type VARCHAR → null
+```
+
+On other adapters, the payload is data-type-only (`column: a → b`) — same format the macro produced before this var existed.
+
+**Fallback**: If the var is unset or set to an empty list, the package falls back to the default `['mismatch_data_type', 'in_a_only']` so behaviour matches the pre-configurable shipping defaults — no silent no-ops.
+
+---
+
 ## Configuration Examples
 
 ### Minimal Configuration
@@ -658,7 +946,12 @@ vars:
   # Logging
   audit_helper__database: "analytics_prod"
   audit_helper__schema: "validation_logs"
-  audit_helper__dbt_cloud_host_url: "cloud.getdbt.com"
+  audit_helper__dbt_host_url: "cloud.getdbt.com"
+
+  # Row-level detail persistence
+  audit_helper__store_comparison_data: true
+  audit_helper__store_matched_rows: false
+  # audit_helper__store_comparison_data_limit: 1000
 
   # Source location
   audit_helper__source_database: "legacy_dwh"
@@ -679,6 +972,16 @@ vars:
   # Display
   audit_helper__print_table_enabled: "yes"
   audit_helper_ext__result_format: "table"
+
+  # Schema validation — strict mode (Snowflake only surfaces all of these)
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
+    - in_a_only
 ```
 
 ---

@@ -49,3 +49,18 @@
   {{ return(sql) }}
 
 {% endmacro %}
+
+
+{% macro databricks__extract_mart_folder_sql(mart_path) %}
+
+  {% set mart_paths -%}
+    split({{ mart_path }}, '/')
+  {%- endset %}
+
+  {% set sql -%}
+    cast(element_at({{ mart_paths }}, size({{ mart_paths }}) - 1) as {{ dbt.type_string() }})
+  {%- endset %}
+
+  {{ return(sql) }}
+
+{% endmacro %}

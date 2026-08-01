@@ -1,0 +1,34 @@
+version: 2
+
+macros:
+  - name: aggregate_schema_mismatches_sql
+    description: |
+      Aggregates schema validation mismatches into a formatted string.
+
+      Returns one line per column with drift, formatted as
+      `column_name: <reason>[, <reason>]…` where each reason is one of
+      `type a → b`, `length a → b`, `precision a → b`, `scale a → b`,
+      `nullable a → b`, `position a → b`. Columns present only in dbt
+      (`in_b_only`) are excluded — same exclusion as the original macro.
+
+      Coverage depends on which `has_*_match` fields the adapter's
+      `compare_relation_columns` emits. Where those fields are missing,
+      the corresponding reason fragments resolve to NULL via COALESCE
+      and drop out of the line, so it's safe to widen coverage by
+      extending the comparator without touching this macro.
+
+      Cross-platform implementation:
+      - Snowflake: full attribute coverage (type, position, length,
+        precision, scale, nullable) via LISTAGG.
+      - SQL Server: type + position via STRING_AGG.
+      - BigQuery: data-type only via STRING_AGG with inline ORDER BY.
+      - Postgres: data-type only via STRING_AGG with ORDER BY.
+      - Databricks: data-type only via array_join + collect_list.
+      - default (other adapters): data-type only via STRING_AGG.
+    arguments:
+      - name: validation_type_field
+        type: string
+        description: Field name containing validation type (default 'validation_type')
+      - name: result_field
+        type: string
+        description: Field name containing JSON result data (default 'result')

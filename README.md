@@ -10,13 +10,16 @@
 [![dbt-hub](https://img.shields.io/badge/Visit-dbt--hub%20↗️-FF694B?logo=dbt&logoColor=FF694B)](https://hub.getdbt.com/infinitelambda/audit_helper_ext)
 [![support-snowflake](https://img.shields.io/badge/support-Snowflake-7faecd?logo=snowflake&logoColor=7faecd)](https://docs.snowflake.com?ref=infinitelambda)
 [![support-bigquery](https://img.shields.io/badge/support-BigQuery-4285F4?logo=google-cloud&logoColor=white)](https://cloud.google.com/bigquery/docs?ref=infinitelambda)
+[![support-databricks](https://img.shields.io/badge/support-Databricks-FF3621?logo=databricks&logoColor=white)](https://docs.databricks.com?ref=infinitelambda)
 [![support-sqlserver](https://img.shields.io/badge/support-SQL%20Server-CC2927?logo=microsoft%20sql%20server&logoColor=white)](https://docs.microsoft.com/en-us/sql/sql-server/?ref=infinitelambda)
 [![support-postgres](https://img.shields.io/badge/support-PostgreSQL-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/docs/?ref=infinitelambda)
+[![support-duckdb](https://img.shields.io/badge/support-DuckDB-FFF000?logo=duckdb&logoColor=black)](https://duckdb.org/docs/?ref=infinitelambda)
 [![support-dbt](https://img.shields.io/badge/support-dbt%20v1.7+-FF694B?logo=dbt&logoColor=FF694B)](https://docs.getdbt.com?ref=infinitelambda)
 
 This repository provides a collection of powerful macros designed to enhance data validation workflows that support:
 
 - _Historical Logging_: Automatically saving detailed validation results into a designated DWH table for comprehensive audit tracking
+- _Row-Level Detail Persistence_: Optionally persisting per-mart row-level comparison data for deep-dive investigation of mismatches
 - _Latest Summary Reporting_: Maintaining a concise, up-to-date summary table for quick insights into the current state of validations
 - _Codegen and Scripts_: Simplifying workflows, particularly valuable for migration projects by automating repetitive tasks
 
@@ -24,8 +27,12 @@ This repository provides a collection of powerful macros designed to enhance dat
 
 - ❄️ Snowflake (default)
 - ☁️ BigQuery
+- 🧱 Databricks
 - ⛱️ SQL Server
 - 🐘 PostgreSQL
+- 🦆 DuckDB
+
+> **Upgrading?** Check the breaking changes for [v0.11](./docs/breaking-changes-v0.11.md) and [v0.9](./docs/breaking-changes-v0.9.md) before you upgrade.
 
 ## Installation
 
@@ -43,7 +50,7 @@ This repository provides a collection of powerful macros designed to enhance dat
   ```yml
   packages:
     - git: "https://github.com/infinitelambda/dbt-audit-helper-ext.git"
-      version: <release version or tag> # 0.1.0
+      revision: <release version or tag> # 0.1.0
   ```
 
   And run `dbt deps` to install the package!
@@ -65,7 +72,8 @@ This repository provides a collection of powerful macros designed to enhance dat
   dbt run -s audit_helper_ext
   ```
 
-  This step will create log table (`validation_log`) and the summary view on top (`validation_log_report`)
+  This step will create the log table (`validation_log`) and the summary view on top (`validation_log_report`).
+  When row-level detail persistence is enabled, per-mart detail tables (`validation_log_detail__<mart_table>`) are created automatically during validation runs.
 
 - **Generate the validation macros**:
 
@@ -138,6 +146,24 @@ vars:
 - **PostgreSQL**: Disable parallel execution to avoid discrepancies with window functions or double precision types
 - **Other adapters**: Set session-level configurations for performance tuning or behavior consistency
 
+### Schema Validation Checks
+
+By default, `schema` validation flags column data-type drift and columns missing on the dbt side (`in_a_only`). You can broaden this to include column order, text length, numeric precision/scale, and nullability via the `audit_helper__schema_validation_checks` var:
+
+```yaml
+vars:
+  audit_helper__schema_validation_checks:
+    - mismatch_data_type
+    - mismatch_ordinal_position           # Snowflake + SQL Server
+    - mismatch_character_maximum_length   # Snowflake only
+    - mismatch_numeric_precision          # Snowflake only
+    - mismatch_numeric_scale              # Snowflake only
+    - mismatch_is_nullable                # Snowflake only
+    - in_a_only
+```
+
+Checks not yet supported by an adapter's `compare_relation_columns` are silently skipped on that adapter — they don't error. See the [`audit_helper__schema_validation_checks` reference](./docs/dbt-variables-reference.md#audit_helper__schema_validation_checks) for the full coverage matrix and output format.
+
 ## Validation Strategy
 
 This repo contains the **useful macros** to support for saving the historical validation results into the DWH table ([`validation_log`](./models/validation_log.sql)), together with the latest summary table ([`validation_log_report`](./models/validation_log_report.sql)).
@@ -149,6 +175,26 @@ There are 3 main types of validation:
 - Row by Row (`full`, [source](./macros/validation/get_validation_full.sql))
 
 Additionally, we have the 4th type - `upstream_row_count` ([source](./macros/validation/get_upstream_row_count.sql)) which will be very useful to understand better the validtion context, for example, _the result might be up to 100% matched rate but there is 0 updates in the upstream models, hence there no updates in the final table, that means we can't not say surely it was a perfect match_.
+
+### Row-Level Detail Persistence
+
+When the `full` validation type runs, you can optionally persist the row-level comparison data into a dedicated detail table per mart model. This is incredibly useful for investigating mismatches without having to re-run the comparison query manually.
+
+Enable it by setting these variables in your `dbt_project.yml`:
+
+```yaml
+vars:
+  audit_helper__store_comparison_data: true         # enable row-level detail persistence
+  # audit_helper__store_matched_rows: false          # also persist identical rows (default: false)
+  # audit_helper__store_comparison_data_limit: none   # cap the number of sampled PKs (default: none = no limit)
+```
+
+Each detail table is created as `validation_log_detail__<mart_table>` in the same database/schema as `validation_log`, and includes:
+- All intersecting data columns from both relations (excluded columns are omitted)
+- Audit columns from `compare_and_classify_relation_rows` (e.g. `dbt_audit_row_status`, `dbt_audit_in_a`, `dbt_audit_in_b`)
+- Metadata columns: `dbt_audit_ext_mart_table`, `dbt_audit_ext_job_run_url`, `dbt_audit_ext_date_of_process`
+
+See the [dbt Variables Reference](./docs/dbt-variables-reference.md) for full details on these variables.
 
 For DX, we also have serveral other types:
 - Column by Column (`all_col`, [source](./macros/validation/get_validation_all_col.sql))
@@ -172,7 +218,7 @@ Depending on projects, it might be vary in the strategy of validation. Therefore
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD1` 👍
 - _Scenario 2: Validate the incremental run against D2 based on D1_
   - Configure source yml to use `source__YYYYMMD2`
-  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already (e.g. [clone_relation](./macros/dwh/clone_relation.sql))
+  - Clone `mart__YYYYMMD1` to `mart_dbt` to mimic that dbt should have the D1 data already (e.g. [clone_relation](./macros/dwh/clone_relation.sql) for a single table, or [clone_relation_extended](./macros/dwh/clone_relation_extended.sql) to also clone dependent JOIN/LOOKUP tables not maintained by the pipeline)
   - Run incrementally dbt to build mart tables
   - Run validation macros to compare between `mart_dbt` vs `mart__YYYYMMD2` 👍👍
 

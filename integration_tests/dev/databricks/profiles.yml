@@ -1,0 +1,11 @@
+audit_helper_ext:
+  outputs:
+    adb:
+      type: databricks
+      catalog: dbdemos
+      schema: audit_helper_ext # YOUR VALUE HERE ⚠️
+      host: adb-3957583140448876.16.azuredatabricks.net
+      http_path: /sql/1.0/warehouses/015d3faa1406c66d # Starter Warehouse
+      auth_type: oauth
+      threads: 4
+  target: adb

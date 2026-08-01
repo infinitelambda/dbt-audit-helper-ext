@@ -4,10 +4,10 @@ models:
     columns:
       - name: mart_table
       - name: mart_folder
-      - name: dbt_cloud_job_url
-      - name: dbt_cloud_job_run_url
+      - name: job_url
+      - name: job_run_url
       - name: date_of_process
-      - name: dbt_cloud_job_start_at
+      - name: job_started_at
       - name: old_relation
       - name: dbt_relation
       - name: old_relation_row_count

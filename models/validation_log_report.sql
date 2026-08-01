@@ -10,8 +10,8 @@ with latest_log as (
 
   {{ audit_helper_ext.deduplicate_with_row_number_sql(
       source_relation=ref('validation_log'),
-      partition_by_fields=['mart_table', 'dbt_cloud_job_url', 'date_of_process', 'validation_type'],
-      order_by_fields=['dbt_cloud_job_start_at desc']
+      partition_by_fields=['mart_table', 'job_url', 'date_of_process', 'validation_type'],
+      order_by_fields=['job_started_at desc']
   ) }}
 
 ),
@@ -21,12 +21,14 @@ extract_data as (
   select
     mart_table,
     {{ audit_helper_ext.extract_mart_folder_sql("mart_path") }} as mart_folder,
-    dbt_cloud_job_url,
-    dbt_cloud_job_run_url,
+    job_url,
+    job_run_url,
     date_of_process,
     dbt_relation,
     max(old_relation) as old_relation,
-    min(dbt_cloud_job_start_at) as dbt_cloud_job_start_at,
+    max(old_filter) as old_filter,
+    max(dbt_filter) as dbt_filter,
+    min(job_started_at) as job_started_at,
     max(
       case
         when validation_type = 'count'
@@ -68,7 +70,7 @@ extract_data as (
         end
       ), 0) as found_only_in_dbt_row_count,
     {{ audit_helper_ext.aggregate_upstream_row_count_sql() }} as upstream_row_count,
-    {{ audit_helper_ext.aggregate_data_type_mismatches_sql() }} as data_type_mismatches
+    {{ audit_helper_ext.aggregate_schema_mismatches_sql() }} as schema_mismatches
 
   from
     latest_log 
@@ -76,8 +78,8 @@ extract_data as (
   group by
     mart_table,
     mart_path,
-    dbt_cloud_job_url,
-    dbt_cloud_job_run_url,
+    job_url,
+    job_run_url,
     date_of_process,
     dbt_relation
 
@@ -96,9 +98,9 @@ calculate_exp as (
       else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
     end as is_count_match,
     case
-      when coalesce(data_type_mismatches, '') = '' then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
+      when coalesce(schema_mismatches, '') = '' then {{ audit_helper_ext.unicode_prefix() }}'Yes ✅'
       else {{ audit_helper_ext.unicode_prefix() }}'No 🟡'
-    end as is_data_type_match,
+    end as is_schema_match,
     case
       when {{ match_rate_percentage }} = 100 then {{ audit_helper_ext.unicode_prefix() }}'✅'
       when {{ match_rate_percentage }} >= 99 and {{ match_rate_percentage }} < 100 then {{ audit_helper_ext.unicode_prefix() }}'🟡'
@@ -112,18 +114,20 @@ calculate_exp as (
 select
   mart_table,
   mart_folder,
-  dbt_cloud_job_url,
-  dbt_cloud_job_run_url,
+  job_url,
+  job_run_url,
   date_of_process,
-  dbt_cloud_job_start_at,
+  job_started_at,
   old_relation,
+  old_filter,
+  dbt_filter,
   dbt_relation,
   old_relation_row_count,
   dbt_relation_row_count,
   is_count_match,
-  is_data_type_match,
+  is_schema_match,
   match_rate_percentage,
-  data_type_mismatches,
+  schema_mismatches,
   match_rate_status,
   match_count,
   found_only_in_old_row_count,

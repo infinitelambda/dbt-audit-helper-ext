@@ -1,14 +1,16 @@
-{% macro clone_relation(identifier, source_database=none, source_schema=none, use_prev=false) %}
+{% macro clone_relation(identifier, source_database=none, source_schema=none, source_name=none, use_prev=false, package_name=none) %}
     {{ return(adapter.dispatch('clone_relation', 'audit_helper_ext')(
         identifier=identifier,
         source_database=source_database,
         source_schema=source_schema,
-        use_prev=use_prev
+        source_name=source_name,
+        use_prev=use_prev,
+        package_name=package_name
     )) }}
 {% endmacro %}
 
 
-{% macro default__clone_relation(identifier, source_database, source_schema, use_prev) %}
+{% macro default__clone_relation(identifier, source_database, source_schema, source_name, use_prev, package_name) %}
     {% set copy_mode = 'clone' %}
 
     {# Resolve source_identifier using naming convention #}
@@ -27,7 +29,8 @@
     {% set source_relation_exists, source_relation, _ = audit_helper_ext.get_relation(
         identifier=source_identifier,
         identifier_database=source_database,
-        identifier_schema=source_schema
+        identifier_schema=source_schema,
+        package_name=package_name
     ) %}
     {% if source_relation_exists == false %}
         {% do exceptions.raise_compiler_error("❌ The table " ~ source_relation.identifier ~ " cannot be found at " ~  source_relation ~ "." ) %}
@@ -37,7 +40,11 @@
     {% endif %}
 
     {# checking target table #}
-    {% set dbt_relation_exists, dbt_relation, dbt_config = audit_helper_ext.get_relation(identifier=identifier) %}
+    {% set dbt_relation_exists, dbt_relation, dbt_config = audit_helper_ext.get_relation(
+        identifier=identifier,
+        source_name=source_name,
+        package_name=package_name
+    ) %}
     {% if dbt_relation_exists == true and dbt_relation.type == 'view' %}
         {{ log("ℹ️ 🗑️  " ~ dbt_relation.identifier ~ " exists as a view, it needs to be dropped first.", true) }}
         {% do audit_helper_ext.drop_object(object_name=dbt_relation, object_type="view") %}
@@ -52,7 +59,8 @@
         {% set sql = 'select * from ' ~ source_relation %}
         {% do audit_helper_ext.create_or_replace_table_as(relation=dbt_relation, sql=sql, config=dbt_config) %}
     {% elif copy_mode == 'clone' %}
-        {% do audit_helper_ext.clone_object(object_name=dbt_relation, source_object_name=source_relation, replace=true) %}
+        {% set is_iceberg = audit_helper_ext.is_iceberg_table(source_relation) %}
+        {% do audit_helper_ext.clone_object(object_name=dbt_relation, source_object_name=source_relation, replace=true, is_iceberg=is_iceberg) %}
     {% endif %}
 
 {% endmacro %}
