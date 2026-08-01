@@ -1,0 +1,76 @@
+name: Integration Tests (DuckDB)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DBT_DUCKDB_PATH: ${{ github.workspace }}/audit_helper_ext.duckdb
+  DBT_PROFILES_DIR: ${{ github.workspace }}/integration_tests/dev/duckdb
+  DBT_TARGET: duckdb
+
+jobs:
+  integration-tests:
+    name: dbt integration suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-in-project: true
+
+      - name: Cache virtualenv
+        uses: actions/cache@v6
+        with:
+          path: .venv
+          key: venv-duckdb-${{ runner.os }}-py3.11-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --with duckdb,dev
+
+      - name: dbt deps
+        run: poetry run dbt deps --project-dir integration_tests
+
+      - name: dbt debug
+        run: poetry run dbt debug --project-dir integration_tests
+
+      - name: Init (seed + clone fixtures)
+        run: poetry run poe init-duckdb
+
+      - name: Build (models + generic tests)
+        run: poetry run poe build-duckdb
+
+      - name: Validate (all models, all validation types)
+        run: poetry run poe validate-duckdb
+
+      - name: Detail-table persistence tests
+        run: poetry run poe test-detail-duckdb
+
+      - name: Install dbt Fusion
+        run: curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh -s -- --update
+
+      - name: Validate under dbt Fusion
+        working-directory: integration_tests
+        env:
+          DBT_PROFILES_DIR: dev/duckdb
+        run: |
+          ~/.local/bin/dbt deps
+          ~/.local/bin/dbt parse --warn-error
+          dbt_packages/audit_helper_ext/scripts/validation__all.sh -m customers -c fusion
+          dbt_packages/audit_helper_ext/scripts/validation__all.sh -m orders -c fusion
