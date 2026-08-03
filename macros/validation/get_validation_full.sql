@@ -63,14 +63,17 @@
         limit=100
     ) %}
 
+    {% set column_expressions = audit_helper_ext.format_column_expressions(column_specs) %}
+
     {% if execute %}
       {{ log('ℹ️  Those columns are excluded from the comparison: ' ~ exclude_columns, true) }}
       {% if a_filter %}{{ log('ℹ️  Filter on source (A): ' ~ audit_helper_ext.get_log_value(a_filter), true) }}{% endif %}
       {% if b_filter %}{{ log('ℹ️  Filter on dbt (B): ' ~ audit_helper_ext.get_log_value(b_filter), true) }}{% endif %}
+      {% if column_expressions %}{{ log('ℹ️  Column expressions applied: ' ~ audit_helper_ext.get_log_value(column_expressions), true) }}{% endif %}
 
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
       {% if summarize %}
-        {{ audit_helper_ext.log_validation_result('full', audit_results, dbt_identifier, dbt_relation, old_relation, old_filter=a_filter, dbt_filter=b_filter) }}
+        {{ audit_helper_ext.log_validation_result('full', audit_results, dbt_identifier, dbt_relation, old_relation, old_filter=a_filter, dbt_filter=b_filter, column_expressions=column_expressions) }}
       {% else %}
         {% if audit_results and audit_results | length > 0 %}
           {# Print sample query #}

@@ -28,6 +28,7 @@ extract_data as (
     max(old_relation) as old_relation,
     max(old_filter) as old_filter,
     max(dbt_filter) as dbt_filter,
+    max(column_expressions) as column_expressions,
     min(job_started_at) as job_started_at,
     max(
       case
@@ -121,6 +122,7 @@ select
   old_relation,
   old_filter,
   dbt_filter,
+  column_expressions,
   dbt_relation,
   old_relation_row_count,
   dbt_relation_row_count,

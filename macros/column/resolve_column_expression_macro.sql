@@ -15,7 +15,5 @@
     ) }}
   {% endif %}
 
-  {{ audit_helper_ext.log_debug("🎯 Applying custom expression '" ~ macro_name ~ "' to column '" ~ column_name ~ "'") }}
-
   {{ return(expression_macro(quoted_column) | trim) }}
 {% endmacro %}
