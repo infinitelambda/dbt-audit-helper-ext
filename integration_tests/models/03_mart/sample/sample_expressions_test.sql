@@ -38,3 +38,15 @@ select
     'test data' as text_value,
     200 as integer_value,
     'differs-on-purpose' as ignored_col
+union all
+-- Row 3 is the deliberate mismatch. float_value, text_value and integer_value all still
+-- reconcile through their expressions; precision_value does not. The seed holds 1.6180,
+-- this rounds to 1.6181, and round(_, 4) has no way to bridge a 4th-decimal disagreement.
+-- Keeps a real "different" row in the comparison output instead of an all-identical run.
+select
+    3 as id,
+    1.61803398875 as float_value,
+    1.61805000000 as precision_value,
+    'mismatch row' as text_value,
+    300 as integer_value,
+    'differs-on-purpose' as ignored_col
