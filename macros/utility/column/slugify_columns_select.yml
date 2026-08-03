@@ -1,0 +1,59 @@
+macros:
+  - name: slugify_columns_select
+    description: |
+      Build a complete `select ... from <relation>` that aliases every column to a slugified,
+      quote-free name. Drop it into a view model and you have a normalized relation ready to point a
+      validation at.
+
+      Each column is quoted on the way in via `adapter.quote()` — so the mixed-case and
+      space-riddled originals resolve correctly — and aliased to the output of
+      [slugify_column_name](#slugify_column_name):
+
+      ```sql
+      -- models/validation/legacy_orders_normalized.sql
+      {% raw %}{{ config(materialized = 'view') }}
+
+      {{ audit_helper_ext.slugify_columns_select(source('legacy', 'orders')) }}{% endraw %}
+      ```
+
+      compiles to:
+
+      ```sql
+      select
+          "id" as id,
+          "MixedCase" as mixed_case,
+          "Total Amount ($USD)" as total_amount_usd,
+          "CustomerID" as customer_id
+      from "db"."legacy"."orders"
+      ```
+
+      This is the mechanized version of the workaround in
+      [Quoted Column Names](../../../docs/quoted-column-names.md) — validate the view instead of the
+      raw relation and every column name in your `audit_helper__*` config becomes a plain unquoted
+      identifier, no escaped quotes and no per-adapter syntax.
+
+      **Collisions.** Two names can slugify to the same string (`Total Amount` and `total_amount`
+      both want `total_amount`). The first column in relation order keeps the bare slug; later ones
+      get `_2`, `_3`, and so on. Suffixes skip anything already claimed, so a relation that happens
+      to hold a literal `total_amount_2` column won't end up with that alias emitted twice — most
+      warehouses accept a duplicate alias silently, which is a nasty way to lose a column.
+
+      Because the tie-break depends on column order, a reordered upstream relation can shuffle which
+      column wins the bare slug. If that matters, alias those columns by hand instead.
+
+      The macro reads the relation's columns from the warehouse, so the relation must already exist
+      when the model compiles. During parsing it returns a plain `select *` placeholder.
+
+      Example usage:
+      ```sql
+      {% raw %}
+      {{ config(materialized = 'view') }}
+      {{ audit_helper_ext.slugify_columns_select(ref('legacy_orders')) }}
+      {% endraw %}
+      ```
+    arguments:
+      - name: relation
+        type: relation
+        description: |
+          The relation to select from, typically a `ref()` or `source()`. Must already be built —
+          the column list is fetched from the warehouse via `adapter.get_columns_in_relation()`.

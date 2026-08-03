@@ -10,7 +10,8 @@
         "float_value": "round_2dp_expr",
         "precision_value": "round_4dp_expr",
         "text_value": "trim_upper_expr",
-        "integer_value": "cast_to_int_expr"
+        "integer_value": "cast_to_int_expr",
+        "not_exist_column": "cast_to_int_expr"
       }
     }
   )
@@ -20,8 +21,8 @@
 -- seed, and the configured expression is what brings the two sides back into agreement.
 --
 -- Plain unquoted identifiers only: quoted columns are not fully supported (see
--- docs/custom-column-expressions.md#quoted-column-names), so this fixture stays on the
--- supported path. Config keys are uppercase to match how the warehouse stores them.
+-- docs/quoted-column-names.md), so this fixture stays on the supported path.
+-- Config keys are uppercase to match how the warehouse stores them.
 select
     1 as id,
     3.14159265 as float_value,

@@ -1,0 +1,47 @@
+macros:
+  - name: slugify_column_name
+    description: |
+      Turn a single column name into a `snake_case` identifier that survives without quoting.
+
+      The transformation runs in three steps:
+
+      1. Insert an underscore at `camelCase` / `PascalCase` boundaries. Acronym runs are kept whole,
+         so `CustomerID` becomes `customer_id` rather than `customer_i_d`, and `HTTPStatus` becomes
+         `http_status`.
+      2. Lowercase, then collapse every run of characters outside `[a-z0-9]` into a single
+         underscore, trimming any trailing one.
+      3. Prefix an underscore if the result starts with a digit, since most warehouses refuse an
+         identifier that leads with a number.
+
+      Deliberately ASCII-only. Jinja's `isalnum()` happily accepts accented and CJK letters, which
+      would then sail through into an alias that *still* needs quoting on some adapters — rather
+      defeating the purpose. A name with no ASCII alphanumerics at all raises a compile-time error
+      instead of returning something unusable.
+
+      | Input | Output |
+      |-------|--------|
+      | `Total Amount ($USD)` | `total_amount_usd` |
+      | `MixedCase` | `mixed_case` |
+      | `CustomerID` | `customer_id` |
+      | `HTTPStatus` | `http_status` |
+      | `order-id` | `order_id` |
+      | `2024_total` | `_2024_total` |
+
+      Note that this macro knows nothing about the other columns in the relation, so two different
+      names can slugify to the same result. Use
+      [slugify_columns_select](#slugify_columns_select) when you need collision handling.
+
+      Example usage:
+      ```sql
+      {% raw %}
+      {% set alias = audit_helper_ext.slugify_column_name('Total Amount ($USD)') %}
+      {# -> total_amount_usd #}
+      {% endraw %}
+      ```
+    arguments:
+      - name: column_name
+        type: string
+        description: |
+          The raw column name as the warehouse stores it, e.g. `'Total Amount'` or `'MixedCase'`.
+          Pass it unquoted — quote characters would be collapsed into underscores like any other
+          non-alphanumeric.
