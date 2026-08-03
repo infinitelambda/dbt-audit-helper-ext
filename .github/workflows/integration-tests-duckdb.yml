@@ -62,15 +62,5 @@ jobs:
       - name: Detail-table persistence tests
         run: poetry run poe test-detail-duckdb
 
-      - name: Install dbt Fusion
-        run: curl -fsSL https://public.cdn.getdbt.com/fs/install/install.sh | sh -s -- --update
-
-      - name: Validate under dbt Fusion
-        working-directory: integration_tests
-        env:
-          DBT_PROFILES_DIR: dev/duckdb
-        run: |
-          ~/.local/bin/dbt deps
-          ~/.local/bin/dbt parse --warn-error
-          dbt_packages/audit_helper_ext/scripts/validation__all.sh -m customers -c fusion
-          dbt_packages/audit_helper_ext/scripts/validation__all.sh -m orders -c fusion
+      - name: Validate under dbt Fusion (installs Fusion)
+        run: poetry run poe validate-with-fusion-duckdb
