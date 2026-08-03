@@ -7,7 +7,7 @@
     {% set old_schema = audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)) %}
     {% set old_identifier = 'sample_expressions_source' %}
 
-    {%- set primary_keys = ["\"id\""] -%}
+    {%- set primary_keys = ["id"] -%}
     {%- set exclude_columns = ["ignored_col"] -%}
     {%- set old_filter = none -%}
     {%- set dbt_filter = none -%}
