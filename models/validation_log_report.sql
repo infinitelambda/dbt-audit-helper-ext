@@ -44,14 +44,15 @@ extract_data as (
           then {{ safe_cast_sql() }}({{ json_field_sql('result', 'total_records') }} as integer)
       end
     ) as dbt_relation_row_count,
-    max(
-      case
-        when validation_type = 'full'
-          and lower({{ json_field_sql('result', 'in_a') }}) in ('true', '1')
-          and lower({{ json_field_sql('result', 'in_b') }}) in ('true', '1')
-          then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
-      end
-    ) as match_count,
+    coalesce(
+      max(
+        case
+          when validation_type = 'full'
+            and lower({{ json_field_sql('result', 'in_a') }}) in ('true', '1')
+            and lower({{ json_field_sql('result', 'in_b') }}) in ('true', '1')
+            then {{ safe_cast_sql() }}({{ json_field_sql('result', 'count') }} as integer)
+        end
+      ), 0) as match_count,
     coalesce(
       max(
         case
@@ -91,7 +92,7 @@ calculate_exp as (
   select
     *,
     {% set match_rate_percentage -%}
-      cast(match_count as numeric) / (match_count + found_only_in_old_row_count + found_only_in_dbt_row_count) * 100
+      cast(match_count as numeric) / nullif(match_count + found_only_in_old_row_count + found_only_in_dbt_row_count, 0) * 100
     {%- endset %}
     {{ match_rate_percentage }} as match_rate_percentage,
     case
