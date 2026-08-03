@@ -32,6 +32,10 @@ on-run-end:
     {% if flags.WHICH in ["seed", "build"] %}
       {{ audit_helper_ext.clone_schema(source_schema="audit_helper_ext_seed") }}
     {% endif %}
+  - > # duckdb rolls the clone back otherwise; only `seed` holds a transaction open here
+    {% if target.type == "duckdb" and flags.WHICH == "seed" %}
+      commit
+    {% endif %}
 
 seeds:
   audit_helper_ext_test:

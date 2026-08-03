@@ -6,6 +6,3 @@ audit_helper_ext:
       path: "{{ env_var('DBT_DUCKDB_PATH', 'audit_helper_ext.duckdb') }}"
       schema: audit_helper_ext
       threads: 10
-      # on-run-end hooks (clone_schema) are otherwise wrapped in a transaction that never
-      # commits, so the cloned schema is silently rolled back.
-      disable_transactions: true
