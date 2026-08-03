@@ -43,7 +43,7 @@ dbt-postgres = "^1.7.0"
 [tool.poetry.group.sqlserver]
 optional = true
 [tool.poetry.group.sqlserver.dependencies]
-dbt-sqlserver = "^1.9.0"
+dbt-sqlserver = "^1.10.1"
 
 [tool.poetry.group.duckdb]
 optional = true

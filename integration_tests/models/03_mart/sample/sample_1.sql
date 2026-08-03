@@ -10,7 +10,7 @@
   config(
     materialized = 'table',
     pre_hook = [
-      "alter table " ~ seed_fqn ~ " alter column name set not null"
+      "{% if target.type != 'sqlserver' %} alter table " ~ seed_fqn ~ " alter column name set not null{% endif %} "
     ],
     meta = {
       "audit_helper__exclude_columns": ["sample_1_sk", "not_exist_in_dbt", "optional_metric"],

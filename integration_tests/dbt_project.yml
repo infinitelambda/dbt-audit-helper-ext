@@ -84,3 +84,7 @@ vars:
     - in_a_only
   audit_helper__source_filter: dummy_true
   audit_helper__dbt_filter: dummy_true
+
+flags:
+  dbt_sqlserver_use_dbt_transactions: true
+  dbt_sqlserver_use_native_string_types: true

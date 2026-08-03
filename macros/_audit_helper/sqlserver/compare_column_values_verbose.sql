@@ -16,7 +16,7 @@
             else cast(0 as bit)
         end as perfect_match,
         case
-            when a_query.hk_h_products is null and a_query.dbt_audit_helper_pk is not null then cast(1 as bit)
+            when a_query.{{ column_to_compare }} is null and a_query.{{ primary_key }} is not null then cast(1 as bit)
             else cast(0 as bit)
         end as null_in_a,
         case
