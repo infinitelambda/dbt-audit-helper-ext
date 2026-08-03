@@ -41,6 +41,17 @@ seeds:
   audit_helper_ext_test:
     +schema: audit_helper_ext_seed # Target Day 1 -- will be cloned to `audit_helper_ext_seed__20240912`
     sample:
+      sample_expressions_source:
+        +quote_columns: true
+        +column_types:
+          id: integer
+          float_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
+          precision_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
+          text_value: varchar(50)
+          integer_value: integer
+          MixedCase: varchar(50)
+          Total Amount: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
+          ignored_col: varchar(50)
       sample_target_1:
         +alias: sample_1
         +column_types:

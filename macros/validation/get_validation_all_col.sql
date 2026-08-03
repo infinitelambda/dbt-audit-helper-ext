@@ -62,7 +62,7 @@
         a_relation=old_relation,
         b_relation=dbt_relation,
         exclude_columns=exclude_columns,
-        primary_key=dbt_utils.generate_surrogate_key(primary_keys),
+        primary_key=dbt_utils.generate_surrogate_key(audit_helper_ext.get_quoted_columns(primary_keys)),
         summarize=summarize,
         a_filter=a_filter,
         b_filter=b_filter,
