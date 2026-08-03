@@ -46,20 +46,20 @@ seeds:
           id: integer
           float_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
           precision_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
-          text_value: varchar(50)
+          text_value: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
           integer_value: integer
-          ignored_col: varchar(50)
+          ignored_col: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
       sample_target_1:
         +alias: sample_1
         +column_types:
-          name: varchar(50)
+          name: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
           life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
           optional_metric: "{{ 'numeric(38,4)' if target.type == 'snowflake' else 'float' }}"
       sample_target_2:
         +schema: audit_helper_ext_seed__20240913 # Target Day 2
         +alias: sample_1
         +column_types:
-          name: varchar(50)
+          name: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
           life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
           optional_metric: "{{ 'numeric(38,4)' if target.type == 'snowflake' else 'float' }}"
 

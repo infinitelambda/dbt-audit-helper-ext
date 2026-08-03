@@ -10,7 +10,7 @@
   config(
     materialized = 'table',
     pre_hook = [
-      "{% if target.type != 'sqlserver' %} alter table " ~ seed_fqn ~ " alter column name set not null{% endif %} "
+      "{% if target.type not in ['sqlserver', 'bigquery'] %} alter table " ~ seed_fqn ~ " alter column name set not null{% endif %} "
     ],
     meta = {
       "audit_helper__exclude_columns": ["sample_1_sk", "not_exist_in_dbt", "optional_metric"],
@@ -59,7 +59,7 @@ select
     {%- else %}
       age,
     {%- endif %}
-    {% if target.type in ["biquery", "snowflake", "databricks"] -%}
+    {% if target.type in ["bigquery", "snowflake", "databricks"] -%}
       cast(life_time_value as {{ dbt.type_string() }}) as life_time_value,
     {%- else %}
       cast(life_time_value as {{ dbt.type_float() }}) as life_time_value,
