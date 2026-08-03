@@ -8,7 +8,7 @@
     - [Slug Rules](#slug-rules)
     - [Collisions](#collisions)
     - [Aliasing By Hand](#aliasing-by-hand)
-  - [Related Gotcha: Case-Sensitive Config Keys](#related-gotcha-case-sensitive-config-keys)
+  - [Config Keys Are Case-Insensitive](#config-keys-are-case-insensitive)
 
 ## Overview
 
@@ -120,12 +120,16 @@ select
 from {{ source('legacy', 'orders') }}
 ```
 
-## Related Gotcha: Case-Sensitive Config Keys
+## Config Keys Are Case-Insensitive
 
-Expression config keys are matched **case-sensitively** against the column names as the warehouse
-stores them. On Snowflake, an unquoted `float_value` is stored as `FLOAT_VALUE`, so the config key
-must be `FLOAT_VALUE` to match. Normalizing through a view does not change this — pick the casing
-your warehouse actually reports.
+Worth knowing, since it removes a class of worry: `audit_helper__custom_column_expressions` keys are
+matched **case-insensitively** against the relation's columns. A lowercase `float_value` key matches
+Snowflake's `FLOAT_VALUE` without ceremony, so you never need to second-guess the casing your
+warehouse reports — write the keys in lowercase and move on.
 
-See [Custom Column Expressions](./custom-column-expressions.md) for how expressions are resolved and
-applied.
+Case, in other words, is not what makes quoted columns hard. The problems above are about identifiers
+that need *quoting* to parse at all, which is a different matter entirely.
+
+A config key matching no column at all raises a warning naming the key and its macro, rather than
+failing quietly. See [Custom Column Expressions](./custom-column-expressions.md) for how expressions
+are resolved and applied.

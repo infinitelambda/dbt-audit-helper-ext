@@ -47,7 +47,7 @@
   {% for cfg_column, cfg_macro in custom_expressions.items() %}
     {% if cfg_column not in columns_lower %}
       {% do exceptions.warn(
-        "[" ~ config_name ~ "] Column '" ~ cfg_column ~ "' (macro: " ~ cfg_macro ~ ") is configured for model '"
+        "⚠️  [" ~ config_name ~ "] Column '" ~ cfg_column ~ "' (macro: " ~ cfg_macro ~ ") is configured for model '"
         ~ model_name ~ "' but was not found in the compared columns. The custom expression will be ignored."
       ) %}
     {% endif %}

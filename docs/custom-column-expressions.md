@@ -244,8 +244,7 @@ from sales
 ## Limitations
 
 Columns that require quoting to survive as identifiers — mixed case, embedded spaces, reserved words,
-or anything created under `quote_columns: true` — are **not fully supported**, and expression config
-keys are matched case-sensitively against the column names as the warehouse stores them.
+or anything created under `quote_columns: true` — are **not fully supported**.
 
 The fix is to validate a view that aliases those columns to quote-free names, which
 `audit_helper_ext.slugify_columns_select(relation)` will generate for you:
@@ -266,15 +265,21 @@ are handled.
 
 **Q: My custom expression isn't being applied. What's wrong?**
 
-Check the run output for
-`ℹ️  DEBUG: 🎯 Applying custom expression 'macro_name' to column 'column_name'`, which is logged for
-every column an expression is applied to. If that line is missing, the column name in your config
-likely doesn't match the column in the relation (matching is case-sensitive), or the column is
-listed in `audit_helper__exclude_columns`.
+Check the run output for a warning like:
 
-Case is the usual culprit: Snowflake stores an unquoted `float_value` as `FLOAT_VALUE`, so a
-lowercase config key silently matches nothing and the raw values flow through untransformed. See
-[Quoted Column Names](./quoted-column-names.md) for the full story.
+```text
+⚠️  [audit_helper__custom_column_expressions] Column 'not_exist_column' (macro: cast_to_int_expr) is
+configured for model 'my_model' but was not found in the compared columns. The custom expression
+will be ignored.
+```
+
+Every config key that doesn't match a column gets one, so a typo or a stale column name shows up
+without you having to dig. The other likely cause is the column being listed in
+`audit_helper__exclude_columns` — exclusion is applied first, so the column never reaches expression
+resolution and no warning is raised.
+
+Case is not the problem: config keys are matched **case-insensitively**, so a lowercase
+`float_value` key correctly matches Snowflake's `FLOAT_VALUE`. Write your keys in lowercase.
 
 If the macro name itself doesn't resolve, the run fails with dbt's
 `No macro named 'macro_name' found within namespace` — check for a typo, and make sure your macro
