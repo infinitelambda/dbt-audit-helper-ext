@@ -3,7 +3,7 @@
     materialized = 'table',
     unique_key = ['id'],
     meta = {
-      "audit_helper__exclude_columns": ["id"],
+      "audit_helper__exclude_columns": [],
       "audit_helper__old_identifier": "sample_expressions_source",
       "audit_helper__unique_key": ["id"],
       "audit_helper__custom_column_expressions": {

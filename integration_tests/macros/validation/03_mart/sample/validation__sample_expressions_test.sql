@@ -8,7 +8,7 @@
     {% set old_identifier = 'sample_expressions_source' %}
 
     {%- set primary_keys = ["id"] -%}
-    {%- set exclude_columns = ["id"] -%}
+    {%- set exclude_columns = [] -%}
 
     {{ log('👀  A:' ~ audit_helper_ext.get_log_value(old_database ~ '.' ~ old_schema ~ '.' ~ old_identifier) 
         ~ ' vs. B:' ~ audit_helper_ext.get_log_value(ref(dbt_identifier))
