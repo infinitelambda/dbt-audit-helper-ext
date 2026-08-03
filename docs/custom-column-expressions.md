@@ -7,9 +7,7 @@
   - [Configuration](#configuration)
     - [Basic Usage](#basic-usage)
     - [Configuration Priority](#configuration-priority)
-  - [Built-in Expression Macros](#built-in-expression-macros)
-    - [Numeric Transformations](#numeric-transformations)
-    - [String Transformations](#string-transformations)
+  - [Common Expression Macros](#common-expression-macros)
   - [Creating Custom Expression Macros](#creating-custom-expression-macros)
     - [Simple Custom Macro](#simple-custom-macro)
     - [Database-Specific Implementation](#database-specific-implementation)
@@ -45,9 +43,9 @@ Configure custom expressions in your model's `meta` block:
   config(
     meta = {
       "audit_helper__custom_column_expressions": {
-        "float_column": "audit_helper__round_2dp",
-        "precise_column": "audit_helper__round_4dp",
-        "text_column": "audit_helper__trim_upper"
+        "float_column": "round_2dp_expr",
+        "precise_column": "round_4dp_expr",
+        "text_column": "trim_upper_expr"
       }
     }
   )
@@ -70,24 +68,36 @@ The package checks for custom expressions in the following order:
 
 This allows backward compatibility while encouraging the use of meta blocks for better organization.
 
-## Built-in Expression Macros
+## Common Expression Macros
 
-The package provides several ready-to-use transformation macros out of the box:
+The package ships no expression macros — you define them in your own project, which keeps the
+transformations under your control rather than at the mercy of a package upgrade. These are the
+ones worth copying first:
 
-### Numeric Transformations
+```sql
+{% macro round_2dp_expr(column_name) %}
+  {{ return('round(' ~ column_name ~ ', 2)') }}
+{% endmacro %}
+
+{% macro trim_upper_expr(column_name) %}
+  {{ return('upper(trim(' ~ column_name ~ '))') }}
+{% endmacro %}
+
+{% macro cast_to_int_expr(column_name) %}
+  {% set int_type = 'int' if target.type == 'sqlserver' else 'integer' %}
+  {{ return('cast(' ~ column_name ~ ' as ' ~ int_type ~ ')') }}
+{% endmacro %}
+```
 
 | Macro | Description | Example Input | Example Output |
 |-------|-------------|---------------|----------------|
-| `audit_helper__round_2dp` | Round to 2 decimal places | `3.14159` | `3.14` |
-| `audit_helper__round_4dp` | Round to 4 decimal places | `2.718281828` | `2.7183` |
-| `audit_helper__cast_to_int` | Cast to integer type | `3.14` | `3` |
+| `round_2dp_expr` | Round to 2 decimal places | `3.14159` | `3.14` |
+| `round_4dp_expr` | Round to 4 decimal places | `2.718281828` | `2.7183` |
+| `cast_to_int_expr` | Cast to integer type | `3.14` | `3` |
+| `trim_upper_expr` | Trim whitespace and uppercase | `'  hello  '` | `'HELLO'` |
+| `trim_lower_expr` | Trim whitespace and lowercase | `'  WORLD  '` | `'world'` |
 
-### String Transformations
-
-| Macro | Description | Example Input | Example Output |
-|-------|-------------|---------------|----------------|
-| `audit_helper__trim_upper` | Trim whitespace and uppercase | `'  hello  '` | `'HELLO'` |
-| `audit_helper__trim_lower` | Trim whitespace and lowercase | `'  WORLD  '` | `'world'` |
+A working set lives in `integration_tests/macros/validation/config/column_expressions.sql`.
 
 ## Creating Custom Expression Macros
 
@@ -106,13 +116,9 @@ Create a macro in your own project that takes a column name and returns a SQL ex
 The column name arrives already quoted for your adapter, so use it verbatim — no need to quote
 it again.
 
-Note the plain macro: expression macros are resolved by name and called directly, so do **not**
-wrap them in `adapter.dispatch`. A dispatched macro is looked up against your root project's
-namespace at call time and will fail to resolve.
-
 ### Database-Specific Implementation
 
-Since dispatch is unavailable here, branch on `target.type` for database-specific SQL:
+Branch on `target.type` for database-specific SQL:
 
 ```sql
 {% macro normalize_phone(column_name) %}
@@ -163,7 +169,7 @@ The work happens in `get_column_specs`, called by this package's `compare_all_co
   config(
     meta = {
       "audit_helper__custom_column_expressions": {
-        "pi_value": "audit_helper__round_2dp"
+        "pi_value": "round_2dp_expr"
       }
     }
   )
@@ -186,7 +192,7 @@ from calculations
   config(
     meta = {
       "audit_helper__custom_column_expressions": {
-        "customer_name": "audit_helper__trim_lower"
+        "customer_name": "trim_lower_expr"
       }
     }
   )
@@ -210,10 +216,10 @@ from customers
     meta = {
       "audit_helper__exclude_columns": ["surrogate_key"],
       "audit_helper__custom_column_expressions": {
-        "revenue": "audit_helper__round_2dp",
-        "tax_rate": "audit_helper__round_4dp",
-        "product_name": "audit_helper__trim_upper",
-        "quantity": "audit_helper__cast_to_int"
+        "revenue": "round_2dp_expr",
+        "tax_rate": "round_4dp_expr",
+        "product_name": "trim_upper_expr",
+        "quantity": "cast_to_int_expr"
       }
     }
   )
@@ -265,7 +271,7 @@ Absolutely! Both work together:
     meta = {
       "audit_helper__exclude_columns": ["created_at", "updated_at"],
       "audit_helper__custom_column_expressions": {
-        "price": "audit_helper__round_2dp"
+        "price": "round_2dp_expr"
       }
     }
   )

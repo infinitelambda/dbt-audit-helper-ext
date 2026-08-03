@@ -68,11 +68,11 @@ vars:
   # audit_helper__store_matched_rows: true
   audit_helper__schema_validation_checks:
     - mismatch_data_type
-    # - mismatch_ordinal_position
-    # - mismatch_character_maximum_length
-    # - mismatch_numeric_precision
-    # - mismatch_numeric_scale
-    # - mismatch_is_nullable
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
     - in_a_only
   audit_helper__source_filter: dummy_true
   audit_helper__dbt_filter: dummy_true

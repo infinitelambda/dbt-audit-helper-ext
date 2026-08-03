@@ -20,7 +20,7 @@ macros:
       {% raw %}
       {% set expression = audit_helper_ext.resolve_column_expression_macro(
           column_name='price',
-          macro_name='audit_helper__round_2dp'
+          macro_name='round_2dp_expr'
       ) %}
       {% endraw %}
       -- Returns: round("price", 2)
@@ -32,4 +32,4 @@ macros:
         description: The name of the column to apply the expression to
       - name: macro_name
         type: string
-        description: The name of the macro to execute (e.g., 'audit_helper__round_2dp')
+        description: The name of the macro to execute (e.g., 'round_2dp_expr')

@@ -30,7 +30,7 @@
       a_query=a_query,
       b_query=b_query,
       primary_key="dbt_audit_helper_pk",
-      column_to_compare=spec.name
+      column_to_compare=adapter.quote(spec.name)
     ) %}
 
     /*  Create a query combining results from all columns so that the user, or the
@@ -62,7 +62,7 @@
 
         final as (
           select
-            upper(column_name) as column_name,
+            upper(replace(replace(column_name, '[', ''), ']', '')) as column_name,
             sum(case when perfect_match = 1 then 1 else 0 end) as perfect_match,
             sum(case when null_in_a = 1 then 1 else 0 end) as null_in_a,
             sum(case when null_in_b = 1 then 1 else 0 end) as null_in_b,
@@ -78,7 +78,7 @@
         final as (
           select
             primary_key,
-            upper(column_name) as column_name,
+            upper(replace(replace(column_name, '[', ''), ']', '')) as column_name,
             perfect_match,
             null_in_a,
             null_in_b,

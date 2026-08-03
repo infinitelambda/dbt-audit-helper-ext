@@ -23,19 +23,19 @@ macros:
           model_name='my_model',
           column_names=['price', 'quantity', 'name']
       ) %}
-      {% endraw %}
 
       -- For a model with config:
       -- meta:
       --   audit_helper__custom_column_expressions:
-      --     price: audit_helper__round_2dp
+      --     price: round_2dp_expr
       --
       -- Returns specs like:
       -- [
-      --   namespace(name='price', expression='round("price", 2)', select='round("price", 2) as "price"', macro_ref='audit_helper__round_2dp'),
+      --   namespace(name='price', expression='round("price", 2)', select='round("price", 2) as "price"', macro_ref='round_2dp_expr'),
       --   namespace(name='quantity', expression='"quantity"', select='"quantity"', macro_ref=none),
       --   namespace(name='name', expression='"name"', select='"name"', macro_ref=none)
       -- ]
+      {% endraw %}
       ```
 
     arguments:

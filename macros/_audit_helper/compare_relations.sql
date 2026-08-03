@@ -1,4 +1,16 @@
 {% macro compare_relations(a_relation, b_relation, exclude_columns=[], primary_key=None, summarize=true, limit=None) %}
+  {{ return(adapter.dispatch('compare_relations', 'audit_helper_ext')(
+      a_relation=a_relation,
+      b_relation=b_relation,
+      exclude_columns=exclude_columns,
+      primary_key=primary_key,
+      summarize=summarize,
+      limit=limit
+  )) }}
+{% endmacro %}
+
+
+{% macro default__compare_relations(a_relation, b_relation, exclude_columns, primary_key, summarize, limit) %}
 
   {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
 

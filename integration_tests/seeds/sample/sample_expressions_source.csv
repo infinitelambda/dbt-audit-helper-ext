@@ -1,0 +1,3 @@
+id,float_value,precision_value,text_value,integer_value,MixedCase,Total Amount
+1,3.14,2.7183,"  HELLO WORLD  ",100,"  ALPHA  ",1.11
+2,3.00,1.4142,"  TEST DATA  ",200,"  BETA  ",2.22
