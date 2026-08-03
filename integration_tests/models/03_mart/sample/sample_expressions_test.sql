@@ -7,10 +7,10 @@
       "audit_helper__old_identifier": "sample_expressions_source",
       "audit_helper__unique_key": ["id"],
       "audit_helper__custom_column_expressions": {
-        "FLOAT_VALUE": "round_2dp_expr",
-        "PRECISION_VALUE": "round_4dp_expr",
-        "TEXT_VALUE": "trim_upper_expr",
-        "INTEGER_VALUE": "cast_to_int_expr"
+        "float_value": "round_2dp_expr",
+        "precision_value": "round_4dp_expr",
+        "text_value": "trim_upper_expr",
+        "integer_value": "cast_to_int_expr"
       }
     }
   )
