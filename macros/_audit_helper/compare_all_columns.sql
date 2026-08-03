@@ -45,11 +45,12 @@
 
   {% for spec in column_specs %}
 
-    {% set audit_query = audit_helper.compare_column_values_verbose(
+    {% set audit_query = audit_helper_ext.compare_column_values_verbose(
       a_query=a_query,
       b_query=b_query,
       primary_key="dbt_audit_helper_pk",
-      column_to_compare=adapter.quote(spec.name)
+      column_to_compare=adapter.quote(spec.name),
+      column_label=spec.name
     ) %}
 
     /*  Create a query combining results from all columns so that the user, or the
@@ -81,7 +82,7 @@
 
         final as (
           select
-            upper(replace(column_name, '"', '')) as column_name,
+            upper(column_name) as column_name,
             sum(case when perfect_match then 1 else 0 end) as perfect_match,
             sum(case when null_in_a then 1 else 0 end) as null_in_a,
             sum(case when null_in_b then 1 else 0 end) as null_in_b,
@@ -98,7 +99,7 @@
         final as (
           select
             primary_key,
-            upper(replace(column_name, '"', '')) as column_name,
+            upper(column_name) as column_name,
             perfect_match,
             null_in_a,
             null_in_b,
