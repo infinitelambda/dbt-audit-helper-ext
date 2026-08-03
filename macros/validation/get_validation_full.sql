@@ -62,7 +62,7 @@
     {% set audit_query = audit_helper.compare_queries(
         a_query=a_query,
         b_query=b_query,
-        primary_key=dbt_utils.generate_surrogate_key(audit_helper_ext.get_quoted_columns(primary_keys)),
+        primary_key=dbt_utils.generate_surrogate_key(primary_keys),
         summarize=summarize,
         limit=100
     ) %}

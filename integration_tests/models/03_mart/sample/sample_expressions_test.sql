@@ -5,7 +5,7 @@
     meta = {
       "audit_helper__exclude_columns": ["ignored_col"],
       "audit_helper__old_identifier": "sample_expressions_source",
-      "audit_helper__unique_key": ["id"],
+      "audit_helper__unique_key": ["\"id\""],
       "audit_helper__custom_column_expressions": {
         "float_value": "round_2dp_expr",
         "precision_value": "round_4dp_expr",
