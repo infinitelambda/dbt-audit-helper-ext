@@ -214,7 +214,9 @@ When determining the legacy table name, the system follows this priority order:
 All these configs benefit from being organized in the `meta` block for cleaner, more maintainable code.
 
 **Note on Quoted Column Names**: Column names that need quoting to survive as identifiers are not
-fully supported in these configs. See [Quoted Column Names](./quoted-column-names.md) before you
-point a validation at a mixed-case relation.
+fully supported in these configs. Point `audit_helper__old_identifier` at a normalized view instead —
+`{{ audit_helper_ext.slugify_columns_select(source('legacy', 'orders')) }}` generates one for you, so
+every name in the configs above stays a plain unquoted identifier. See
+[Quoted Column Names](./quoted-column-names.md) for the details.
 
 _🐞 Enjoy the Bug, finally!_

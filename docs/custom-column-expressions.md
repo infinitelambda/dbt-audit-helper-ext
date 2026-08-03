@@ -245,8 +245,22 @@ from sales
 
 Columns that require quoting to survive as identifiers — mixed case, embedded spaces, reserved words,
 or anything created under `quote_columns: true` — are **not fully supported**, and expression config
-keys are matched case-sensitively against the column names as the warehouse stores them. See
-[Quoted Column Names](./quoted-column-names.md) for the reasons and the recommended workaround.
+keys are matched case-sensitively against the column names as the warehouse stores them.
+
+The fix is to validate a view that aliases those columns to quote-free names, which
+`audit_helper_ext.slugify_columns_select(relation)` will generate for you:
+
+```sql
+-- models/validation/legacy_orders_normalized.sql
+{{ config(materialized = 'view') }}
+
+{{ audit_helper_ext.slugify_columns_select(source('legacy', 'orders')) }}
+```
+
+Point `audit_helper__old_identifier` at that view and your expression config keys become plain
+lowercase identifiers (`total_amount` rather than `"Total Amount"`). See
+[Quoted Column Names](./quoted-column-names.md) for the reasons, the slug rules, and how collisions
+are handled.
 
 ## Troubleshooting
 
