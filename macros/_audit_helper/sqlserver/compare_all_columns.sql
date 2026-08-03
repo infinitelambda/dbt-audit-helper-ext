@@ -1,8 +1,23 @@
 {# Override at v0.12 #}
 
-{% macro sqlserver__compare_all_columns( a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none ) -%}
+{% macro sqlserver__compare_all_columns(
+    a_relation,
+    b_relation,
+    primary_key,
+    exclude_columns=[],
+    summarize=true,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none,
+    package_name=none
+) -%}
 
-  {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
+  {% set column_specs = column_specs or audit_helper_ext.get_column_specs(
+      a_relation=a_relation,
+      b_relation=b_relation,
+      exclude_columns=exclude_columns,
+      package_name=package_name
+  ) %}
 
   {% set a_query %}
     select

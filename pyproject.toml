@@ -203,7 +203,9 @@ validate-detail-store-with-limit = [
   {shell = "cd integration_tests && dbt run-operation validation_full__sample_1 --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_comparison_data_limit': 2}\""},
 ]
 validate-detail-store-expressions = [
-  {shell = "cd integration_tests && dbt run-operation validation_full__sample_expressions_test --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_matched_rows': true}\""},
+  {shell = """cd integration_tests && dbt run-operation validation_full__sample_expressions_test \
+    --args "{'summarize': false}" \
+    --vars "{'audit_helper__store_comparison_data': true, 'audit_helper__store_matched_rows': true}""""},
 ]
 test-detail = [
   # Test 1: Mismatched rows only (default) — then verify columns, metadata, and no identical rows

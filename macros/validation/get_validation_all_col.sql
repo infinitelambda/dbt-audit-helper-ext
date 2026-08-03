@@ -6,6 +6,7 @@
     primary_keys,
     exclude_columns=[],
     summarize=true,
+    package_name=none,
     old_filter=none,
     dbt_filter=none
 ) %}
@@ -18,6 +19,7 @@
         primary_keys=primary_keys,
         exclude_columns=exclude_columns,
         summarize=summarize,
+        package_name=package_name,
         old_filter=old_filter,
         dbt_filter=dbt_filter
       )
@@ -33,6 +35,7 @@
     primary_keys,
     exclude_columns,
     summarize,
+    package_name=none,
     old_filter=none,
     dbt_filter=none
 ) %}
@@ -47,6 +50,14 @@
     {% set a_filter = audit_helper_ext.resolve_relation_filter(old_filter, side='a') %}
     {% set b_filter = audit_helper_ext.resolve_relation_filter(dbt_filter, side='b') %}
 
+    {% set column_specs = audit_helper_ext.get_column_specs(
+        a_relation=old_relation,
+        b_relation=dbt_relation,
+        exclude_columns=exclude_columns,
+        package_name=package_name
+    ) %}
+    {% set column_expressions = audit_helper_ext.format_column_expressions(column_specs) %}
+
     {% set audit_query = audit_helper_ext.compare_all_columns(
         a_relation=old_relation,
         b_relation=dbt_relation,
@@ -54,11 +65,10 @@
         primary_key=dbt_utils.generate_surrogate_key(primary_keys),
         summarize=summarize,
         a_filter=a_filter,
-        b_filter=b_filter
+        b_filter=b_filter,
+        column_specs=column_specs,
+        package_name=package_name
     ) %}
-
-    {% set column_specs = audit_helper_ext.get_column_specs(old_relation, dbt_relation, exclude_columns) %}
-    {% set column_expressions = audit_helper_ext.format_column_expressions(column_specs) %}
 
     {% if execute %}
       {{ log('ℹ️  Those columns are excluded from the comparison: ' ~ exclude_columns, true) }}
@@ -68,7 +78,16 @@
 
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
       {% if summarize %}
-        {{ audit_helper_ext.log_validation_result('all_col', audit_results, dbt_identifier, dbt_relation, old_relation, old_filter=a_filter, dbt_filter=b_filter, column_expressions=column_expressions) }}
+        {{ audit_helper_ext.log_validation_result(
+            type='all_col',
+            result=audit_results,
+            dbt_identifier=dbt_identifier,
+            dbt_relation=dbt_relation,
+            old_relation=old_relation,
+            old_filter=a_filter,
+            dbt_filter=b_filter,
+            column_expressions=column_expressions
+        ) }}
       {% endif %}
     {% endif %}
 

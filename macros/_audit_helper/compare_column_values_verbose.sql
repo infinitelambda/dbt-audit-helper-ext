@@ -1,4 +1,5 @@
-{# Override at v0.12: upstream uses `column_to_compare` both as a SQL identifier and as the #}
+{# Override of audit_helper 0.14.0. Body copied from upstream default__; re-check on upgrade. #}
+{# Upstream uses `column_to_compare` both as a SQL identifier and as the #}
 {# reported label, so a quoted identifier leaks quotes into the report. `column_label` keeps #}
 {# the two apart -- pass the quoted name to compare, the bare name to display. #}
 

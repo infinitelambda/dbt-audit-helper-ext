@@ -50,10 +50,14 @@
     {% set a_filter = audit_helper_ext.resolve_relation_filter(old_filter, side='a') %}
     {% set b_filter = audit_helper_ext.resolve_relation_filter(dbt_filter, side='b') %}
 
-    {# Project the same column list (from old_relation) on both sides, then compare_queries. #}
-    {% set column_specs = audit_helper_ext.get_column_specs(old_relation, dbt_relation, exclude_columns) %}
-    {% set a_query = audit_helper_ext.build_filtered_query(old_relation, column_specs=column_specs, filter=a_filter) %}
-    {% set b_query = audit_helper_ext.build_filtered_query(dbt_relation, column_specs=column_specs, filter=b_filter) %}
+    {% set column_specs = audit_helper_ext.get_column_specs(
+        a_relation=old_relation,
+        b_relation=dbt_relation,
+        exclude_columns=exclude_columns,
+        package_name=package_name
+    ) %}
+    {% set a_query = audit_helper_ext.build_filtered_query(relation=old_relation, column_specs=column_specs, filter=a_filter) %}
+    {% set b_query = audit_helper_ext.build_filtered_query(relation=dbt_relation, column_specs=column_specs, filter=b_filter) %}
 
     {% set audit_query = audit_helper.compare_queries(
         a_query=a_query,
@@ -73,7 +77,16 @@
 
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
       {% if summarize %}
-        {{ audit_helper_ext.log_validation_result('full', audit_results, dbt_identifier, dbt_relation, old_relation, old_filter=a_filter, dbt_filter=b_filter, column_expressions=column_expressions) }}
+        {{ audit_helper_ext.log_validation_result(
+            type='full',
+            result=audit_results,
+            dbt_identifier=dbt_identifier,
+            dbt_relation=dbt_relation,
+            old_relation=old_relation,
+            old_filter=a_filter,
+            dbt_filter=b_filter,
+            column_expressions=column_expressions
+        ) }}
       {% else %}
         {% if audit_results and audit_results | length > 0 %}
           {# Print sample query #}
@@ -84,7 +97,8 @@
               exclude_columns=exclude_columns,
               audit_results=audit_results,
               a_filter=a_filter,
-              b_filter=b_filter
+              b_filter=b_filter,
+              column_specs=column_specs
           ) %}
           {% if sample_query %}
             {{ log('💡 Investigation query suggestion (first discrepancy row):', true) }}

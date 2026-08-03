@@ -15,17 +15,17 @@
 
 {% macro default__build_filtered_query(relation, columns, exclude_columns, filter, extra_select, column_specs) %}
 
-  {% if columns is none %}
-    {% set columns = dbt_utils.get_filtered_columns_in_relation(from=relation, except=exclude_columns) %}
-  {% endif %}
-
   {# String concat (not a {% set %} block) so the value survives return() from a macro call. #}
   {% set quoted_columns = [] %}
+
   {% if column_specs %}
     {% for spec in column_specs %}
       {% do quoted_columns.append(spec.select) %}
     {% endfor %}
   {% else %}
+    {% if columns is none %}
+      {% set columns = dbt_utils.get_filtered_columns_in_relation(from=relation, except=exclude_columns) %}
+    {% endif %}
     {% for column_name in columns %}
       {% do quoted_columns.append(adapter.quote(column_name)) %}
     {% endfor %}

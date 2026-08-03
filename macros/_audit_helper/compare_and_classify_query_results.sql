@@ -1,4 +1,5 @@
-{# Override at v0.12: quote the column list before upstream renders it. #}
+{# Override of audit_helper 0.14.0: quote the column list before upstream renders it. #}
+{# Delegates to upstream default__, so only the quoting contract must hold on upgrade. #}
 {# Upstream builds its projection with a bare `columns | join(", ")`, which produces invalid #}
 {# SQL for identifiers that need quoting (spaces, mixed case). #}
 

@@ -3,7 +3,7 @@
     materialized = 'table',
     unique_key = ['id'],
     meta = {
-      "audit_helper__exclude_columns": [],
+      "audit_helper__exclude_columns": ["ignored_col"],
       "audit_helper__old_identifier": "sample_expressions_source",
       "audit_helper__unique_key": ["id"],
       "audit_helper__custom_column_expressions": {
@@ -27,6 +27,7 @@ select
     'hello world' as text_value,
     100 as integer_value,
     'alpha' as "MixedCase",
+    'differs-on-purpose' as ignored_col,
     1.14 as "Total Amount"
 union all
 select
@@ -36,4 +37,5 @@ select
     'test data' as text_value,
     200 as integer_value,
     'beta' as "MixedCase",
+    'differs-on-purpose' as ignored_col,
     2.24 as "Total Amount"

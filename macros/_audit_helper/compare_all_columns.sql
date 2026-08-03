@@ -2,7 +2,17 @@
 {# the source (A) side; `b_filter` bounds the dbt (B) side. Lives in the audit_helper_ext #}
 {# namespace and is called directly by the validation entry macros. #}
 
-{% macro compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+{% macro compare_all_columns(
+    a_relation,
+    b_relation,
+    primary_key,
+    exclude_columns=[],
+    summarize=true,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none,
+    package_name=none
+) -%}
   {{ return(adapter.dispatch('compare_all_columns', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
@@ -10,14 +20,31 @@
     exclude_columns=exclude_columns,
     summarize=summarize,
     a_filter=a_filter,
-    b_filter=b_filter
+    b_filter=b_filter,
+    column_specs=column_specs,
+    package_name=package_name
   )) }}
 {%- endmacro %}
 
 
-{% macro default__compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+{% macro default__compare_all_columns(
+    a_relation,
+    b_relation,
+    primary_key,
+    exclude_columns=[],
+    summarize=true,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none,
+    package_name=none
+) -%}
 
-  {% set column_specs = audit_helper_ext.get_column_specs(a_relation, b_relation, exclude_columns) %}
+  {% set column_specs = column_specs or audit_helper_ext.get_column_specs(
+      a_relation=a_relation,
+      b_relation=b_relation,
+      exclude_columns=exclude_columns,
+      package_name=package_name
+  ) %}
 
   {# We explictly select the primary_key and rename to support any sql as the primary_key -
   a column or concatenated columns. this assumes that a_relation and b_relation do not already

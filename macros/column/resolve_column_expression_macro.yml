@@ -6,14 +6,12 @@ macros:
       This macro looks up a transformation macro by name and applies it to a column,
       returning the transformed SQL expression.
 
-      The built-in `audit_helper__*` expressions are resolved through the audit_helper_ext
-      namespace; any other name is treated as a macro in your own project. The column name is
-      quoted before it reaches the expression macro, so expressions receive a ready-to-use
-      identifier.
+      The package ships no expression macros: the name is resolved against your own project.
+      The column name is quoted for your adapter before it reaches the macro, so expressions
+      receive a ready-to-use identifier.
 
-      An unknown macro name fails at compile time with dbt's own "No macro named ... found
-      within namespace" error — there is no silent fallback to the untransformed column, since
-      that would quietly compare the wrong thing.
+      A name that does not resolve raises a compile-time error rather than silently comparing
+      the untransformed column, which would report a clean match on data you never normalised.
 
       Example:
       ```sql

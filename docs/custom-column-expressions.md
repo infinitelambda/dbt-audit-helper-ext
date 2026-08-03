@@ -20,7 +20,10 @@
 
 ## Overview
 
-Sometimes columns can't be compared directly in their raw form. Think of floating-point values that differ slightly due to precision differences between systems, or string values that need normalization before comparison. Custom column expressions let you apply SQL transformations to specific columns during validation, ensuring apples-to-apples comparisons.
+Sometimes columns can't be compared directly in their raw form. Think of floating-point values that differ
+slightly due to precision differences between systems, or string values that need normalization before
+comparison. Custom column expressions let you apply SQL transformations to specific columns during validation,
+ensuring apples-to-apples comparisons.
 
 ## Why Use Custom Column Expressions?
 
@@ -97,7 +100,7 @@ ones worth copying first:
 | `trim_upper_expr` | Trim whitespace and uppercase | `'  hello  '` | `'HELLO'` |
 | `trim_lower_expr` | Trim whitespace and lowercase | `'  WORLD  '` | `'world'` |
 
-A working set lives in `integration_tests/macros/validation/config/column_expressions.sql`.
+A working set lives in `integration_tests/macros/validation/config/column_expressions/`.
 
 ## Creating Custom Expression Macros
 
@@ -152,9 +155,12 @@ When you run validations with custom column expressions:
 2. **Expression Resolution**: For each configured column, the specified macro is dynamically resolved and executed
 3. **SQL Generation**: The transformed expression is applied to both sides of the comparison, aliased back to the original column name (e.g., `round("column", 2) as "column"`)
 4. **Logging**: Debug messages indicate when custom expressions are applied
-5. **Fail Fast**: A macro name that doesn't resolve raises a compile-time error rather than silently comparing the untransformed column — a quiet fallback would report a clean match on data you never actually normalized
+5. **Fail Fast**: A macro name that doesn't resolve raises a compile-time error rather than
+   silently comparing the untransformed column — a quiet fallback would report a clean match
+   on data you never actually normalized
 
-The work happens in `get_column_specs`, called by this package's `compare_all_columns` and `compare_relations` overrides. Columns without a configured expression are selected as plain quoted identifiers.
+The work happens in `get_column_specs`, called by this package's `compare_all_columns` and `compare_relations`
+overrides. Columns without a configured expression are selected as plain quoted identifiers.
 
 ## Examples
 
