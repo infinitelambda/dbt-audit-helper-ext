@@ -51,9 +51,9 @@
     {% set b_filter = audit_helper_ext.resolve_relation_filter(dbt_filter, side='b') %}
 
     {# Project the same column list (from old_relation) on both sides, then compare_queries. #}
-    {% set columns = dbt_utils.get_filtered_columns_in_relation(from=old_relation, except=exclude_columns) %}
-    {% set a_query = audit_helper_ext.build_filtered_query(old_relation, columns=columns, filter=a_filter) %}
-    {% set b_query = audit_helper_ext.build_filtered_query(dbt_relation, columns=columns, filter=b_filter) %}
+    {% set column_specs = audit_helper_ext.get_column_specs(old_relation, dbt_relation, exclude_columns) %}
+    {% set a_query = audit_helper_ext.build_filtered_query(old_relation, column_specs=column_specs, filter=a_filter) %}
+    {% set b_query = audit_helper_ext.build_filtered_query(dbt_relation, column_specs=column_specs, filter=b_filter) %}
 
     {% set audit_query = audit_helper.compare_queries(
         a_query=a_query,

@@ -30,3 +30,9 @@ macros:
       - name: extra_select
         type: optional[string]
         description: Optional extra projection appended after the columns (e.g. a surrogate key expression).
+      - name: column_specs
+        type: optional[list]
+        description: |
+          Column specs from `get_column_specs`, carrying any custom column expressions
+          configured on the model. When given, `spec.select` is projected verbatim (already
+          quoted and aliased) and both `columns` and `exclude_columns` are ignored.

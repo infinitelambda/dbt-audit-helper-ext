@@ -22,8 +22,14 @@
         {%- set columns = audit_helper._get_intersecting_columns_from_relations(a_relation, b_relation) -%}
     {%- endif -%}
 
-    {%- set a_query = "select * from " ~ a_relation ~ (" where " ~ a_filter if a_filter else "") -%}
-    {%- set b_query = "select * from " ~ b_relation ~ (" where " ~ b_filter if b_filter else "") -%}
+    {%- set column_specs = audit_helper_ext.get_columns_with_expressions(
+        relation=a_relation,
+        model_name=b_relation.identifier,
+        column_names=columns
+    ) -%}
+
+    {%- set a_query = audit_helper_ext.build_filtered_query(a_relation, column_specs=column_specs, filter=a_filter) -%}
+    {%- set b_query = audit_helper_ext.build_filtered_query(b_relation, column_specs=column_specs, filter=b_filter) -%}
 
     {{
         audit_helper.compare_and_classify_query_results(
