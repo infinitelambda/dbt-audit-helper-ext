@@ -265,7 +265,16 @@ are handled.
 
 **Q: My custom expression isn't being applied. What's wrong?**
 
-Check the run output for a warning like:
+The run output lists every expression that was actually applied, so start there:
+
+```text
+ℹ️  Column expressions applied:
+• float_value: round_2dp_expr -> round("float_value", 2)
+• text_value: trim_upper_expr -> upper(trim("text_value"))
+```
+
+If your column is missing from that list, look for the companion warning — each config key that
+matches no column gets one, which catches typos and stale column names:
 
 ```text
 ⚠️  [audit_helper__custom_column_expressions] Column 'not_exist_column' (macro: cast_to_int_expr) is
@@ -273,10 +282,8 @@ configured for model 'my_model' but was not found in the compared columns. The c
 will be ignored.
 ```
 
-Every config key that doesn't match a column gets one, so a typo or a stale column name shows up
-without you having to dig. The other likely cause is the column being listed in
-`audit_helper__exclude_columns` — exclusion is applied first, so the column never reaches expression
-resolution and no warning is raised.
+No entry and no warning means the column was excluded: `audit_helper__exclude_columns` is applied
+first, so those columns never reach expression resolution.
 
 Case is not the problem: config keys are matched **case-insensitively**, so a lowercase
 `float_value` key correctly matches Snowflake's `FLOAT_VALUE`. Write your keys in lowercase.
