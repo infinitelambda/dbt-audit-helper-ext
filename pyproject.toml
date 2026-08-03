@@ -202,6 +202,9 @@ validate-detail-store-with-matched = [
 validate-detail-store-with-limit = [
   {shell = "cd integration_tests && dbt run-operation validation_full__sample_1 --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_comparison_data_limit': 2}\""},
 ]
+validate-detail-store-expressions = [
+  {shell = "cd integration_tests && dbt run-operation validation_full__sample_expressions_test --args \"{'summarize': false}\" --vars \"{'audit_helper__store_comparison_data': true, 'audit_helper__store_matched_rows': true}\""},
+]
 test-detail = [
   # Test 1: Mismatched rows only (default) — then verify columns, metadata, and no identical rows
   {cmd = "poe validate-detail-store"},
@@ -212,7 +215,10 @@ test-detail = [
   # Test 3: With matched rows — then verify identical rows are present
   {cmd = "poe validate-detail-store-with-matched"},
   {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_1__has_identical_rows"},
-  # Test 4: Package-scoped node lookups (metadata-only, no state setup needed)
+  # Test 4: Custom column expressions reach the persisted detail table
+  {cmd = "poe validate-detail-store-expressions"},
+  {shell = "cd integration_tests && dbt test -s verify_detail_table__sample_expressions_test__columns"},
+  # Test 5: Package-scoped node lookups (metadata-only, no state setup needed)
   {shell = "cd integration_tests && dbt test -s tag:package_scoped_lookup"},
 ]
 test-detail-sf = { env = { DBT_PROFILES_DIR = "dev/snowflake", DBT_TARGET = "sf" }, cmd = "poe test-detail" }
