@@ -58,6 +58,43 @@
 {% endmacro %}
 
 
+{% macro sqlserver__create_or_replace_table_as(relation, sql, config, dry_run) -%}
+
+  {% set staging_view = api.Relation.create(
+      schema=relation.schema,
+      identifier=relation.identifier ~ '__ctas_tmp',
+      type='view'
+  ) %}
+
+  {% set drop_view_statement = 'drop view if exists ' ~ staging_view ~ ';' %}
+  {% set create_view_statement -%}
+    {{ sql_header if sql_header is not none }}
+    create view {{ staging_view }} as
+    {{ sql }}
+  {%- endset %}
+  {% set create_statement -%}
+    drop table if exists {{ relation }};
+    select *
+    into {{ relation }}
+    from {{ staging_view }};
+  {%- endset %}
+
+  {% set full_statement = drop_view_statement ~ "\n" ~ create_view_statement ~ "\n" ~ create_statement ~ "\n" ~ drop_view_statement %}
+
+  {{ log_debug("\n" ~ full_statement, info=True) if dry_run }}
+  {% if dry_run == false %}
+    {% do run_query(drop_view_statement) %}
+    {% do run_query(create_view_statement) %}
+    {% do run_query(create_statement) %}
+    {% do run_query(drop_view_statement) %}
+    {% do adapter.commit() %}
+  {% endif %}
+
+  {{ return(full_statement) }}
+
+{% endmacro %}
+
+
 {% macro duckdb__create_or_replace_table_as(relation, sql, config, dry_run) -%}
 
   {# DuckDB supports `create or replace table`, but when this runs inside a run-operation #}

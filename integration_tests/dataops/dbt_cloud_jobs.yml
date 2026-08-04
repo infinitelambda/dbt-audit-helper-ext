@@ -104,7 +104,22 @@ jobs:
       schedule: True
     job_type: scheduled
 
-  validation_00005: # stores
+  validation_00005: # sample_expressions_test
+    <<: *val_job
+    name: "sample_expressions_test"
+    execute_steps:
+      - "dbt run -s validation_log"
+      - "dbt run-operation clone_relation --args 'identifier: sample_expressions_test'"
+      - "dbt build -s +sample_expressions_test --exclude sample_expressions_test --full-refresh"
+      - "dbt build -s sample_expressions_test"
+      - "dbt run-operation validations__sample_expressions_test"
+    schedule:
+      cron: "15 18 * * 1-5"
+    triggers:
+      schedule: True
+    job_type: scheduled
+
+  validation_00006: # stores
     <<: *val_job
     name: "stores"
     execute_steps:
@@ -114,12 +129,12 @@ jobs:
       - "dbt build -s stores"
       - "dbt run-operation validations__stores"
     schedule:
-      cron: "15 18 * * 1-5"
+      cron: "30 18 * * 1-5"
     triggers:
       schedule: True
     job_type: scheduled
 
-  validation_00006: # supplies
+  validation_00007: # supplies
     <<: *val_job
     name: "supplies"
     execute_steps:
@@ -129,7 +144,7 @@ jobs:
       - "dbt build -s supplies"
       - "dbt run-operation validations__supplies"
     schedule:
-      cron: "30 18 * * 1-5"
+      cron: "45 18 * * 1-5"
     triggers:
       schedule: True
     job_type: scheduled

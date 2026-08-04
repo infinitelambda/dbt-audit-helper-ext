@@ -81,3 +81,68 @@
   {% endif %}
 
 {% endmacro %}
+
+
+{% macro sqlserver__log_validation_detail_result(
+    dbt_identifier,
+    old_relation,
+    dbt_relation,
+    primary_keys,
+    exclude_columns,
+    store_matched_rows,
+    a_filter=none,
+    b_filter=none
+) %}
+
+  {% set log_relation = ref('validation_log') %}
+  {% set detail_relation = api.Relation.create(
+      database=log_relation.database,
+      schema=log_relation.schema,
+      identifier='validation_log_detail__' ~ dbt_identifier,
+      type='table'
+  ) %}
+
+  {% set columns = audit_helper_ext.get_intersecting_columns(old_relation, dbt_relation, exclude_columns) %}
+
+  {% set sample_limit = var('audit_helper__store_comparison_data_limit', none) %}
+  {% set comparison_query = audit_helper_ext.compare_and_classify_relation_rows(
+      a_relation=old_relation,
+      b_relation=dbt_relation,
+      primary_key_columns=primary_keys,
+      columns=columns,
+      sample_limit=sample_limit,
+      a_filter=a_filter,
+      b_filter=b_filter
+  ) %}
+
+  {% set comparison_ctes = (comparison_query | trim).split('select * from final')[0] | trim %}
+
+  {% set predicates = [] %}
+  {% if not store_matched_rows %}
+    {% do predicates.append("dbt_audit_row_status != 'identical'") %}
+  {% endif %}
+  {% if sample_limit %}
+    {% do predicates.append('dbt_audit_sample_number <= ' ~ sample_limit) %}
+  {% endif %}
+
+  {% set detail_query %}
+    {{ comparison_ctes }}
+    select
+      final.*,
+      '{{ dbt_identifier }}' as dbt_audit_ext_mart_table,
+      '{{ audit_helper_ext.job_run_url() }}' as dbt_audit_ext_job_run_url,
+      '{{ audit_helper_ext.date_of_process() }}' as dbt_audit_ext_date_of_process
+    from final
+    {% if predicates %}where {{ predicates | join(' and ') }}{% endif %}
+  {% endset %}
+
+  {% if execute %}
+    {% do audit_helper_ext.create_or_replace_table_as(
+        relation=detail_relation,
+        sql=detail_query,
+        config={}
+    ) %}
+    {{ log("ℹ️  Validation detail of " ~ dbt_identifier ~ " was persisted at " ~ audit_helper_ext.get_log_value(detail_relation), info=True) }}
+  {% endif %}
+
+{% endmacro %}

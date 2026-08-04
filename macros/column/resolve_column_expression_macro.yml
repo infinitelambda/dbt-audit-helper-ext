@@ -1,0 +1,33 @@
+macros:
+  - name: resolve_column_expression_macro
+    description: |
+      Dynamically resolve and execute a column expression macro.
+
+      This macro looks up a transformation macro by name and applies it to a column,
+      returning the transformed SQL expression.
+
+      The package ships no expression macros: the name is resolved against your own project.
+      The column name is quoted for your adapter before it reaches the macro, so expressions
+      receive a ready-to-use identifier.
+
+      A name that does not resolve raises a compile-time error rather than silently comparing
+      the untransformed column, which would report a clean match on data you never normalised.
+
+      Example:
+      ```sql
+      {% raw %}
+      {% set expression = audit_helper_ext.resolve_column_expression_macro(
+          column_name='price',
+          macro_name='round_2dp_expr'
+      ) %}
+      {% endraw %}
+      -- Returns: round("price", 2)
+      ```
+
+    arguments:
+      - name: column_name
+        type: string
+        description: The name of the column to apply the expression to
+      - name: macro_name
+        type: string
+        description: The name of the macro to execute (e.g., 'round_2dp_expr')

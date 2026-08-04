@@ -2,7 +2,17 @@
 {# the source (A) side; `b_filter` bounds the dbt (B) side. Lives in the audit_helper_ext #}
 {# namespace and is called directly by the validation entry macros. #}
 
-{% macro compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+{% macro compare_all_columns(
+    a_relation,
+    b_relation,
+    primary_key,
+    exclude_columns=[],
+    summarize=true,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none,
+    package_name=none
+) -%}
   {{ return(adapter.dispatch('compare_all_columns', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
@@ -10,14 +20,31 @@
     exclude_columns=exclude_columns,
     summarize=summarize,
     a_filter=a_filter,
-    b_filter=b_filter
+    b_filter=b_filter,
+    column_specs=column_specs,
+    package_name=package_name
   )) }}
 {%- endmacro %}
 
 
-{% macro default__compare_all_columns(a_relation, b_relation, primary_key, exclude_columns=[], summarize=true, a_filter=none, b_filter=none) -%}
+{% macro default__compare_all_columns(
+    a_relation,
+    b_relation,
+    primary_key,
+    exclude_columns=[],
+    summarize=true,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none,
+    package_name=none
+) -%}
 
-  {% set column_names = dbt_utils.get_filtered_columns_in_relation(from=a_relation, except=exclude_columns) %}
+  {% set column_specs = column_specs or audit_helper_ext.get_column_specs(
+      a_relation=a_relation,
+      b_relation=b_relation,
+      exclude_columns=exclude_columns,
+      package_name=package_name
+  ) %}
 
   {# We explictly select the primary_key and rename to support any sql as the primary_key -
   a column or concatenated columns. this assumes that a_relation and b_relation do not already
@@ -25,7 +52,9 @@
 
   {% set a_query %}
     select
-      *,
+      {% for spec in column_specs %}
+        {{ spec.select }},
+      {% endfor %}
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ a_relation }}
     {% if a_filter %}where {{ a_filter }}{% endif %}
@@ -33,19 +62,22 @@
 
   {% set b_query %}
     select
-      *,
+      {% for spec in column_specs %}
+        {{ spec.select }},
+      {% endfor %}
       {{ primary_key }} as dbt_audit_helper_pk
     from {{ b_relation }}
     {% if b_filter %}where {{ b_filter }}{% endif %}
   {% endset %}
 
-  {% for column_name in column_names %}
+  {% for spec in column_specs %}
 
-    {% set audit_query = audit_helper.compare_column_values_verbose(
+    {% set audit_query = audit_helper_ext.compare_column_values_verbose(
       a_query=a_query,
       b_query=b_query,
       primary_key="dbt_audit_helper_pk",
-      column_to_compare=column_name
+      column_to_compare=adapter.quote(spec.name),
+      column_label=spec.name
     ) %}
 
     /*  Create a query combining results from all columns so that the user, or the

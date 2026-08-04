@@ -32,22 +32,34 @@ on-run-end:
     {% if flags.WHICH in ["seed", "build"] %}
       {{ audit_helper_ext.clone_schema(source_schema="audit_helper_ext_seed") }}
     {% endif %}
+  - > # duckdb rolls the clone back otherwise; only `seed` holds a transaction open here
+    {% if target.type == "duckdb" and flags.WHICH == "seed" %}
+      commit
+    {% endif %}
 
 seeds:
   audit_helper_ext_test:
     +schema: audit_helper_ext_seed # Target Day 1 -- will be cloned to `audit_helper_ext_seed__20240912`
     sample:
+      sample_expressions_source:
+        +column_types:
+          id: integer
+          float_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
+          precision_value: "{{ 'float8' if target.type == 'postgres' else 'float' }}"
+          text_value: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
+          integer_value: integer
+          ignored_col: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
       sample_target_1:
         +alias: sample_1
         +column_types:
-          name: varchar(50)
+          name: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
           life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
           optional_metric: "{{ 'numeric(38,4)' if target.type == 'snowflake' else 'float' }}"
       sample_target_2:
         +schema: audit_helper_ext_seed__20240913 # Target Day 2
         +alias: sample_1
         +column_types:
-          name: varchar(50)
+          name: "{{ 'string' if target.type == 'bigquery' else 'varchar(50)' }}"
           life_time_value: "{{ 'float' if target.type in ['sqlserver', 'postgres'] else 'string' }}"
           optional_metric: "{{ 'numeric(38,4)' if target.type == 'snowflake' else 'float' }}"
 
@@ -64,11 +76,15 @@ vars:
   # audit_helper__store_matched_rows: true
   audit_helper__schema_validation_checks:
     - mismatch_data_type
-    # - mismatch_ordinal_position
-    # - mismatch_character_maximum_length
-    # - mismatch_numeric_precision
-    # - mismatch_numeric_scale
-    # - mismatch_is_nullable
+    - mismatch_ordinal_position
+    - mismatch_character_maximum_length
+    - mismatch_numeric_precision
+    - mismatch_numeric_scale
+    - mismatch_is_nullable
     - in_a_only
   audit_helper__source_filter: dummy_true
   audit_helper__dbt_filter: dummy_true
+
+flags:
+  dbt_sqlserver_use_dbt_transactions: true
+  dbt_sqlserver_use_native_string_types: true

@@ -1,10 +1,12 @@
 {# Override at v0.12 #}
 
-{% macro sqlserver__compare_column_values_verbose(a_query, b_query, primary_key, column_to_compare) -%}
+{% macro sqlserver__compare_column_values_verbose(a_query, b_query, primary_key, column_to_compare, column_label=none) -%}
+
+    {% set column_label = column_label or column_to_compare %}
 
     select
         coalesce(a_query.{{ primary_key }}, b_query.{{ primary_key }}) as primary_key,
-        '{{ column_to_compare }}' as column_name,
+        '{{ column_label }}' as column_name,
         case
             when a_query.{{ column_to_compare }} = b_query.{{ column_to_compare }}
                 and a_query.{{ primary_key }} is not null
@@ -14,7 +16,7 @@
             else cast(0 as bit)
         end as perfect_match,
         case
-            when a_query.hk_h_products is null and a_query.dbt_audit_helper_pk is not null then cast(1 as bit)
+            when a_query.{{ column_to_compare }} is null and a_query.{{ primary_key }} is not null then cast(1 as bit)
             else cast(0 as bit)
         end as null_in_a,
         case

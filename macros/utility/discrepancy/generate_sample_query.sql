@@ -5,7 +5,8 @@
     exclude_columns=[],
     audit_results=none,
     a_filter=none,
-    b_filter=none
+    b_filter=none,
+    column_specs=none
 ) %}
   {{ return(adapter.dispatch('generate_sample_query', 'audit_helper_ext')(
       old_relation=old_relation,
@@ -14,7 +15,8 @@
       exclude_columns=exclude_columns,
       audit_results=audit_results,
       a_filter=a_filter,
-      b_filter=b_filter
+      b_filter=b_filter,
+      column_specs=column_specs
   )) }}
 {% endmacro %}
 
@@ -26,7 +28,8 @@
     exclude_columns,
     audit_results,
     a_filter=none,
-    b_filter=none
+    b_filter=none,
+    column_specs=none
 ) %}
 
   {% if not audit_results or audit_results | length == 0 %}
@@ -61,7 +64,18 @@
     {% endif %}
   {% endfor %}
 
-  {% set column_list = column_names | join(', ') %}
+  {# Project through the configured expressions so the suggestion reproduces the comparison. #}
+  {% set select_by_name = {} %}
+  {% for spec in (column_specs or []) %}
+    {% do select_by_name.update({spec.name | upper: spec.select}) %}
+  {% endfor %}
+
+  {% set projected = [] %}
+  {% for col_name in column_names %}
+    {% do projected.append(select_by_name.get(col_name | upper, adapter.quote(col_name))) %}
+  {% endfor %}
+
+  {% set column_list = projected | join(', ') %}
 
   {# Mirror the comparison's filters so the suggestion matches what was compared. #}
   {% set a_where = where_clause ~ ('\n      and ' ~ a_filter if a_filter else '') %}
