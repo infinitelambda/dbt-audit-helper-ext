@@ -1,0 +1,68 @@
+{{ config(tags=['column_expressions']) }}
+-- Asserts the Show Column Conflicts drill-down honours `audit_helper__custom_column_expressions`,
+-- so it agrees with the `all_col` summary it exists to explain (issue #67).
+--
+-- On `sample_expressions_test`, `all_col` reports float_value/text_value as 3/3 perfect and
+-- precision_value as the single real conflict. Without the expressions the raw comparison flags
+-- all three rows on every column. Each branch below runs the real conflicts SQL and counts the
+-- rows it returns; any row emitted here means the drill-down contradicts the summary.
+
+{% set dbt_relation = ref('sample_expressions_test') %}
+
+{# The source relation only resolves at run time, so keep introspection out of the parse pass. #}
+{% if not execute %}
+  select 1 as scenario where false
+{% else %}
+
+{% set old_relation = adapter.get_relation(
+    database=var('audit_helper__source_database', target.database),
+    schema=audit_helper_ext.get_versioned_name(name=var('audit_helper__source_schema', target.schema)),
+    identifier=audit_helper_ext.get_old_identifier_name('sample_expressions_test')
+) %}
+
+{% set column_specs = audit_helper_ext.get_column_specs(
+    a_relation=old_relation,
+    b_relation=dbt_relation
+) %}
+
+{% set clean_query = audit_helper_ext.show_columns_conflicts_sql(
+    a_relation=old_relation,
+    b_relation=dbt_relation,
+    primary_keys=['id'],
+    columns_to_compare=['float_value', 'text_value'],
+    summarize=true,
+    limit=none,
+    column_specs=column_specs
+) %}
+
+{% set conflicting_query = audit_helper_ext.show_columns_conflicts_sql(
+    a_relation=old_relation,
+    b_relation=dbt_relation,
+    primary_keys=['id'],
+    columns_to_compare=['precision_value'],
+    summarize=true,
+    limit=none,
+    column_specs=column_specs
+) %}
+
+with clean_columns as (
+    select count(*) as actual, 0 as expected, 'float_value+text_value' as scenario
+    from ({{ clean_query }}) as _clean
+),
+
+conflicting_column as (
+    select count(*) as actual, 1 as expected, 'precision_value' as scenario
+    from ({{ conflicting_query }}) as _conflicting
+),
+
+all_scenarios as (
+    select * from clean_columns
+    union all
+    select * from conflicting_column
+)
+
+select *
+from all_scenarios
+where actual != expected
+
+{% endif %}

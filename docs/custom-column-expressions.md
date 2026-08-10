@@ -161,7 +161,13 @@ When you run validations with custom column expressions:
    on data you never actually normalized
 
 The work happens in `get_column_specs`, called by this package's `compare_all_columns` and `compare_relations`
-overrides. Columns without a configured expression are selected as plain quoted identifiers.
+overrides, by the investigation-query suggestion, and by `show_validation_columns_conflicts` (the Show Column
+Conflicts drill-down). Columns without a configured expression are selected as plain quoted identifiers.
+
+Because the drill-down shares the summary's expressions, the two agree: a column that `all_col` certifies as a
+perfect match will not hand you back a wall of conflicts that were never real. The conflicts path compares only
+the columns you name, so it logs just the expressions covering those — configured expressions for other columns
+stay quietly out of the way.
 
 ## Examples
 
