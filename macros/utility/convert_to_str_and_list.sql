@@ -5,14 +5,19 @@
 
 {% macro default__convert_to_str_and_list(variable) %}
 
+    {# Trim and drop blanks in both branches: callers match these names against column specs,
+       so `'a, b'` must yield `b`, not `' b'`. #}
     {% if variable is string %}
-        {# Trim so `'a, b'` yields `b`, not `' b'`: callers match these names against column specs. #}
         {% set return_list = variable.split(',') | map('trim') | select | list %}
         {% set return_str = return_list | join(',') %}
 
     {% elif variable is iterable %}
-        {% set return_str = variable | join(',') %}
-        {% set return_list = variable %}
+        {% set trimmed = [] %}
+        {% for item in variable %}
+            {% do trimmed.append(item | trim if item is string else item) %}
+        {% endfor %}
+        {% set return_list = trimmed | select | list %}
+        {% set return_str = return_list | join(',') %}
 
     {% else %}
         {% set return_str = variable | string %}
@@ -22,15 +27,3 @@
     {{ return([return_str, return_list]) }}
 
 {% endmacro %}
-
-
-{#
-{% macro test__convert_to_str_and_list() %}
-    {% if execute %}
-        {{ log(convert_to_str_and_list('var1'), true) }}
-        {{ log(convert_to_str_and_list('var1,var2'), true) }}
-        {{ log(convert_to_str_and_list(["var1","var2"]), true) }}
-        {{ log(convert_to_str_and_list(123), true) }}
-    {% endif %}
-{% endmacro %}
-#}

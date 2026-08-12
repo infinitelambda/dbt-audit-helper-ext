@@ -7,9 +7,9 @@
     columns_to_compare=[],
     summarize=true,
     limit=none,
+    package_name=none,
     old_filter=none,
-    dbt_filter=none,
-    package_name=none
+    dbt_filter=none
 ) %}
   {{ return(adapter.dispatch('show_validation_columns_conflicts', 'audit_helper_ext')
       (
@@ -21,9 +21,9 @@
         columns_to_compare=columns_to_compare,
         summarize=summarize,
         limit=limit,
+        package_name=package_name,
         old_filter=old_filter,
-        dbt_filter=dbt_filter,
-        package_name=package_name
+        dbt_filter=dbt_filter
       )
   ) }}
 {% endmacro %}
@@ -38,9 +38,9 @@
     columns_to_compare,
     summarize,
     limit,
+    package_name=none,
     old_filter=none,
-    dbt_filter=none,
-    package_name=none
+    dbt_filter=none
 ) %}
 
     {% set old_relation = adapter.get_relation(
@@ -59,6 +59,13 @@
         package_name=package_name
     ) %}
 
+    {# Specs cover the whole relation, while the drill-down looks only at the columns the caller
+       asked for: align them once here, so the log and the query report the same expressions. #}
+    {% set _, primary_keys_list = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
+    {% set _, columns_to_compare_list = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
+    {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys_list + columns_to_compare_list) %}
+    {% set column_expressions = audit_helper_ext.format_column_expressions(applied_specs) %}
+
     {% set audit_query = audit_helper_ext.show_columns_conflicts_sql(
         a_relation=old_relation,
         b_relation=dbt_relation,
@@ -68,15 +75,8 @@
         limit=limit,
         a_filter=a_filter,
         b_filter=b_filter,
-        column_specs=column_specs
+        column_specs=applied_specs
     ) %}
-
-    {# Only report expressions that reach this comparison: specs cover the whole relation,
-       while the drill-down looks at the columns the caller asked for. #}
-    {% set primary_keys_csv, primary_keys_list = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
-    {% set columns_to_compare_csv, columns_to_compare_list = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
-    {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys_list + columns_to_compare_list) %}
-    {% set column_expressions = audit_helper_ext.format_column_expressions(applied_specs) %}
 
     {% if execute %}
       {{ log('ℹ️  Those columns are included in the comparison: ' ~ columns_to_compare, true) }}

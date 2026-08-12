@@ -1,4 +1,14 @@
-{% macro show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize=true, limit=None, a_filter=none, b_filter=none, column_specs=none) %}
+{% macro show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize=true,
+    limit=none,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
   {{ return(adapter.dispatch('show_columns_conflicts_sql', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
@@ -14,7 +24,17 @@
 
 
 
-{% macro default__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none, column_specs=none) %}
+{% macro default__show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize,
+    limit,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 
@@ -134,7 +154,17 @@
 {% endmacro %}
 
 
-{% macro sqlserver__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none, column_specs=none) %}
+{% macro sqlserver__show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize,
+    limit,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 

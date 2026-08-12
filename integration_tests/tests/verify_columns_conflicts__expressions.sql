@@ -1,12 +1,7 @@
 {{ config(tags=['column_expressions']) }}
 -- Asserts the Show Column Conflicts drill-down honours `audit_helper__custom_column_expressions`,
--- so it agrees with the `all_col` summary it exists to explain (issue #67).
---
--- On `sample_expressions_test`, `all_col` reports float_value/text_value as 3/3 perfect and
--- precision_value as the single real conflict. Without the expressions the raw comparison flags
--- all three rows on every column. Each branch below runs the real conflicts SQL and counts the
--- rows it returns; any row emitted here means the drill-down contradicts the summary. The last
--- branch passes the same columns as a spaced CSV string, the shape `--args` produces.
+-- so it agrees with the `all_col` summary (issue #67): float_value/text_value are perfect matches,
+-- precision_value is the single real conflict. Any row emitted here is a disagreement.
 
 {% set dbt_relation = ref('sample_expressions_test') %}
 
@@ -46,8 +41,8 @@
     column_specs=column_specs
 ) %}
 
-{# Same clean columns as a spaced CSV string: names must be trimmed before they are matched
-   against the specs, or the expressions silently miss and the conflicts come back. #}
+{# Same columns as a spaced CSV string, the shape `--args` produces: names must be trimmed
+   before matching against the specs. #}
 {% set spaced_csv_query = audit_helper_ext.show_columns_conflicts_sql(
     a_relation=old_relation,
     b_relation=dbt_relation,
