@@ -42,12 +42,14 @@
 ) %}
 
 {# Same columns as a spaced CSV string, the shape `--args` produces: names must be trimmed
-   before matching against the specs. #}
+   before matching against the specs. Includes the conflicting column so the expected count is
+   non-zero — a trim regression that silently drops an expression changes the count, not just
+   whether the SQL parses. #}
 {% set spaced_csv_query = audit_helper_ext.show_columns_conflicts_sql(
     a_relation=old_relation,
     b_relation=dbt_relation,
     primary_keys='id',
-    columns_to_compare='float_value, text_value',
+    columns_to_compare='float_value, text_value, precision_value',
     summarize=true,
     limit=none,
     column_specs=column_specs
@@ -64,7 +66,7 @@ conflicting_column as (
 ),
 
 spaced_csv_columns as (
-    select count(*) as actual, 0 as expected, 'spaced csv' as scenario
+    select count(*) as actual, 1 as expected, 'spaced csv' as scenario
     from ({{ spaced_csv_query }}) as _spaced
 ),
 

@@ -17,8 +17,8 @@
   {% for column in columns %}
     {% do filtered.append(select_by_name.get(column | lower, namespace(
         name=column,
-        expression=adapter.quote(column),
-        select=adapter.quote(column),
+        expression=column,
+        select=column,
         macro_ref=none
     ))) %}
   {% endfor %}

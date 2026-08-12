@@ -164,9 +164,10 @@ The work happens in `get_column_specs`, called by this package's `compare_all_co
 overrides, by the investigation-query suggestion, and by `show_validation_columns_conflicts` (the Show Column
 Conflicts drill-down). Columns without a configured expression are selected as plain quoted identifiers.
 
-Because the drill-down shares the summary's expressions, the two agree: a column reported as a perfect match by
-`all_col` does not come back with conflicts in the drill-down. It compares only the columns you name, so it logs
-just the expressions covering those.
+Because `show_validation_columns_conflicts` resolves the specs itself and passes them down, the drill-down and the
+summary agree: a column reported as a perfect match by `all_col` does not come back with conflicts. It compares only
+the columns you name, so it logs just the expressions covering those. Calling `show_columns_conflicts_sql` directly
+applies expressions only when you hand it `column_specs` yourself.
 
 ## Examples
 
