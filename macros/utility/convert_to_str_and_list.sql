@@ -6,8 +6,9 @@
 {% macro default__convert_to_str_and_list(variable) %}
 
     {% if variable is string %}
-        {% set return_str = variable %}
-        {% set return_list = variable.split(',') %}
+        {# Trim so `'a, b'` yields `b`, not `' b'`: callers match these names against column specs. #}
+        {% set return_list = variable.split(',') | map('trim') | select | list %}
+        {% set return_str = return_list | join(',') %}
 
     {% elif variable is iterable %}
         {% set return_str = variable | join(',') %}

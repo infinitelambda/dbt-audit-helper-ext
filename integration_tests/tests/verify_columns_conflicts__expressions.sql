@@ -5,7 +5,8 @@
 -- On `sample_expressions_test`, `all_col` reports float_value/text_value as 3/3 perfect and
 -- precision_value as the single real conflict. Without the expressions the raw comparison flags
 -- all three rows on every column. Each branch below runs the real conflicts SQL and counts the
--- rows it returns; any row emitted here means the drill-down contradicts the summary.
+-- rows it returns; any row emitted here means the drill-down contradicts the summary. The last
+-- branch passes the same columns as a spaced CSV string, the shape `--args` produces.
 
 {% set dbt_relation = ref('sample_expressions_test') %}
 
@@ -45,6 +46,18 @@
     column_specs=column_specs
 ) %}
 
+{# Same clean columns as a spaced CSV string: names must be trimmed before they are matched
+   against the specs, or the expressions silently miss and the conflicts come back. #}
+{% set spaced_csv_query = audit_helper_ext.show_columns_conflicts_sql(
+    a_relation=old_relation,
+    b_relation=dbt_relation,
+    primary_keys='id',
+    columns_to_compare='float_value, text_value',
+    summarize=true,
+    limit=none,
+    column_specs=column_specs
+) %}
+
 with clean_columns as (
     select count(*) as actual, 0 as expected, 'float_value+text_value' as scenario
     from ({{ clean_query }}) as _clean
@@ -55,10 +68,17 @@ conflicting_column as (
     from ({{ conflicting_query }}) as _conflicting
 ),
 
+spaced_csv_columns as (
+    select count(*) as actual, 0 as expected, 'spaced csv' as scenario
+    from ({{ spaced_csv_query }}) as _spaced
+),
+
 all_scenarios as (
     select * from clean_columns
     union all
     select * from conflicting_column
+    union all
+    select * from spaced_csv_columns
 )
 
 select *

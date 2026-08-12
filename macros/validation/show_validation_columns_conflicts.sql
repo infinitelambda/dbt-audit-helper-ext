@@ -73,13 +73,9 @@
 
     {# Only report expressions that reach this comparison: specs cover the whole relation,
        while the drill-down looks at the columns the caller asked for. #}
-    {% set _, primary_keys_list = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
-    {% set _, columns_to_compare_list = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
-    {% set compared_upper = (primary_keys_list + columns_to_compare_list) | map('upper') | list %}
-    {% set applied_specs = [] %}
-    {% for spec in column_specs %}
-      {% if (spec.name | upper) in compared_upper %}{% do applied_specs.append(spec) %}{% endif %}
-    {% endfor %}
+    {% set primary_keys_csv, primary_keys_list = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
+    {% set columns_to_compare_csv, columns_to_compare_list = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
+    {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys_list + columns_to_compare_list) %}
     {% set column_expressions = audit_helper_ext.format_column_expressions(applied_specs) %}
 
     {% if execute %}

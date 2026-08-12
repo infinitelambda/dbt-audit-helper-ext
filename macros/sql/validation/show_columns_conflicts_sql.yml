@@ -31,7 +31,7 @@ macros:
       - summarize (optional): Allows you to switch between a summary or detailed view of the compared data. Defaults to true.
       - limit (optional): Allows you to limit the number of rows returned. Defaults to 100.
       - a_filter and b_filter (optional): WHERE clauses applied to the respective side before comparing.
-      - column_specs (optional): Column specs from `audit_helper_ext.get_column_specs`, used to project columns through the expressions configured in `audit_helper__custom_column_expressions`. Specs may cover the whole relation; only those matching `primary_keys` + `columns_to_compare` are applied, and columns without a spec are selected as-is. Defaults to none, which compares the raw columns.
+      - column_specs (optional): Column specs from `audit_helper_ext.get_column_specs`, used to project columns through the expressions configured in `audit_helper__custom_column_expressions`. Specs may cover the whole relation; only those matching `primary_keys` + `columns_to_compare` are applied. Defaults to none, which compares the raw columns.
 
       ## Usage
 

@@ -1,0 +1,22 @@
+macros:
+  - name: filter_column_specs
+    description: |
+      Re-align the specs from `get_column_specs` (which cover the whole relation) to an
+      explicit caller-supplied subset of columns, matched by name case-insensitively.
+
+      Returns one spec per requested column, in the order requested. Columns without a
+      configured expression get a bare spec (`select` is the plain column name, `macro_ref`
+      is none) — the same shape `get_columns_with_expressions` produces for them — so callers
+      can project `spec.select` uniformly and hand the result to `format_column_expressions`.
+
+      Used by the Show Column Conflicts path, which compares only the columns the caller names.
+
+      **Returns** (`list`): one spec per entry in `columns`.
+
+    arguments:
+      - name: column_specs
+        type: optional[list]
+        description: Column specs from `audit_helper_ext.get_column_specs`. Empty or none yields all-bare specs.
+      - name: columns
+        type: list[string]
+        description: Column names to align to, typically `primary_keys` + `columns_to_compare`.

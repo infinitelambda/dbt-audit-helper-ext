@@ -20,10 +20,8 @@
 
   {% set columns_to_compare_csv, columns_to_compare = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
 
-  {% set include_columns_csv = audit_helper_ext.build_conflicts_projection(
-    columns=primary_keys + columns_to_compare,
-    column_specs=column_specs
-  ) %}
+  {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys + columns_to_compare) %}
+  {% set include_columns_csv = applied_specs | map(attribute='select') | join(',') %}
 
 
   {% set a_query %}
@@ -142,10 +140,8 @@
 
   {% set columns_to_compare_csv, columns_to_compare = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
 
-  {% set include_columns_csv = audit_helper_ext.build_conflicts_projection(
-    columns=primary_keys + columns_to_compare,
-    column_specs=column_specs
-  ) %}
+  {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys + columns_to_compare) %}
+  {% set include_columns_csv = applied_specs | map(attribute='select') | join(',') %}
 
 
   {% set a_query %}
