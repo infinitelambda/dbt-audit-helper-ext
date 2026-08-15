@@ -76,7 +76,7 @@
   calculate_exp as (
     select
       *,
-      count(*) over (partition by {{ primary_keys_csv }}) as __count_by_pk,
+      count(*) over (partition by {{ primary_keys_csv }}) as __count_by_pk
     from audit_query
   ),
 
@@ -95,8 +95,8 @@
 
       {% for column in columns_to_compare -%}
 
-      max(case when in_a is true then {{ column }} end) as {{ column ~ '__a' }},
-      max(case when in_b is true then {{ column }} end) as {{ column ~ '__b' }}
+      max(case when in_a then {{ column }} end) as {{ column ~ '__a' }},
+      max(case when in_b then {{ column }} end) as {{ column ~ '__b' }}
 
       {{- "," if not loop.last else "" }}
 
@@ -122,7 +122,7 @@
 
     select
       {{ columns_to_compare_pivoted }},
-      count(*) as count_conflicts,
+      count(*) as count_conflicts
     from compare_conflicts
     group by
       {{ columns_to_compare_pivoted }}
