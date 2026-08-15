@@ -5,13 +5,18 @@
 
 {% macro default__convert_to_str_and_list(variable) %}
 
+    {# Both branches trim and drop blanks: callers match these names against column specs. #}
     {% if variable is string %}
-        {% set return_str = variable %}
-        {% set return_list = variable.split(',') %}
+        {% set return_list = variable.split(',') | map('trim') | reject('eq', '') | list %}
+        {% set return_str = return_list | join(',') %}
 
     {% elif variable is iterable %}
-        {% set return_str = variable | join(',') %}
-        {% set return_list = variable %}
+        {% set trimmed = [] %}
+        {% for item in variable %}
+            {% do trimmed.append(item | trim if item is string else item) %}
+        {% endfor %}
+        {% set return_list = trimmed | reject('eq', '') | list %}
+        {% set return_str = return_list | join(',') %}
 
     {% else %}
         {% set return_str = variable | string %}
@@ -21,15 +26,3 @@
     {{ return([return_str, return_list]) }}
 
 {% endmacro %}
-
-
-{#
-{% macro test__convert_to_str_and_list() %}
-    {% if execute %}
-        {{ log(convert_to_str_and_list('var1'), true) }}
-        {{ log(convert_to_str_and_list('var1,var2'), true) }}
-        {{ log(convert_to_str_and_list(["var1","var2"]), true) }}
-        {{ log(convert_to_str_and_list(123), true) }}
-    {% endif %}
-{% endmacro %}
-#}

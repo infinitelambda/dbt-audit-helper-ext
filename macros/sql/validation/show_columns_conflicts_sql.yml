@@ -23,14 +23,6 @@ macros:
       | 001d3e4d-bb1f-4f31-a244-aed39b5555e0 | KIKA STORE  | False |  True |
       | 001d3e4d-bb1f-4f31-a244-aed39b5555e0 | kika store  |  True | False |
 
-      ## Arguments
-
-      - a_relation and b_relation: The Relations you want to compare.
-      - primary_keys: The primary key of the model. Used to sort unmatched results for row-by-row validation. Must be a unique key (unique and never null) in both tables, otherwise the join won't work as expected. This can be a string (`column_a`), or a list of string in csv format (`column_a,column_b`), or a list of string (`["column_a", "column_b"]`).
-      - columns_to_compare: Columns you want to see the conflicting values. This can be a string (`column_a`), or a list of string in csv format (`column_a,column_b`), or a list of string (`["column_a", "column_b"]`).
-      - summarize (optional): Allows you to switch between a summary or detailed view of the compared data. Defaults to true.
-      - limit (optional): Allows you to limit the number of rows returned. Defaults to 100.
-
       ## Usage
 
       {% raw %}
@@ -55,3 +47,41 @@ macros:
       ```
 
       {% endraw %}
+
+    arguments:
+      - name: a_relation
+        type: relation
+        description: The source relation to compare.
+      - name: b_relation
+        type: relation
+        description: The dbt relation to compare against.
+      - name: primary_keys
+        type: string | list[string]
+        description: |
+          The primary key of the model. Used to sort unmatched results for row-by-row validation.
+          Must be unique and never null in both relations, otherwise the join won't work as
+          expected. Accepts `column_a`, `column_a,column_b`, or `["column_a", "column_b"]`.
+      - name: columns_to_compare
+        type: string | list[string]
+        description: |
+          Columns you want to see the conflicting values for. Accepts `column_a`,
+          `column_a,column_b`, or `["column_a", "column_b"]`.
+      - name: summarize
+        type: optional[bool]
+        description: Switch between a summary and a detailed view of the compared data. Defaults to true.
+      - name: limit
+        type: optional[int]
+        description: Limit the number of rows returned. Defaults to none.
+      - name: a_filter
+        type: optional[string]
+        description: WHERE clause applied to the source side before comparing.
+      - name: b_filter
+        type: optional[string]
+        description: WHERE clause applied to the dbt side before comparing.
+      - name: column_specs
+        type: optional[list]
+        description: |
+          Column specs from `audit_helper_ext.get_column_specs`, used to project columns through
+          the expressions configured in `audit_helper__custom_column_expressions`. Specs may cover
+          the whole relation; only those matching `primary_keys` + `columns_to_compare` are
+          applied. Defaults to none, which compares the columns untransformed.

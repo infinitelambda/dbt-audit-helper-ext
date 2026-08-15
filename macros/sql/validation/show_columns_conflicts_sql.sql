@@ -1,4 +1,14 @@
-{% macro show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize=true, limit=None, a_filter=none, b_filter=none) %}
+{% macro show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize=true,
+    limit=none,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
   {{ return(adapter.dispatch('show_columns_conflicts_sql', 'audit_helper_ext')(
     a_relation=a_relation,
     b_relation=b_relation,
@@ -7,19 +17,31 @@
     summarize=summarize,
     limit=limit,
     a_filter=a_filter,
-    b_filter=b_filter
+    b_filter=b_filter,
+    column_specs=column_specs
   )) }}
 {% endmacro %}
 
 
 
-{% macro default__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none) %}
+{% macro default__show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize,
+    limit,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 
   {% set columns_to_compare_csv, columns_to_compare = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
 
-  {% set include_columns_csv = (primary_keys + columns_to_compare) | join(',') %}
+  {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys + columns_to_compare) %}
+  {% set include_columns_csv = applied_specs | map(attribute='select') | join(',') %}
 
 
   {% set a_query %}
@@ -54,7 +76,7 @@
   calculate_exp as (
     select
       *,
-      count(*) over (partition by {{ primary_keys_csv }}) as __count_by_pk,
+      count(*) over (partition by {{ primary_keys_csv }}) as __count_by_pk
     from audit_query
   ),
 
@@ -73,8 +95,8 @@
 
       {% for column in columns_to_compare -%}
 
-      max(case when in_a is true then {{ column }} end) as {{ column ~ '__a' }},
-      max(case when in_b is true then {{ column }} end) as {{ column ~ '__b' }}
+      max(case when in_a then {{ column }} end) as {{ column ~ '__a' }},
+      max(case when in_b then {{ column }} end) as {{ column ~ '__b' }}
 
       {{- "," if not loop.last else "" }}
 
@@ -100,7 +122,7 @@
 
     select
       {{ columns_to_compare_pivoted }},
-      count(*) as count_conflicts,
+      count(*) as count_conflicts
     from compare_conflicts
     group by
       {{ columns_to_compare_pivoted }}
@@ -132,13 +154,24 @@
 {% endmacro %}
 
 
-{% macro sqlserver__show_columns_conflicts_sql(a_relation, b_relation, primary_keys, columns_to_compare, summarize, limit, a_filter=none, b_filter=none) %}
+{% macro sqlserver__show_columns_conflicts_sql(
+    a_relation,
+    b_relation,
+    primary_keys,
+    columns_to_compare,
+    summarize,
+    limit,
+    a_filter=none,
+    b_filter=none,
+    column_specs=none
+) %}
 
   {% set primary_keys_csv, primary_keys = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
 
   {% set columns_to_compare_csv, columns_to_compare = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
 
-  {% set include_columns_csv = (primary_keys + columns_to_compare) | join(',') %}
+  {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys + columns_to_compare) %}
+  {% set include_columns_csv = applied_specs | map(attribute='select') | join(',') %}
 
 
   {% set a_query %}

@@ -7,6 +7,7 @@
     columns_to_compare=[],
     summarize=true,
     limit=none,
+    package_name=none,
     old_filter=none,
     dbt_filter=none
 ) %}
@@ -20,6 +21,7 @@
         columns_to_compare=columns_to_compare,
         summarize=summarize,
         limit=limit,
+        package_name=package_name,
         old_filter=old_filter,
         dbt_filter=dbt_filter
       )
@@ -36,6 +38,7 @@
     columns_to_compare,
     summarize,
     limit,
+    package_name=none,
     old_filter=none,
     dbt_filter=none
 ) %}
@@ -50,6 +53,19 @@
     {% set a_filter = audit_helper_ext.resolve_relation_filter(old_filter, side='a') %}
     {% set b_filter = audit_helper_ext.resolve_relation_filter(dbt_filter, side='b') %}
 
+    {% set column_specs = audit_helper_ext.get_column_specs(
+        a_relation=old_relation,
+        b_relation=dbt_relation,
+        package_name=package_name
+    ) %}
+
+    {# Specs cover the whole relation, while the drill-down looks only at the columns the caller
+       asked for: align them once here, so the log and the query report the same expressions. #}
+    {% set _, primary_keys_list = audit_helper_ext.convert_to_str_and_list(primary_keys) %}
+    {% set _, columns_to_compare_list = audit_helper_ext.convert_to_str_and_list(columns_to_compare) %}
+    {% set applied_specs = audit_helper_ext.filter_column_specs(column_specs, primary_keys_list + columns_to_compare_list) %}
+    {% set column_expressions = audit_helper_ext.format_column_expressions(applied_specs) %}
+
     {% set audit_query = audit_helper_ext.show_columns_conflicts_sql(
         a_relation=old_relation,
         b_relation=dbt_relation,
@@ -58,13 +74,15 @@
         summarize=summarize,
         limit=limit,
         a_filter=a_filter,
-        b_filter=b_filter
+        b_filter=b_filter,
+        column_specs=applied_specs
     ) %}
 
     {% if execute %}
       {{ log('ℹ️  Those columns are included in the comparison: ' ~ columns_to_compare, true) }}
       {% if a_filter %}{{ log('ℹ️  Filter on source (A): ' ~ audit_helper_ext.get_log_value(a_filter), true) }}{% endif %}
       {% if b_filter %}{{ log('ℹ️  Filter on dbt (B): ' ~ audit_helper_ext.get_log_value(b_filter), true) }}{% endif %}
+      {% if column_expressions %}{{ log('ℹ️  Column expressions applied: ' ~ audit_helper_ext.get_log_value(column_expressions), true) }}{% endif %}
 
       {% set audit_results = audit_helper_ext.run_audit_query(audit_query, summarize) %}
 

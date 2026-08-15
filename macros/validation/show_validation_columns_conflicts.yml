@@ -2,3 +2,42 @@ macros:
   - name: show_validation_columns_conflicts
     description: |
       Execute the Audit Query returned by `audit_helper_ext.show_columns_conflicts_sql`.
+
+      Resolves `audit_helper__custom_column_expressions` via `audit_helper_ext.get_column_specs` and
+      passes the specs down, so this drill-down applies the same transformations as the `all_col`
+      summary it is usually run after. Expressions covering the compared columns are logged.
+
+    arguments:
+      - name: dbt_identifier
+        type: string
+        description: The dbt model to compare, resolved via `ref()`.
+      - name: old_database
+        type: string
+        description: Database of the source relation.
+      - name: old_schema
+        type: string
+        description: Schema of the source relation.
+      - name: old_identifier
+        type: string
+        description: Identifier of the source relation.
+      - name: primary_keys
+        type: string | list[string]
+        description: The primary key of the model. Must be unique and never null in both relations.
+      - name: columns_to_compare
+        type: string | list[string]
+        description: Columns you want to see the conflicting values for.
+      - name: summarize
+        type: optional[bool]
+        description: Switch between a summary and a detailed view. Defaults to true.
+      - name: limit
+        type: optional[int]
+        description: Limit the number of rows returned.
+      - name: package_name
+        type: optional[string]
+        description: Package to scope the model-config lookup to, when the model lives outside the root project.
+      - name: old_filter
+        type: optional[string]
+        description: Named filter macro applied to the source side.
+      - name: dbt_filter
+        type: optional[string]
+        description: Named filter macro applied to the dbt side.

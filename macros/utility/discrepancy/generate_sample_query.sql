@@ -65,17 +65,8 @@
   {% endfor %}
 
   {# Project through the configured expressions so the suggestion reproduces the comparison. #}
-  {% set select_by_name = {} %}
-  {% for spec in (column_specs or []) %}
-    {% do select_by_name.update({spec.name | upper: spec.select}) %}
-  {% endfor %}
-
-  {% set projected = [] %}
-  {% for col_name in column_names %}
-    {% do projected.append(select_by_name.get(col_name | upper, adapter.quote(col_name))) %}
-  {% endfor %}
-
-  {% set column_list = projected | join(', ') %}
+  {% set projected_specs = audit_helper_ext.filter_column_specs(column_specs, column_names) %}
+  {% set column_list = projected_specs | map(attribute='select') | join(', ') %}
 
   {# Mirror the comparison's filters so the suggestion matches what was compared. #}
   {% set a_where = where_clause ~ ('\n      and ' ~ a_filter if a_filter else '') %}
